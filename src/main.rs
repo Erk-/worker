@@ -12,6 +12,7 @@ extern crate hyper_tls;
 extern crate native_tls;
 extern crate tungstenite;
 extern crate serde_json;
+extern crate regex;
 
 mod error;
 
@@ -29,6 +30,7 @@ use serenity::model::channel::Message;
 use serenity::Error as SerenityError;
 use futures::Future;
 use futures::future::FutureResult;
+use regex::Regex;
 
 fn main() {
     env_logger::init();
@@ -53,7 +55,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let serenity_http = SerenityHttpClient::new(
         http_client.clone(), handle.clone(), Rc::new(token)
     );
-    let event_handler = EventHandler::new(handle.clone(), serenity_http);
+    let event_handler = EventHandler::new(handle.clone(), serenity_http)?;
 
     #[async]
     for message in shard.messages() {
@@ -78,14 +80,20 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 struct EventHandler {
     handle: Handle,
     serenity_http: SerenityHttpClient,
+    split_regex: Regex,
 }
 
+const PREFIX: &'static str = ">";
+
 impl EventHandler {
-    fn new(handle: Handle, serenity_http: SerenityHttpClient) -> Self {
-        Self {
+    fn new(handle: Handle, serenity_http: SerenityHttpClient) -> Result<Self, Error> {
+        let split_regex = Regex::new(r"\s+")?;
+
+        Ok(Self {
             handle,
             serenity_http,
-        }
+            split_regex,
+        })
     }
 
     fn on_ready(&self, _: ReadyEvent) {
@@ -94,11 +102,33 @@ impl EventHandler {
 
     fn on_message(&self, event: MessageCreateEvent) {
         let msg = event.message;
-        println!("{}#{}: {}", msg.author.name, msg.author.discriminator, msg.content);
-
-        if msg.content == "DABBOT IS GOOD" {
-            self.handle.spawn(send_message(&self.serenity_http, msg.channel_id.0, ":pray: real niggas speak the truth"));
+        let content = msg.content;
+        println!("{}#{}: {}", msg.author.name, msg.author.discriminator, &content);
+        
+        if !content.starts_with(PREFIX) {
+            // no
+            return;
         }
+
+        let content = &content[PREFIX.len()..];
+        println!("content: {}", content);
+
+        let mut content_iter = self.split_regex.split(&content);
+        let command_name = match content_iter.next() {
+            Some(c) => c,
+            None => {
+                // no
+                return;
+            }
+        };
+        println!("command_name: {}", command_name);
+
+        let args = content_iter.collect::<Vec<&str>>();
+        println!("args: {:?}", args);
+
+        //if msg.content == "DABBOT IS GOOD" {
+        //    self.handle.spawn(send_message(&self.serenity_http, msg.channel_id.0, "hel"));
+        //}
     }
 }
 
