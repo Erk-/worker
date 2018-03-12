@@ -24,9 +24,11 @@ use hyper_tls::HttpsConnector;
 use std::rc::Rc;
 use serenity::gateway::Shard;
 use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent, ReadyEvent};
-use serenity::model::channel::{Message, Channel};
 use serenity::http::Client as SerenityHttpClient;
-use serenity::builder::CreateMessage;
+use serenity::model::channel::Message;
+use serenity::Error as SerenityError;
+use futures::Future;
+use futures::future::FutureResult;
 
 fn main() {
     env_logger::init();
@@ -95,11 +97,13 @@ impl EventHandler {
         println!("{}#{}: {}", msg.author.name, msg.author.discriminator, msg.content);
 
         if msg.content == "DABBOT IS GOOD" {
-            let future = self.serenity_http.send_message(msg.channel_id.0, |m| m.content(":pray: real niggas speak the truth"))
-                .map(|m| println!("sent msg {:?}", m))
-                .map_err(|e| println!("Error sending message {:?}", e));
-
-            self.handle.spawn(future);
+            self.handle.spawn(send_message(&self.serenity_http, msg.channel_id.0, ":pray: real niggas speak the truth"));
         }
     }
+}
+
+fn send_message(serenity_http: &SerenityHttpClient, channel_id: u64, content: &str) -> impl Future<Item = (), Error = ()> {
+    serenity_http.send_message(channel_id, |m| m.content(content))
+        .map(|m| debug!("Sent message {:?}", m))
+        .map_err(|e| error!("Error sending message {:?}", e))
 }
