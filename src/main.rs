@@ -15,24 +15,23 @@ extern crate serde_json;
 extern crate regex;
 
 mod error;
+mod command;
 
 use error::Error;
+use command::{CommandManager, Command, TestCommand};
 use futures::prelude::*;
+use futures::Future;
 use tokio_core::reactor::{Core, Handle};
 use std::env;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::sync::RwLock;
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
-use std::rc::Rc;
 use serenity::gateway::Shard;
 use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent, ReadyEvent};
 use serenity::http::Client as SerenityHttpClient;
-use serenity::model::channel::Message;
-use serenity::Error as SerenityError;
-use futures::Future;
-use futures::future::FutureResult;
 use regex::Regex;
-use std::collections::HashMap;
-use std::cell::RefCell;
 
 fn main() {
     env_logger::init();
@@ -58,8 +57,9 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         http_client.clone(), handle.clone(), Rc::new(token)
     );
 
-    let command_manager = Rc::new(RefCell::new(CommandManager::default()));
-    command_manager.add(vec![TestCommand {}]);
+    let mut command_manager = CommandManager::new(handle.clone());
+    command_manager.add(Rc::new(RwLock::new(TestCommand {})));
+    let command_manager = Rc::new(RefCell::new(command_manager));
 
     let event_handler = EventHandler::new(handle.clone(), serenity_http, command_manager.clone())?;
 
@@ -110,7 +110,8 @@ impl EventHandler {
 
     fn on_message(&self, event: MessageCreateEvent) {
         let msg = event.message;
-        let content = msg.content;
+        
+        let content = msg.content.clone();
         println!("{}#{}: {}", msg.author.name, msg.author.discriminator, &content);
         
         if !content.starts_with(PREFIX) {
@@ -131,10 +132,11 @@ impl EventHandler {
         };
         println!("command_name: {}", command_name);
 
-        let command = match self.command_manager.commands.get(&command_name.lowercase()) {
-            Some(command) => command,
+        let mut command_manager = self.command_manager.borrow_mut();
+        let mut command = match command_manager.commands.get_mut(&command_name.to_lowercase()) {
+            Some(command) => command.write().expect("could not get write lock on command"),
             None => {
-                debug!("invalid command {}", command_name);
+                // invalid command
                 return;
             }
         };
@@ -144,6 +146,7 @@ impl EventHandler {
 
         let future = command.run(msg, args)
             .map_err(|e| error!("oh no couldnt run command: {:?}", e));
+
         self.handle.spawn(future);
 
         //if msg.content == "DABBOT IS GOOD" {
@@ -156,41 +159,4 @@ fn send_message(serenity_http: &SerenityHttpClient, channel_id: u64, content: &s
     serenity_http.send_message(channel_id, |m| m.content(content))
         .map(|m| debug!("Sent message {:?}", m))
         .map_err(|e| error!("Error sending message {:?}", e))
-}
-
-trait Command {
-    fn names(&self) -> Vec<&'static str>;
-
-    fn run(&mut self, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
-}
-
-#[derive(Default)]
-struct CommandManager {
-    commands: HashMap<String, Command + 'static>,
-}
-
-impl CommandManager {
-    fn add<C: Command + 'static>(&mut self, commands: Vec<C>) {
-        for command in commands.into_iter() {
-            let names = command.names();
-            for name in names {
-                self.commands.insert(name, command);
-            }
-        }
-    }
-}
-
-struct TestCommand;
-
-impl Command for TestCommand {
-    fn names(&self) -> Vec<&'static str> {
-        vec!["test", "t", "meme"]
-    }
-
-    #[async]
-    fn run(&mut self, msg: Message, args: Vec<String>) -> Result<(), Error> {
-        // lol do some shit
-
-        Ok(())
-    }
 }
