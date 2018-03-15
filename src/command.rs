@@ -11,7 +11,12 @@ use serenity::http::Client as SerenityHttpClient;
 pub trait Command: 'static {
     fn names(&self) -> Vec<&'static str>;
 
-    fn run(&mut self, Handle, Rc<SerenityHttpClient>, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
+    fn run(&mut self, Context, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
+}
+
+pub struct Context {
+    pub handle: Handle,
+    pub serenity_http: Rc<SerenityHttpClient>,
 }
 
 type ICommand = Rc<RwLock<Command>>;

@@ -1,5 +1,5 @@
 use error::Error;
-use command::{CommandManager, Command};
+use command::{CommandManager, Command, Context};
 use futures::prelude::*;
 use futures::Future;
 use tokio_core::reactor::{Core, Handle};
@@ -88,7 +88,12 @@ impl EventHandler {
         let args = content_iter.map(|s| s.to_string()).collect::<Vec<String>>();
         println!("args: {:?}", args);
 
-        let future = command.run(self.handle.clone(), self.serenity_http.clone(), msg, args)
+        let context = Context {
+            handle: self.handle.clone(), 
+            serenity_http: self.serenity_http.clone(),
+        };
+
+        let future = command.run(context, msg, args)
             .map_err(|e| error!("oh no couldnt run command: {:?}", e));
 
         self.handle.spawn(future);
