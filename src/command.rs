@@ -6,11 +6,12 @@ use std::collections::HashMap;
 use serenity::model::channel::Message;
 use std::rc::Rc;
 use std::sync::RwLock;
+use serenity::http::Client as SerenityHttpClient;
 
 pub trait Command: 'static {
     fn names(&self) -> Vec<&'static str>;
 
-    fn run(&mut self, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
+    fn run(&mut self, Handle, Rc<SerenityHttpClient>, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
 }
 
 type ICommand = Rc<RwLock<Command>>;
@@ -35,19 +36,5 @@ impl CommandManager {
         for name in names {
             self.commands.insert(name.to_string(), command.clone());
         }
-    }
-}
-
-pub struct TestCommand;
-
-impl Command for TestCommand {
-    fn names(&self) -> Vec<&'static str> {
-        vec!["test", "t", "meme"]
-    }
-    
-    fn run(&mut self, msg: Message, args: Vec<String>) -> Box<Future<Item = (), Error = Error>> {
-        // lol do some shit
-
-        Box::new(future::ok(()))
     }
 }
