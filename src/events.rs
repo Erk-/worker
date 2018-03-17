@@ -10,7 +10,11 @@ use std::sync::RwLock;
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
 use serenity::gateway::Shard;
-use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent, ReadyEvent};
+use serenity::model::event::{
+    Event, GatewayEvent, MessageCreateEvent, ReadyEvent, ResumedEvent, 
+    GuildCreateEvent, GuildDeleteEvent, VoiceStateUpdateEvent, 
+    VoiceServerUpdateEvent
+};
 use serenity::http::Client as SerenityHttpClient;
 use regex::Regex;
 
@@ -41,15 +45,26 @@ impl EventHandler {
 
         match event {
             Dispatch(_, Ready(e)) => self.on_ready(e),
+            Dispatch(_, Resumed(e)) => self.on_resumed(e),
             Dispatch(_, MessageCreate(e)) => self.on_message(e),
+            Dispatch(_, GuildCreate(e)) => self.on_guild_create(e),
+            Dispatch(_, GuildDelete(e)) => self.on_guild_delete(e),
+            Dispatch(_, VoiceStateUpdate(e)) => self.on_voice_state_update(e),
+            Dispatch(_, VoiceServerUpdate(e)) => self.on_voice_server_update(e),
             _ => {
                 // ya nothing else
             }
         }
     }
 
-    fn on_ready(&self, _: ReadyEvent) {
-        println!("Connected to discord");
+    fn on_ready(&self, event: ReadyEvent) {
+        //debug!("ready event: {:?}", event);
+        info!("Connected to discord!");
+    }
+
+    fn on_resumed(&self, event: ResumedEvent) {
+        debug!("resumed event: {:?}", event);
+        info!("Resumed connection to discord");
     }
 
     fn on_message(&self, event: MessageCreateEvent) {
@@ -97,5 +112,21 @@ impl EventHandler {
             .map_err(|e| error!("oh no couldnt run command: {:?}", e));
 
         self.handle.spawn(future);
+    }
+
+    fn on_guild_create(&self, event: GuildCreateEvent) {
+        //debug!("guild create: {:?}", event);
+    }
+
+    fn on_guild_delete(&self, event: GuildDeleteEvent) {
+        debug!("guild delete: {:?}", event);
+    }
+
+    fn on_voice_state_update(&self, event: VoiceStateUpdateEvent) {
+        //debug!("voice state update: {:?}", event);
+    }
+
+    fn on_voice_server_update(&self, event: VoiceServerUpdateEvent) {
+        debug!("voice server update: {:?}", event);
     }
 }
