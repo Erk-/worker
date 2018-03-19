@@ -1,6 +1,5 @@
 use error::Error;
 use futures::Future;
-use futures::future;
 use tokio_core::reactor::Handle;
 use std::collections::HashMap;
 use serenity::model::channel::Message;
@@ -10,6 +9,8 @@ use serenity::http::Client as SerenityHttpClient;
 
 pub trait Command: 'static {
     fn names(&self) -> Vec<&'static str>;
+
+    fn description(&self) -> &'static str;
 
     fn run(&mut self, Context, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
 }

@@ -1,17 +1,11 @@
 use error::Error;
-use command::{CommandManager, Command, Context};
-use futures::prelude::*;
+use command::{CommandManager, Context};
 use futures::Future;
-use tokio_core::reactor::{Core, Handle};
-use std::env;
+use tokio_core::reactor::Handle;
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::sync::RwLock;
-use hyper::Client as HyperClient;
-use hyper_tls::HttpsConnector;
-use serenity::gateway::Shard;
 use serenity::model::event::{
-    Event, GatewayEvent, MessageCreateEvent, ReadyEvent, ResumedEvent, 
+    GatewayEvent, MessageCreateEvent, ReadyEvent, ResumedEvent, 
     GuildCreateEvent, GuildDeleteEvent, VoiceStateUpdateEvent, 
     VoiceServerUpdateEvent
 };
@@ -57,13 +51,11 @@ impl EventHandler {
         }
     }
 
-    fn on_ready(&self, event: ReadyEvent) {
-        //debug!("ready event: {:?}", event);
+    fn on_ready(&self, _: ReadyEvent) {
         info!("Connected to discord!");
     }
 
-    fn on_resumed(&self, event: ResumedEvent) {
-        debug!("resumed event: {:?}", event);
+    fn on_resumed(&self, _: ResumedEvent) {
         info!("Resumed connection to discord");
     }
 
@@ -114,16 +106,13 @@ impl EventHandler {
         self.handle.spawn(future);
     }
 
-    fn on_guild_create(&self, event: GuildCreateEvent) {
-        //debug!("guild create: {:?}", event);
+    fn on_guild_create(&self, _: GuildCreateEvent) {
     }
 
-    fn on_guild_delete(&self, event: GuildDeleteEvent) {
-        debug!("guild delete: {:?}", event);
+    fn on_guild_delete(&self, _: GuildDeleteEvent) {
     }
 
-    fn on_voice_state_update(&self, event: VoiceStateUpdateEvent) {
-        //debug!("voice state update: {:?}", event);
+    fn on_voice_state_update(&self, _: VoiceStateUpdateEvent) {
     }
 
     fn on_voice_server_update(&self, event: VoiceServerUpdateEvent) {

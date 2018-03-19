@@ -20,7 +20,7 @@ mod commands;
 mod events;
 
 use error::Error;
-use command::{CommandManager, Command};
+use command::{CommandManager};
 use events::EventHandler;
 use futures::prelude::*;
 use futures::Future;
@@ -32,9 +32,8 @@ use std::sync::RwLock;
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
 use serenity::gateway::Shard;
-use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent, ReadyEvent};
+use serenity::model::event::{Event, GatewayEvent};
 use serenity::http::Client as SerenityHttpClient;
-use regex::Regex;
 
 fn main() {
     env_logger::init();
