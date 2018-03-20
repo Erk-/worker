@@ -6,18 +6,20 @@ use serenity::model::channel::Message;
 use std::rc::Rc;
 use std::sync::RwLock;
 use serenity::http::Client as SerenityHttpClient;
+use regex::Split as RegexSplit;
 
 pub trait Command: 'static {
     fn names(&self) -> Vec<&'static str>;
 
     fn description(&self) -> &'static str;
 
-    fn run(&mut self, Context, Message, Vec<String>) -> Box<Future<Item = (), Error = Error>>;
+    fn run(&mut self, Context, Message) -> Box<Future<Item = (), Error = Error>>;
 }
 
-pub struct Context {
+pub struct Context<'a> {
     pub handle: Handle,
     pub serenity_http: Rc<SerenityHttpClient>,
+    pub args: RegexSplit<'a, 'a>,
 }
 
 type ICommand = Rc<RwLock<Command>>;

@@ -15,13 +15,11 @@ impl Command for TestCommand {
         "Testing command lol"
     }
     
-    fn run(&mut self, ctx: Context, msg: Message, _args: Vec<String>) -> Box<Future<Item = (), Error = Error>> {
-        let future = ctx.serenity_http.send_message(msg.channel_id.0, |m| m.content("HELLO WORLD"))
+    fn run(&mut self, ctx: Context, msg: Message) -> Box<Future<Item = (), Error = Error>> {
+        let args = ctx.args.map(|s| s.to_string()).collect::<Vec<String>>();
+        
+        box ctx.serenity_http.send_message(msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))
             .map(|m| debug!("Sent message {:?}", m))
-            .map_err(|e| error!("Error sending message {:?}", e));
-
-        ctx.handle.spawn(future);
-
-        box future::ok(())
+            .map_err(From::from)
     }
 }

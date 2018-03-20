@@ -61,18 +61,14 @@ impl EventHandler {
 
     fn on_message(&self, event: MessageCreateEvent) {
         let msg = event.message;
-        
         let content = msg.content.clone();
         println!("{}#{}: {}", msg.author.name, msg.author.discriminator, &content);
         
         if !content.starts_with(PREFIX) {
-            // no
             return;
         }
 
         let content = &content[PREFIX.len()..];
-        println!("content: {}", content);
-
         let mut content_iter = self.split_regex.split(&content);
         let command_name = match content_iter.next() {
             Some(c) => c,
@@ -81,7 +77,6 @@ impl EventHandler {
                 return;
             }
         };
-        println!("command_name: {}", command_name);
 
         let mut command_manager = self.command_manager.borrow_mut();
         let mut command = match command_manager.commands.get_mut(&command_name.to_lowercase()) {
@@ -91,16 +86,14 @@ impl EventHandler {
                 return;
             }
         };
-
-        let args = content_iter.map(|s| s.to_string()).collect::<Vec<String>>();
-        println!("args: {:?}", args);
-
+        
         let context = Context {
             handle: self.handle.clone(), 
             serenity_http: self.serenity_http.clone(),
+            args: content_iter,
         };
 
-        let future = command.run(context, msg, args)
+        let future = command.run(context, msg)
             .map_err(|e| error!("oh no couldnt run command: {:?}", e));
 
         self.handle.spawn(future);
