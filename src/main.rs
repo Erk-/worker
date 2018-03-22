@@ -23,7 +23,6 @@ use error::Error;
 use command::{CommandManager};
 use events::EventHandler;
 use futures::prelude::*;
-use futures::Future;
 use tokio_core::reactor::{Core, Handle};
 use std::env;
 use std::rc::Rc;

@@ -1,8 +1,6 @@
-use error::Error;
-use futures::Future;
-use futures::future;
+use futures::prelude::*;
 use serenity::model::channel::Message;
-use command::{Command, Context};
+use command::{Command, Context, CommandFuture};
 
 pub struct TestCommand;
 
@@ -15,7 +13,7 @@ impl Command for TestCommand {
         "Testing command lol"
     }
     
-    fn run(&mut self, ctx: Context, msg: Message) -> Box<Future<Item = (), Error = Error>> {
+    fn run(&mut self, ctx: Context, msg: Message) -> CommandFuture {
         let args = ctx.args.map(|s| s.to_string()).collect::<Vec<String>>();
         
         box ctx.serenity_http.send_message(msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))

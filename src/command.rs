@@ -1,5 +1,5 @@
 use error::Error;
-use futures::Future;
+use futures::prelude::*;
 use tokio_core::reactor::Handle;
 use std::collections::HashMap;
 use serenity::model::channel::Message;
@@ -8,12 +8,14 @@ use std::sync::RwLock;
 use serenity::http::Client as SerenityHttpClient;
 use regex::Split as RegexSplit;
 
+pub type CommandFuture = Box<Future<Item = (), Error = Error>>;
+
 pub trait Command: 'static {
     fn names(&self) -> Vec<&'static str>;
 
     fn description(&self) -> &'static str;
 
-    fn run(&mut self, Context, Message) -> Box<Future<Item = (), Error = Error>>;
+    fn run(&mut self, Context, Message) -> CommandFuture;
 }
 
 pub struct Context<'a> {

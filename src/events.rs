@@ -1,6 +1,6 @@
 use error::Error;
 use command::{CommandManager, Context};
-use futures::Future;
+use futures::prelude::*;
 use tokio_core::reactor::Handle;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -19,7 +19,10 @@ pub struct EventHandler {
     command_manager: Rc<RefCell<CommandManager>>,
 }
 
-const PREFIX: &'static str = ">";
+fn get_prefix<'a>(_guild_id: u64) -> &'a str {
+    // todo dynamic prefix
+    ">"
+}
 
 impl EventHandler {
     pub fn new(handle: Handle, serenity_http: Rc<SerenityHttpClient>, command_manager: Rc<RefCell<CommandManager>>) -> Result<Self, Error> {
@@ -63,17 +66,24 @@ impl EventHandler {
         let msg = event.message;
         let content = msg.content.clone();
         println!("{}#{}: {}", msg.author.name, msg.author.discriminator, &content);
+
+        let prefix = match msg.guild_id() {
+            Some(guild_id) => get_prefix(guild_id.0),
+            None => {
+                error!("MessageCreateEvent guild_id not present");
+                return;
+            }
+        };
         
-        if !content.starts_with(PREFIX) {
+        if !content.starts_with(prefix) {
             return;
         }
 
-        let content = &content[PREFIX.len()..];
+        let content = &content[prefix.len()..];
         let mut content_iter = self.split_regex.split(&content);
         let command_name = match content_iter.next() {
             Some(c) => c,
             None => {
-                // no
                 return;
             }
         };
@@ -82,11 +92,10 @@ impl EventHandler {
         let mut command = match command_manager.commands.get_mut(&command_name.to_lowercase()) {
             Some(command) => command.write().expect("could not get write lock on command"),
             None => {
-                // invalid command
                 return;
             }
         };
-        
+
         let context = Context {
             handle: self.handle.clone(), 
             serenity_http: self.serenity_http.clone(),
