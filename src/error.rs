@@ -6,7 +6,6 @@ use serenity::Error as SerenityError;
 use tungstenite::error::Error as TungsteniteError;
 use serde_json::error::Error as SerdeJsonError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use regex::Error as RegexError;
 
 #[derive(Debug)]
 pub enum Error {
@@ -16,7 +15,6 @@ pub enum Error {
     Serenity(SerenityError),
     Tungstenite(TungsteniteError),
     SerdeJson(SerdeJsonError),
-    Regex(RegexError),
 }
 
 impl From<IoError> for Error {
@@ -55,12 +53,6 @@ impl From<SerdeJsonError> for Error {
     }
 }
 
-impl From<RegexError> for Error {
-    fn from(e: RegexError) -> Self {
-        Error::Regex(e)
-    }
-}
-
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         f.write_str(self.description())
@@ -76,7 +68,6 @@ impl StdError for Error {
             Error::Serenity(ref e) => e.description(),
             Error::Tungstenite(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
-            Error::Regex(ref e) => e.description(),
         }
     }
 }
