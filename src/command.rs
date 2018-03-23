@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use serenity::model::channel::Message;
 use std::rc::Rc;
 use serenity::http::Client as SerenityHttpClient;
-use regex::Split as RegexSplit;
+use std::str::SplitWhitespace;
 
 pub type CommandFuture = Box<Future<Item = (), Error = Error>>;
 
@@ -33,7 +33,7 @@ pub struct Context<'a> {
     pub handle: Handle,
     pub serenity_http: Rc<SerenityHttpClient>,
     pub msg: Message,
-    pub args: RegexSplit<'a, 'a>,
+    pub args: SplitWhitespace<'a>,
 }
 
 type ICommand = Rc<Command>;

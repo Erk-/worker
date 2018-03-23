@@ -1,12 +1,11 @@
 use error::Error;
-use command::{CommandManager, Command, Context};
+use command::{CommandManager, Context};
 use futures::prelude::*;
 use tokio_core::reactor::Handle;
 use std::rc::Rc;
 use std::cell::RefCell;
 use serenity::model::event::{GatewayEvent, MessageCreateEvent};
 use serenity::http::Client as SerenityHttpClient;
-use regex::{Regex, Split as RegexSplit};
 
 pub struct EventHandler {
     handle: Handle,
@@ -29,12 +28,14 @@ impl EventHandler {
 
         match event {
             Dispatch(_, MessageCreate(e)) => {
-                let future = on_message(
-                    e, 
+                let future = on_message(e, 
                     self.command_manager.clone(), 
                     self.handle.clone(), 
                     self.serenity_http.clone()
-                ).map_err(|_| ());
+                ).map_err(|e| match e {
+                    Error::None(_) => {},
+                    _ => error!("error handling MessageCreate: {:?}", e),
+                });
 
                 self.handle.spawn(future);
             },
@@ -45,24 +46,10 @@ impl EventHandler {
     }
 }
 
-fn split_content<'a>(content: String, prefix: String) -> RegexSplit<'a, 'a> {
-    lazy_static! {
-        static ref SPLIT_REGEX: Regex = Regex::new(r"\s+").unwrap();
-    }
-
-    let content = &content[prefix.len()..];
-    SPLIT_REGEX.split(content)
-}
-
 #[async]
 fn get_prefix(_guild_id: u64) -> Result<String, Error> {
     // todo dynamic prefix
     Ok(">".into())
-}
-
-fn get_command(command_manager: Rc<RefCell<CommandManager>>, name: &str) -> Result<Rc<Command>, Error> {
-    let command_manager = command_manager.borrow();
-    command_manager.get(name)
 }
 
 #[async]
@@ -80,25 +67,26 @@ fn on_message(
     if !content.starts_with(&prefix) {
         return Ok(());
     }
-
-    //let content = &content[prefix.len()..];
-    let mut content_iter = split_content(content, prefix);
-    let command_name = content_iter.next()?;
     
-    let command = get_command(command_manager, &command_name.to_lowercase())?;
+    let content_trimmed: String = content.chars().skip(prefix.len()).collect();
+    let mut content_iter = content_trimmed.split_whitespace();
+    let command_name = content_iter.next()?;
+
+    let command_manager = command_manager.borrow();
+    let command = command_manager.get(&command_name.to_lowercase())?;
 
     let context = Context {
-        handle: handle, 
+        handle: handle.clone(), 
         serenity_http: serenity_http,
         msg,
         args: content_iter,
     };
 
-    let future = command.run(context);
+    let future = command.run(context).map_err(|e| match e {
+        Error::None(_) => {},
+        _ => error!("error running command: {:?}", e),
+    });
 
-    if let Err(e) = await!(future) {
-        error!("oh no couldnt run command: {:?}", e);
-    }
-    
+    handle.spawn(future);
     Ok(())
 }
