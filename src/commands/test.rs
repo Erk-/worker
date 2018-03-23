@@ -1,5 +1,6 @@
 use futures::prelude::*;
-use command::{Command, Context, CommandFuture};
+use command::{Command, Context};
+use error::Error;
 
 pub fn test() -> Command {
     Command {
@@ -9,30 +10,13 @@ pub fn test() -> Command {
     }
 }
 
-fn run(ctx: Context) -> CommandFuture {
-    let args = ctx.args.map(|s| s.to_string()).collect::<Vec<String>>();
+#[async(boxed)]
+fn run(ctx: Context) -> Result<(), Error> {
+    let args = ctx.args;
     
-    box ctx.serenity_http.send_message(ctx.msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))
+    let future = ctx.serenity_http.send_message(ctx.msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))
         .map(|m| debug!("Sent message {:?}", m))
-        .map_err(From::from)
+        .map_err(From::from);
+
+    await!(future)
 }
-
-/*pub struct TestCommand;
-
-impl Command for TestCommand {
-    fn names(&self) -> Vec<&'static str> {
-        vec!["test", "t", "meme"]
-    }
-
-    fn description(&self) -> &'static str {
-        "Testing command lol"
-    }
-    
-    fn run(&mut self, ctx: Context) -> CommandFuture {
-        let args = ctx.args.map(|s| s.to_string()).collect::<Vec<String>>();
-        
-        box ctx.serenity_http.send_message(ctx.msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))
-            .map(|m| debug!("Sent message {:?}", m))
-            .map_err(From::from)
-    }
-}*/

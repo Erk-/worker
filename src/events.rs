@@ -14,7 +14,11 @@ pub struct EventHandler {
 }
 
 impl EventHandler {
-    pub fn new(handle: Handle, serenity_http: Rc<SerenityHttpClient>, command_manager: Rc<RefCell<CommandManager>>) -> Result<Self, Error> {
+    pub fn new(
+        handle: Handle, 
+        serenity_http: Rc<SerenityHttpClient>, 
+        command_manager: Rc<RefCell<CommandManager>>
+    ) -> Result<Self, Error> {
         Ok(Self {
             handle,
             serenity_http,
@@ -27,21 +31,24 @@ impl EventHandler {
         use Event::*;
 
         match event {
+            Dispatch(_, Ready(_)) => {
+                info!("Received Ready event!")
+            },
             Dispatch(_, MessageCreate(e)) => {
+                trace!("Received MessageCreate event");
+
                 let future = on_message(e, 
                     self.command_manager.clone(), 
                     self.handle.clone(), 
                     self.serenity_http.clone()
                 ).map_err(|e| match e {
-                    Error::None(_) => {},
+                    Error::None(_) => debug!("none error handling MessageCreate"),
                     _ => error!("error handling MessageCreate: {:?}", e),
                 });
 
                 self.handle.spawn(future);
-            },
-            _ => {
-                // ya nothing else
             }
+            _ => {}
         }
     }
 }
@@ -61,7 +68,11 @@ fn on_message(
 ) -> Result<(), Error> {
     let msg = event.message;
     let content = msg.content.clone();
-    let guild_id = msg.guild_id()?.0;
+
+    // msg.guild_id() returns None because msg events only contain the channel id
+    // so getting the guild id depends on cache which isnt ready for futures branch
+    //let guild_id = msg.guild_id()?.0;
+    let guild_id = 0u64;
 
     let prefix = await!(get_prefix(guild_id))?;
     if !content.starts_with(&prefix) {
@@ -79,11 +90,11 @@ fn on_message(
         handle: handle.clone(), 
         serenity_http: serenity_http,
         msg,
-        args: content_iter,
+        args: content_iter.map(|s| s.to_string()).collect(),
     };
 
     let future = command.run(context).map_err(|e| match e {
-        Error::None(_) => {},
+        Error::None(_) => debug!("none error running command"),
         _ => error!("error running command: {:?}", e),
     });
 

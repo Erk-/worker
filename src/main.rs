@@ -58,7 +58,6 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     ));
 
     let mut command_manager = CommandManager::new(handle.clone());
-    //command_manager.add(Rc::new(RwLock::new(commands::TestCommand {})));
     command_manager.add(Rc::new(commands::test()));
 
     let command_manager = Rc::new(RefCell::new(command_manager));
