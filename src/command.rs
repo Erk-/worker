@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use serenity::model::channel::Message;
 use std::rc::Rc;
 use serenity::http::Client as SerenityHttpClient;
-
-pub type CommandFuture = Box<Future<Item = (), Error = Error>>;
+use cache::DiscordCache;
+use std::cell::RefCell;
 
 pub struct Command {
     pub names: Vec<&'static str>,
@@ -14,17 +14,12 @@ pub struct Command {
     pub executor: fn(Context) -> Box<Future<Item = (), Error = Error>>,
 }
 
-impl Command {
-    pub fn run(&self, ctx: Context) -> CommandFuture {
-        (self.executor)(ctx)
-    }
-}
-
 pub struct Context {
     pub handle: Handle,
     pub serenity_http: Rc<SerenityHttpClient>,
     pub msg: Message,
     pub args: Vec<String>,
+    pub discord_cache: Rc<RefCell<DiscordCache>>,
 }
 
 type ICommand = Rc<Command>;

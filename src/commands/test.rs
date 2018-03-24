@@ -12,9 +12,14 @@ pub fn test() -> Command {
 
 #[async(boxed)]
 fn run(ctx: Context) -> Result<(), Error> {
-    let args = ctx.args;
+    let channel_id = ctx.msg.channel_id.0;
+
+    let guild_id = {
+        let cache_lock = ctx.discord_cache.borrow();
+        cache_lock.get_guild_by_channel(&channel_id)?.clone()
+    };
     
-    let future = ctx.serenity_http.send_message(ctx.msg.channel_id.0, |m| m.content(format!("HELLO WORLD {:?}", args)))
+    let future = ctx.serenity_http.send_message(channel_id, |m| m.content(format!("guild id: {}", guild_id)))
         .map(|m| debug!("Sent message {:?}", m))
         .map_err(From::from);
 

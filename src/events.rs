@@ -6,11 +6,13 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use serenity::model::event::{GatewayEvent, MessageCreateEvent};
 use serenity::http::Client as SerenityHttpClient;
+use cache::DiscordCache;
 
 pub struct EventHandler {
     handle: Handle,
     serenity_http: Rc<SerenityHttpClient>,
     command_manager: Rc<RefCell<CommandManager>>,
+    discord_cache: Rc<RefCell<DiscordCache>>,
 }
 
 impl EventHandler {
@@ -19,16 +21,21 @@ impl EventHandler {
         serenity_http: Rc<SerenityHttpClient>, 
         command_manager: Rc<RefCell<CommandManager>>
     ) -> Result<Self, Error> {
+        let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
+
         Ok(Self {
             handle,
             serenity_http,
             command_manager,
+            discord_cache,
         })
     }
 
-    pub fn on_event(&self, event: GatewayEvent) {
+    pub fn on_event(&mut self, event: GatewayEvent) {
         use GatewayEvent::Dispatch;
         use Event::*;
+
+        self.discord_cache.borrow_mut().update(&event);
 
         match event {
             Dispatch(_, Ready(_)) => {
@@ -37,10 +44,12 @@ impl EventHandler {
             Dispatch(_, MessageCreate(e)) => {
                 trace!("Received MessageCreate event");
 
-                let future = on_message(e, 
+                let future = on_message(
+                    e, 
                     self.command_manager.clone(), 
                     self.handle.clone(), 
-                    self.serenity_http.clone()
+                    self.serenity_http.clone(),
+                    self.discord_cache.clone()
                 ).map_err(|e| match e {
                     Error::None(_) => debug!("none error handling MessageCreate"),
                     _ => error!("error handling MessageCreate: {:?}", e),
@@ -64,7 +73,8 @@ fn on_message(
     event: MessageCreateEvent, 
     command_manager: Rc<RefCell<CommandManager>>, 
     handle: Handle, 
-    serenity_http: Rc<SerenityHttpClient>
+    serenity_http: Rc<SerenityHttpClient>,
+    discord_cache: Rc<RefCell<DiscordCache>>,
 ) -> Result<(), Error> {
     let msg = event.message;
     let content = msg.content.clone();
@@ -91,9 +101,10 @@ fn on_message(
         serenity_http: serenity_http,
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),
+        discord_cache: discord_cache,
     };
 
-    let future = command.run(context).map_err(|e| match e {
+    let future = (command.executor)(context).map_err(|e| match e {
         Error::None(_) => debug!("none error running command"),
         _ => error!("error running command: {:?}", e),
     });

@@ -1,4 +1,4 @@
-#![feature(proc_macro, conservative_impl_trait, generators, try_trait, box_syntax)]
+#![feature(proc_macro, conservative_impl_trait, generators, try_trait, box_syntax, match_default_bindings)]
 
 #[macro_use]
 extern crate log;
@@ -18,6 +18,7 @@ mod error;
 mod command;
 mod commands;
 mod events;
+mod cache;
 
 use error::Error;
 use command::{CommandManager};
@@ -62,7 +63,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let command_manager = Rc::new(RefCell::new(command_manager));
 
-    let event_handler = EventHandler::new(
+    let mut event_handler = EventHandler::new(
         handle.clone(), 
         serenity_http.clone(), 
         command_manager.clone()
