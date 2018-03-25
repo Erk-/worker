@@ -1,5 +1,5 @@
 bot_prefix = "%"
-discord_token = "MTYzMzM0MjM5NTY2MTY4MDY0.DZmZxg.ur1NsRmwsr0P2_IfBg6JuefV2f8"
+discord_token = "Bot MTYzMzM0MjM5NTY2MTY4MDY0.DZmZxg.ur1NsRmwsr0P2_IfBg6JuefV2f8"
 lavalink_shards = 1
 lavalink_user_id = 163334239566168064
 postgres_addr = "postgresql://dabbot_dev:CkQbv8TkV3XIn8gO@158.69.250.213:5432/dabbot_dev"

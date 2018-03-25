@@ -77,6 +77,11 @@ fn on_message(
     discord_cache: Rc<RefCell<DiscordCache>>,
 ) -> Result<(), Error> {
     let msg = event.message;
+
+    if msg.author.bot {
+        return Ok(());
+    }
+    
     let content = msg.content.clone();
 
     // msg.guild_id() returns None because msg events only contain the channel id
