@@ -43,13 +43,28 @@ impl DiscordCache {
                     trace!("guild create: channel_id = {}, guild_id = {}", &channel_id, &guild_id);
                     self.channel_guild_ids.insert(channel_id.clone(), guild_id);
                 }
+
+                let inner = RefCell::new(e.guild.voice_states.iter()
+                    .filter(|(_, voice_state)| voice_state.channel_id.is_some())
+                    .map(|(user_id, voice_state)| {
+                        let VoiceState { ref channel_id, ref session_id, ref token, .. } = voice_state;
+                        let state = CacheVoiceState {
+                            channel_id: channel_id.unwrap().0,
+                            session_id: session_id.to_owned(),
+                            token: token.to_owned(),
+                        };
+                        (user_id.0, state)
+                    })
+                    .collect());
+
+                self.voice_state_updates.insert(guild_id, inner);
             },
             Dispatch(_, GuildDelete(e)) => {
-                let id = e.guild.id.0;
+                let guild_id = e.guild.id.0;
 
                 let channel_ids = self.channel_guild_ids.iter()
-                    .filter_map(move |(channel_id, guild_id)| {
-                        if guild_id == &id {
+                    .filter_map(move |(channel_id, guild_id_1)| {
+                        if guild_id_1 == &guild_id {
                             Some(channel_id.clone())
                         } else {
                             None
@@ -60,6 +75,11 @@ impl DiscordCache {
                 for channel_id in channel_ids.iter() {
                     trace!("guild delete: channel_id = {}", &channel_id);
                     self.channel_guild_ids.remove(channel_id);
+                }
+
+                let has_guild = self.voice_state_updates.contains_key(&guild_id);
+                if has_guild {
+                    self.voice_state_updates.remove(&guild_id);
                 }
             },
             Dispatch(_, VoiceStateUpdate(e)) => {
