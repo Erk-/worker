@@ -133,8 +133,7 @@ impl DiscordCache {
 
     pub fn get_user_voice_state(&self, guild_id: &u64, user_id: &u64) -> Option<CacheVoiceState> {
         let inner = self.voice_state_updates.get(guild_id)?.borrow();
-        let voice_state = inner.get(user_id)?;
-        Some(voice_state.clone())
+        Some(inner.get(user_id)?.clone())
     }
 }
 

@@ -1,7 +1,7 @@
 #![feature(proc_macro, conservative_impl_trait, generators, try_trait, box_syntax, match_default_bindings)]
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate log;
 extern crate env_logger;
 extern crate serenity;
 extern crate lavalink_futures;
@@ -13,19 +13,21 @@ extern crate native_tls;
 extern crate tungstenite;
 extern crate serde_json;
 extern crate regex;
+extern crate toml;
+extern crate serde;
 
 mod error;
 mod command;
 mod commands;
 mod events;
 mod cache;
+mod config;
 
 use error::Error;
 use command::{CommandManager};
 use events::EventHandler;
 use futures::prelude::*;
 use tokio_core::reactor::{Core, Handle};
-use std::env;
 use std::rc::Rc;
 use std::cell::RefCell;
 use hyper::Client as HyperClient;
@@ -45,7 +47,8 @@ fn main() {
 
 #[async]
 fn try_main(handle: Handle) -> Result<(), Error> {
-    let token = format!("Bot {}", env::var("DISCORD_TOKEN").expect("Error no discord token"));
+    let config = config::load("config.toml").expect("Could not load config.toml");
+    let token = config.discord_token.clone();
 
     let mut shard = await!(Shard::new(
         token.clone(), [0, 1], handle.clone()
