@@ -130,9 +130,15 @@ impl DiscordCache {
     pub fn get_guild_by_channel(&self, channel_id: &u64) -> Option<&u64> {
         self.channel_guild_ids.get(channel_id)
     }
+
+    pub fn get_user_voice_state(&self, guild_id: &u64, user_id: &u64) -> Option<CacheVoiceState> {
+        let inner = self.voice_state_updates.get(guild_id)?.borrow();
+        let voice_state = inner.get(user_id)?;
+        Some(voice_state.clone())
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CacheVoiceState {
     pub channel_id: u64,
     pub session_id: String,
