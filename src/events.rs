@@ -19,10 +19,9 @@ impl EventHandler {
     pub fn new(
         handle: Handle, 
         serenity_http: Rc<SerenityHttpClient>, 
-        command_manager: Rc<RefCell<CommandManager>>
+        command_manager: Rc<RefCell<CommandManager>>,
+        discord_cache: Rc<RefCell<DiscordCache>>
     ) -> Result<Self, Error> {
-        let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
-
         Ok(Self {
             handle,
             serenity_http,
@@ -34,8 +33,6 @@ impl EventHandler {
     pub fn on_event(&mut self, event: GatewayEvent) {
         use GatewayEvent::Dispatch;
         use Event::*;
-
-        self.discord_cache.borrow_mut().update(&event);
 
         match event {
             Dispatch(_, Ready(_)) => {
@@ -56,6 +53,9 @@ impl EventHandler {
                 });
 
                 self.handle.spawn(future);
+            },
+            Dispatch(_, VoiceServerUpdate(_)) => {
+                // todo lavalink
             }
             _ => {}
         }

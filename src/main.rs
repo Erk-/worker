@@ -33,6 +33,7 @@ use hyper_tls::HttpsConnector;
 use serenity::gateway::Shard;
 use serenity::model::event::{Event, GatewayEvent};
 use serenity::http::Client as SerenityHttpClient;
+use cache::DiscordCache;
 
 fn main() {
     env_logger::init();
@@ -60,19 +61,22 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let mut command_manager = CommandManager::new(handle.clone());
     command_manager.add(Rc::new(commands::test()));
-
     let command_manager = Rc::new(RefCell::new(command_manager));
+
+    let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
 
     let mut event_handler = EventHandler::new(
         handle.clone(), 
         serenity_http.clone(), 
-        command_manager.clone()
+        command_manager.clone(),
+        discord_cache.clone(),
     )?;
 
     #[async]
     for message in shard.messages() {
         let event = shard.parse(message)?;
         shard.process(&event);
+        discord_cache.borrow_mut().update(&event);
         event_handler.on_event(event);
     }
 
