@@ -15,6 +15,7 @@ extern crate serde_json;
 extern crate regex;
 extern crate toml;
 extern crate serde;
+extern crate futures_stream_select_all;
 
 mod error;
 mod command;
@@ -22,6 +23,7 @@ mod commands;
 mod events;
 mod cache;
 mod config;
+mod shardmanager;
 
 use error::Error;
 use command::{CommandManager};
@@ -36,13 +38,20 @@ use serenity::gateway::Shard;
 use serenity::model::event::{Event, GatewayEvent};
 use serenity::http::Client as SerenityHttpClient;
 use cache::DiscordCache;
+use futures::{Sink, StartSend, Poll, AsyncSink, Async};
+use tungstenite::{Message as TungsteniteMessage, Error as TungsteniteError};
+use futures::sync::mpsc::{self, Receiver, Sender};
+use futures_stream_select_all::select_all;
 
 fn main() {
     env_logger::init();
 
     let mut core = Core::new().expect("Error creating event loop");
     let future = try_main(core.handle()).map_err(Box::new);
-    println!("Error running future: {:?}", core.run(future));
+
+    if let Err(e) = core.run(future) {
+        println!("Error running future: {:?}", e);
+    }
 }
 
 #[async]
@@ -50,8 +59,8 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let config = config::load("config.toml").expect("Could not load config.toml");
     let token = config.discord_token.clone();
 
-    let mut shard = await!(Shard::new(
-        token.clone(), [0, 1], handle.clone()
+    let shard_manager = await!(shardmanager::new(
+        handle.clone(), token.clone(), [0, 2, 3],
     ))?;
 
     let http_client = Rc::new(HyperClient::configure()
@@ -75,13 +84,48 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         discord_cache.clone(),
     )?;
 
+    let shards = shard_manager.shards();
+    let streams = shards.into_iter()
+        .map(|shard| {
+            let stream = shard.borrow_mut().messages();
+            stream.map(move |result| {
+                (shard.clone(), result)
+            })
+        })
+        .collect::<Vec<_>>();
+
     #[async]
-    for message in shard.messages() {
-        let event = shard.parse(message)?;
-        shard.process(&event);
+    for (shard, message) in select_all::<_, _, TungsteniteError>(streams) {
+        let event = shard.borrow_mut().parse(message)?;
+        shard.borrow_mut().process(&event);
         discord_cache.borrow_mut().update(&event);
         event_handler.on_event(event);
     }
 
     Ok(())
 }
+
+/*struct MessageSink;
+
+impl Sink for MessageSink {
+    type SinkItem = TungsteniteMessage;
+    type Error = Error;
+
+    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
+        /*if self.messages.len() == 8 {
+            // buffer is full
+            return AsyncSink::NotReady;
+        }
+
+        self.messages.push(item);*/
+        AsyncSink::Ready
+    }
+
+    fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
+        /*if self.messages.is_empty() {*/
+            Ok(Async::Ready(()))
+        /*} else {
+            Ok(Async::NotReady)
+        }*/
+    }
+}*/
