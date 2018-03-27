@@ -7,6 +7,8 @@ use std::rc::Rc;
 use serenity::http::Client as SerenityHttpClient;
 use cache::DiscordCache;
 use std::cell::RefCell;
+use serenity::gateway::Shard;
+use serenity::builder::CreateMessage;
 
 pub struct Command {
     pub names: Vec<&'static str>,
@@ -20,6 +22,20 @@ pub struct Context {
     pub msg: Message,
     pub args: Vec<String>,
     pub discord_cache: Rc<RefCell<DiscordCache>>,
+    pub shard: Rc<RefCell<Shard>>,
+}
+
+impl Context {
+    pub fn send_message<F>(&self, m: F)
+    where F: FnOnce(CreateMessage) -> CreateMessage + 'static {
+        let channel_id = self.msg.channel_id.0;
+
+        let future = self.serenity_http.send_message(channel_id, m)
+            .map(move |m| trace!("Sent message to channel {}: {}", channel_id, m.content))
+            .map_err(|e| error!("Error sending message {:?}", e));
+
+        self.handle.spawn(future);
+    }
 }
 
 type ICommand = Rc<Command>;

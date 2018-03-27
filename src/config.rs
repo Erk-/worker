@@ -2,6 +2,13 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Result as IOResult;
 
+#[derive(Deserialize, Debug)]
+struct Sharding {
+    pub lower: u64,
+    pub upper: u64,
+    pub total: u64,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Node {
     pub http_host: String,
@@ -18,6 +25,7 @@ pub struct Config {
     pub lavalink_nodes: Vec<Node>,
     pub postgres_addr: String,
     pub owners: Vec<u64>,
+    sharding: Sharding,
 }
 
 pub fn load(path: &str) -> IOResult<Config> {
@@ -27,4 +35,11 @@ pub fn load(path: &str) -> IOResult<Config> {
     let config: Config = ::toml::from_str(&contents)
         .expect("could not parse config");
     Ok(config)
+}
+
+impl Config {
+    pub fn sharding(&self) -> [u64; 3] {
+        let sharding = &self.sharding;
+        [sharding.lower, sharding.upper, sharding.total]
+    }
 }

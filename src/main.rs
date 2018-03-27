@@ -1,6 +1,7 @@
 #![feature(proc_macro, conservative_impl_trait, generators, try_trait, box_syntax, match_default_bindings)]
 
 #[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate serenity;
@@ -11,7 +12,6 @@ extern crate hyper;
 extern crate hyper_tls;
 extern crate native_tls;
 extern crate tungstenite;
-extern crate serde_json;
 extern crate regex;
 extern crate toml;
 extern crate serde;
@@ -23,7 +23,7 @@ mod commands;
 mod events;
 mod cache;
 mod config;
-mod shardmanager;
+mod shards;
 
 use error::Error;
 use command::{CommandManager};
@@ -34,13 +34,10 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
-use serenity::gateway::Shard;
 use serenity::model::event::{Event, GatewayEvent};
 use serenity::http::Client as SerenityHttpClient;
 use cache::DiscordCache;
-use futures::{Sink, StartSend, Poll, AsyncSink, Async};
-use tungstenite::{Message as TungsteniteMessage, Error as TungsteniteError};
-use futures::sync::mpsc::{self, Receiver, Sender};
+use tungstenite::Error as TungsteniteError;
 use futures_stream_select_all::select_all;
 
 fn main() {
@@ -58,9 +55,10 @@ fn main() {
 fn try_main(handle: Handle) -> Result<(), Error> {
     let config = config::load("config.toml").expect("Could not load config.toml");
     let token = config.discord_token.clone();
+    let sharding = config.sharding();
 
-    let shard_manager = await!(shardmanager::new(
-        handle.clone(), token.clone(), [0, 2, 3],
+    let shard_manager = await!(shards::create_shard_manager(
+        handle.clone(), token.clone(), sharding,
     ))?;
 
     let http_client = Rc::new(HyperClient::configure()
@@ -73,6 +71,8 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let mut command_manager = CommandManager::new(handle.clone());
     command_manager.add(Rc::new(commands::test()));
+    command_manager.add(Rc::new(commands::join()));
+    command_manager.add(Rc::new(commands::leave()));
     let command_manager = Rc::new(RefCell::new(command_manager));
 
     let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
@@ -96,10 +96,15 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     #[async]
     for (shard, message) in select_all::<_, _, TungsteniteError>(streams) {
-        let event = shard.borrow_mut().parse(message)?;
-        shard.borrow_mut().process(&event);
+        let event = {
+            let mut lock = shard.borrow_mut();
+            let event = lock.parse(message)?;
+            lock.process(&event);
+            event
+        };
+
         discord_cache.borrow_mut().update(&event);
-        event_handler.on_event(event);
+        event_handler.on_event(event, shard);
     }
 
     Ok(())

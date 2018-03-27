@@ -7,6 +7,7 @@ use std::cell::RefCell;
 use serenity::model::event::{GatewayEvent, MessageCreateEvent};
 use serenity::http::Client as SerenityHttpClient;
 use cache::DiscordCache;
+use serenity::gateway::Shard;
 
 pub struct EventHandler {
     handle: Handle,
@@ -30,7 +31,7 @@ impl EventHandler {
         })
     }
 
-    pub fn on_event(&mut self, event: GatewayEvent) {
+    pub fn on_event(&mut self, event: GatewayEvent, shard: Rc<RefCell<Shard>>) {
         use GatewayEvent::Dispatch;
         use Event::*;
 
@@ -46,7 +47,8 @@ impl EventHandler {
                     self.command_manager.clone(), 
                     self.handle.clone(), 
                     self.serenity_http.clone(),
-                    self.discord_cache.clone()
+                    self.discord_cache.clone(),
+                    shard,
                 ).map_err(|e| match e {
                     Error::None(_) => debug!("none error handling MessageCreate"),
                     _ => error!("error handling MessageCreate: {:?}", e),
@@ -75,6 +77,7 @@ fn on_message(
     handle: Handle, 
     serenity_http: Rc<SerenityHttpClient>,
     discord_cache: Rc<RefCell<DiscordCache>>,
+    shard: Rc<RefCell<Shard>>,
 ) -> Result<(), Error> {
     let msg = event.message;
 
@@ -107,6 +110,7 @@ fn on_message(
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),
         discord_cache: discord_cache,
+        shard,
     };
 
     let future = (command.executor)(context).map_err(|e| match e {

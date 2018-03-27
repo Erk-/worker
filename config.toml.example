@@ -1,0 +1,16 @@
+bot_prefix = ""
+discord_token = ""
+lavalink_shards =
+lavalink_user_id =
+postgres_addr = ""
+owners = []
+
+[sharding]
+lower = 0
+upper = 0
+total = 1
+
+[[lavalink_nodes]]
+http_host = ""
+websocket_host = ""
+password = ""

@@ -24,7 +24,7 @@ impl DiscordCache {
                     let channel = lock.borrow();
                     let channel_id = channel.id.0;
                     let guild_id = channel.guild_id.0;
-                    trace!("channel create: channel_id = {}, guild_id = {}", &channel_id, &guild_id);
+                    trace!("channel create: channel_id={} guild_id={}", &channel_id, &guild_id);
                     self.channel_guild_ids.insert(channel_id, guild_id);
                 }
             },
@@ -32,7 +32,7 @@ impl DiscordCache {
                 if let Channel::Guild(ref lock) = e.channel {
                     let channel = lock.borrow();
                     let channel_id = channel.id.0;
-                    trace!("channel delete: channel_id = {}", &channel_id);
+                    trace!("channel delete: channel_id={}", &channel_id);
                     self.channel_guild_ids.remove(&channel_id);
                 }
             },
@@ -40,7 +40,7 @@ impl DiscordCache {
                 let guild_id = e.guild.id.0;
 
                 for ChannelId(channel_id) in e.guild.channels.keys() {
-                    trace!("guild create: channel_id = {}, guild_id = {}", &channel_id, &guild_id);
+                    trace!("guild create: channel_id={} guild_id={}", &channel_id, &guild_id);
                     self.channel_guild_ids.insert(channel_id.clone(), guild_id);
                 }
 
@@ -73,7 +73,7 @@ impl DiscordCache {
                     .collect::<Vec<u64>>();
                 
                 for channel_id in channel_ids.iter() {
-                    trace!("guild delete: channel_id = {}", &channel_id);
+                    trace!("guild delete channel_id={}", &channel_id);
                     self.channel_guild_ids.remove(channel_id);
                 }
 

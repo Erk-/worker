@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use serenity::gateway::{Shard, ShardStream};
+use serenity::gateway::Shard;
 use std::rc::Rc;
 use std::cell::RefCell;
 use error::Error;
@@ -14,7 +14,7 @@ pub struct ShardManager {
 }
 
 #[async]
-pub fn new(handle: Handle, token: String, range: [u64; 3]) -> Result<ShardManager, Error> {
+pub fn create_shard_manager(handle: Handle, token: String, range: [u64; 3]) -> Result<ShardManager, Error> {
     let mut shards = HashMap::with_capacity((range[1] - range[0]) as usize);
 
     for shard_id in range[0]..range[1]+1 {
