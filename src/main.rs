@@ -6,6 +6,7 @@
 extern crate env_logger;
 extern crate serenity;
 extern crate lavalink_futures;
+extern crate lavalink;
 extern crate futures_await as futures;
 extern crate tokio_core;
 extern crate hyper;
@@ -16,6 +17,7 @@ extern crate regex;
 extern crate toml;
 extern crate serde;
 extern crate futures_stream_select_all;
+extern crate websocket;
 
 mod error;
 mod command;
@@ -27,7 +29,7 @@ mod shards;
 
 use error::Error;
 use command::{CommandManager};
-use events::EventHandler;
+use events::{DiscordEventHandler, LavalinkEventHandler};
 use futures::prelude::*;
 use tokio_core::reactor::{Core, Handle};
 use std::rc::Rc;
@@ -39,6 +41,8 @@ use serenity::http::Client as SerenityHttpClient;
 use cache::DiscordCache;
 use tungstenite::Error as TungsteniteError;
 use futures_stream_select_all::select_all;
+use lavalink_futures::nodes::NodeManager;
+use futures::future;
 
 fn main() {
     env_logger::init();
@@ -57,9 +61,9 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let token = config.discord_token.clone();
     let sharding = config.sharding();
 
-    let shard_manager = await!(shards::create_shard_manager(
+    let shard_manager = Rc::new(await!(shards::create_shard_manager(
         handle.clone(), token.clone(), sharding,
-    ))?;
+    ))?);
 
     let http_client = Rc::new(HyperClient::configure()
         .connector(HttpsConnector::new(4, &handle)?)
@@ -77,11 +81,20 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
 
-    let mut event_handler = EventHandler::new(
+    let lavalink_event_handler = RefCell::new(box LavalinkEventHandler::new(shard_manager.clone()));
+    let mut node_manager = NodeManager::new(handle.clone(), lavalink_event_handler);
+
+    for node_config in config.node_configs().into_iter() {
+        let future = node_manager.add_node(node_config);
+        node_manager = await!(future)?;
+    }
+
+    let mut event_handler = DiscordEventHandler::new(
         handle.clone(), 
         serenity_http.clone(), 
         command_manager.clone(),
         discord_cache.clone(),
+        Rc::new(RefCell::new(node_manager)),
     )?;
 
     let shards = shard_manager.shards();
@@ -109,28 +122,3 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     Ok(())
 }
-
-/*struct MessageSink;
-
-impl Sink for MessageSink {
-    type SinkItem = TungsteniteMessage;
-    type Error = Error;
-
-    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
-        /*if self.messages.len() == 8 {
-            // buffer is full
-            return AsyncSink::NotReady;
-        }
-
-        self.messages.push(item);*/
-        AsyncSink::Ready
-    }
-
-    fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
-        /*if self.messages.is_empty() {*/
-            Ok(Async::Ready(()))
-        /*} else {
-            Ok(Async::NotReady)
-        }*/
-    }
-}*/

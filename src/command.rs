@@ -9,6 +9,7 @@ use cache::DiscordCache;
 use std::cell::RefCell;
 use serenity::gateway::Shard;
 use serenity::builder::CreateMessage;
+use lavalink_futures::nodes::NodeManager;
 
 pub struct Command {
     pub names: Vec<&'static str>,
@@ -23,6 +24,7 @@ pub struct Context {
     pub args: Vec<String>,
     pub discord_cache: Rc<RefCell<DiscordCache>>,
     pub shard: Rc<RefCell<Shard>>,
+    pub node_manager: Rc<RefCell<NodeManager>>,
 }
 
 impl Context {

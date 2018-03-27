@@ -1,6 +1,5 @@
 bot_prefix = ""
 discord_token = ""
-lavalink_shards =
 lavalink_user_id =
 postgres_addr = ""
 owners = []

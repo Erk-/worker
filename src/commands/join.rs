@@ -32,6 +32,19 @@ fn run(ctx: Context) -> Result<(), Error> {
         },
     };
 
+    let mut node_manager = ctx.node_manager.borrow_mut();
+    
+    {
+        let player_manager = node_manager.player_manager.borrow();
+        if player_manager.has(&guild_id) {
+            ctx.send_message(|m| m.content("YO WE ALREADY PLAYING LMAO"));
+            return Ok(());
+        }
+    }
+
+    node_manager.create_player(guild_id, None)?;
+    trace!("created audio player for guild {}", &guild_id);
+
     let map = json!({
         "op": VoiceOpCode::SessionDescription.num(),
         "d": {

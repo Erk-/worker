@@ -32,6 +32,11 @@ fn run(ctx: Context) -> Result<(), Error> {
         },
     };
 
+    let mut node_manager = ctx.node_manager.borrow_mut();
+    if node_manager.remove_player(&guild_id)? {
+        trace!("removed player for guild {}", &guild_id);
+    }
+
     let none_channel_id: Option<u64> = None;
 
     let map = json!({

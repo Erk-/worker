@@ -36,4 +36,8 @@ impl ShardManager {
     pub fn shards(&self) -> Vec<IShard> {
         self.shards.values().map(|shard| shard.clone()).collect()
     }
+
+    pub fn get_shard(&self, shard_id: &u64) -> Option<IShard> {
+        Some(self.shards.get(shard_id)?.clone())
+    }
 }

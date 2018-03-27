@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Result as IOResult;
+use lavalink_futures::nodes::NodeConfig;
 
 #[derive(Deserialize, Debug)]
 struct Sharding {
@@ -20,7 +21,6 @@ pub struct Node {
 pub struct Config {
     pub bot_prefix: String,
     pub discord_token: String,
-    pub lavalink_shards: u64,
     pub lavalink_user_id: u64,
     pub lavalink_nodes: Vec<Node>,
     pub postgres_addr: String,
@@ -41,5 +41,20 @@ impl Config {
     pub fn sharding(&self) -> [u64; 3] {
         let sharding = &self.sharding;
         [sharding.lower, sharding.upper, sharding.total]
+    }
+
+    pub fn node_configs(&self) -> Vec<NodeConfig> {
+        let num_shards = self.sharding.total;
+        let user_id = self.lavalink_user_id;
+
+        self.lavalink_nodes.iter()
+            .map(move |node| NodeConfig {
+                http_host: node.http_host.clone(),
+                num_shards,
+                password: node.password.clone(),
+                user_id: user_id.to_string(),
+                websocket_host: node.websocket_host.clone(),
+            })
+            .collect()
     }
 }
