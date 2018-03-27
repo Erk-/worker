@@ -77,6 +77,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     command_manager.add(Rc::new(commands::test()));
     command_manager.add(Rc::new(commands::join()));
     command_manager.add(Rc::new(commands::leave()));
+    command_manager.add(Rc::new(commands::play()));
     let command_manager = Rc::new(RefCell::new(command_manager));
 
     let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
