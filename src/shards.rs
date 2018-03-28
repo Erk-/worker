@@ -1,11 +1,12 @@
+use error::Error;
+
 use std::collections::HashMap;
-use serenity::gateway::Shard;
 use std::rc::Rc;
 use std::cell::RefCell;
-use error::Error;
+use std::time::Duration;
+use serenity::gateway::Shard;
 use futures::prelude::*;
 use tokio_core::reactor::{Handle, Timeout};
-use std::time::Duration;
 
 type IShard = Rc<RefCell<Shard>>;
 
@@ -24,6 +25,7 @@ pub fn create_shard_manager(handle: Handle, token: String, range: [u64; 3]) -> R
         ))?;
 
         shards.insert(shard_id, Rc::new(RefCell::new(shard)));
+
         await!(Timeout::new(Duration::from_secs(5), &handle)?)?;
     }
 

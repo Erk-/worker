@@ -1,19 +1,22 @@
 use error::Error;
-use command::{CommandManager, Context};
+use command::{CommandManager, Context, run as run_command};
+use shards::ShardManager;
+use cache::DiscordCache;
+
 use futures::prelude::*;
+use futures::future;
 use tokio_core::reactor::Handle;
 use std::rc::Rc;
 use std::cell::RefCell;
 use serenity::model::event::{GatewayEvent, MessageCreateEvent};
 use serenity::http::Client as SerenityHttpClient;
-use cache::DiscordCache;
 use serenity::gateway::Shard;
 use lavalink_futures::reexports::OwnedMessage;
-use futures::future;
-use shards::ShardManager;
-use tungstenite::Message as TungsteniteMessage;
 use lavalink_futures::nodes::NodeManager;
 use lavalink::model::VoiceUpdate;
+use tungstenite::Message as TungsteniteMessage;
+
+type LavalinkHandlerFuture<T> = Box<Future<Item = T, Error = ()>>;
 
 pub struct DiscordEventHandler {
     handle: Handle,
@@ -144,17 +147,17 @@ fn on_message(
     node_manager: Rc<RefCell<NodeManager>>,
 ) -> Result<(), Error> {
     let msg = event.message;
-
     if msg.author.bot {
         return Ok(());
     }
     
     let content = msg.content.clone();
+    let channel_id = msg.channel_id.0;
 
-    // msg.guild_id() returns None because msg events only contain the channel id
-    // so getting the guild id depends on cache which isnt ready for futures branch
-    //let guild_id = msg.guild_id()?.0;
-    let guild_id = 0u64;
+    let guild_id = {
+        let cache_lock = discord_cache.borrow();
+        cache_lock.get_guild_by_channel(&channel_id)?.clone()
+    };
 
     let prefix = await!(get_prefix(guild_id))?;
     if !content.starts_with(&prefix) {
@@ -170,24 +173,23 @@ fn on_message(
 
     let context = Context {
         handle: handle.clone(), 
-        serenity_http: serenity_http,
+        serenity_http: serenity_http.clone(),
+        discord_cache: discord_cache,
+        node_manager,
+        shard,
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),
-        discord_cache: discord_cache,
-        shard,
-        node_manager,
     };
 
-    let future = (command.executor)(context).map_err(|e| match e {
-        Error::None(_) => debug!("none error running command"),
-        _ => error!("error running command: {:?}", e),
-    });
+    let future = run_command(command.executor, context)
+        .map_err(|e| match e {
+            Error::None(_) => debug!("none error running command"),
+            _ => error!("error running command: {:?}", e),
+        });
 
     handle.spawn(future);
     Ok(())
 }
-
-type LavalinkHandlerFuture<T> = Box<Future<Item = T, Error = ()>>;
 
 pub struct LavalinkEventHandler {
     shard_manager: Rc<ShardManager>,

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
+use std::cell::RefCell;
 use serenity::model::channel::Channel;
 use serenity::model::event::GatewayEvent::{self, Dispatch};
 use serenity::model::id::ChannelId;
 use serenity::model::voice::VoiceState;
-use std::cell::RefCell;
 
 #[derive(Default)]
 pub struct DiscordCache {

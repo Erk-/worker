@@ -30,7 +30,10 @@ mod shards;
 use error::Error;
 use command::{CommandManager};
 use events::{DiscordEventHandler, LavalinkEventHandler};
+use cache::DiscordCache;
+
 use futures::prelude::*;
+use futures_stream_select_all::select_all;
 use tokio_core::reactor::{Core, Handle};
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -38,11 +41,8 @@ use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
 use serenity::model::event::{Event, GatewayEvent};
 use serenity::http::Client as SerenityHttpClient;
-use cache::DiscordCache;
 use tungstenite::Error as TungsteniteError;
-use futures_stream_select_all::select_all;
 use lavalink_futures::nodes::NodeManager;
-use futures::future;
 
 fn main() {
     env_logger::init();
@@ -73,11 +73,10 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         http_client.clone(), handle.clone(), Rc::new(token)
     ));
 
-    let mut command_manager = CommandManager::new(handle.clone());
-    command_manager.add(Rc::new(commands::test()));
-    command_manager.add(Rc::new(commands::join()));
-    command_manager.add(Rc::new(commands::leave()));
-    command_manager.add(Rc::new(commands::play()));
+    let mut command_manager = CommandManager::new(handle.clone(), vec![
+        commands::test(), commands::join(),
+        commands::leave(), commands::play(),
+    ]);
     let command_manager = Rc::new(RefCell::new(command_manager));
 
     let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
@@ -102,8 +101,8 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let streams = shards.into_iter()
         .map(|shard| {
             let stream = shard.borrow_mut().messages();
-            stream.map(move |result| {
-                (shard.clone(), result)
+            stream.map(move |message| {
+                (shard.clone(), message)
             })
         })
         .collect::<Vec<_>>();

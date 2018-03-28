@@ -1,11 +1,11 @@
 use std::option::NoneError;
 use std::io::Error as IoError;
 use std::error::Error as StdError;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use native_tls::Error as NativeTlsError;
 use serenity::Error as SerenityError;
 use tungstenite::error::Error as TungsteniteError;
 use serde_json::error::Error as SerdeJsonError;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use lavalink_futures::Error as LavalinkError;
 
 #[derive(Debug)]
