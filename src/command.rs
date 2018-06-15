@@ -49,7 +49,7 @@ pub fn run(executor: CommandExecutor, ctx: Context) -> Result<(), Error> {
 
     let response = await!((executor)(ctx))?;
     let m = match response {
-        Response::Text(content) => |m: CreateMessage| m.content(content),
+        Response::Text(content) => |mut m: CreateMessage| { m.content(content); m },
     };
 
     let future = serenity_http.send_message(channel_id, m)

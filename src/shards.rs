@@ -17,6 +17,7 @@ pub struct ShardManager {
 #[async]
 pub fn create_shard_manager(handle: Handle, token: String, range: [u64; 3]) -> Result<ShardManager, Error> {
     let mut shards = HashMap::with_capacity((range[1] - range[0]) as usize);
+    let token = Rc::new(token);
 
     for shard_id in range[0]..range[1]+1 {
         info!("Starting shard id {}", shard_id);

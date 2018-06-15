@@ -1,4 +1,4 @@
-#![feature(proc_macro, conservative_impl_trait, generators, try_trait, box_syntax, match_default_bindings)]
+#![feature(proc_macro, generators, try_trait, box_syntax)]
 
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate serde_json;
@@ -51,7 +51,7 @@ fn main() {
     let future = try_main(core.handle()).map_err(Box::new);
 
     if let Err(e) = core.run(future) {
-        println!("Error running future: {:?}", e);
+        error!("Error running future: {:?}", e);
     }
 }
 
@@ -71,7 +71,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let serenity_http = Rc::new(SerenityHttpClient::new(
         http_client.clone(), handle.clone(), Rc::new(token)
-    ));
+    )?);
 
     let mut command_manager = CommandManager::new(handle.clone(), vec![
         commands::test(), commands::join(),

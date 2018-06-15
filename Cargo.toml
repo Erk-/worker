@@ -25,5 +25,5 @@ websocket = "0.20.2"
 
 [dependencies.serenity]
 git = "https://github.com/zeyla/serenity"
-branch = "futures"
+branch = "v0.6.x"
 default-features = true

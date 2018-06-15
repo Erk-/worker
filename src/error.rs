@@ -4,6 +4,7 @@ use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use native_tls::Error as NativeTlsError;
 use serenity::Error as SerenityError;
+use serenity::prelude::HttpError as SerenityHttpError;
 use tungstenite::error::Error as TungsteniteError;
 use serde_json::error::Error as SerdeJsonError;
 use lavalink_futures::Error as LavalinkError;
@@ -14,6 +15,7 @@ pub enum Error {
     None(NoneError),
     NativeTls(NativeTlsError),
     Serenity(SerenityError),
+    SerenityHttp(SerenityHttpError),
     Tungstenite(TungsteniteError),
     SerdeJson(SerdeJsonError),
     Lavalink(LavalinkError),
@@ -40,6 +42,12 @@ impl From<NativeTlsError> for Error {
 impl From<SerenityError> for Error {
     fn from(e: SerenityError) -> Self {
         Error::Serenity(e)
+    }
+}
+
+impl From<SerenityHttpError> for Error {
+    fn from(e: SerenityHttpError) -> Self {
+        Error::SerenityHttp(e)
     }
 }
 
@@ -74,6 +82,7 @@ impl StdError for Error {
             Error::None(_) => "Option value not present",
             Error::NativeTls(ref e) => e.description(),
             Error::Serenity(ref e) => e.description(),
+            Error::SerenityHttp(ref e) => e.description(),
             Error::Tungstenite(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
