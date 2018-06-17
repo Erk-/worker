@@ -14,7 +14,7 @@ pub fn play() -> Command {
 #[async(boxed)]
 fn run(ctx: Context) -> CommandResult {
     let tracks = {
-        let id = ctx.args[0].clone();
+        let id = ctx.args.join(" ");
 
         let (host, password) = {
             let node_manager = ctx.node_manager.borrow_mut();
@@ -23,9 +23,10 @@ fn run(ctx: Context) -> CommandResult {
             (node.http_host.clone(), node.password.clone())
         };
 
-        debug!("requesting tracks for {}", &id);
-        await!(ctx.http_client.load_tracks(&host, &password, id))?
+        debug!("requesting tracks for {}", id);
+        await!(ctx.http_client.load_tracks(host, password, id))?
     };
+    debug!("returned tracks: {:?}", &tracks);
 
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
