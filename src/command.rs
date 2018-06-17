@@ -1,4 +1,5 @@
 use error::Error;
+use events::HyperHttpClient;
 use cache::DiscordCache;
 
 use futures::prelude::*;
@@ -24,6 +25,7 @@ pub struct Command {
 
 pub struct Context {
     pub handle: Handle,
+    pub http_client: Rc<HyperHttpClient>,
     pub serenity_http: Rc<SerenityHttpClient>,
     pub discord_cache: Rc<RefCell<DiscordCache>>,
     pub node_manager: Rc<RefCell<NodeManager>>,

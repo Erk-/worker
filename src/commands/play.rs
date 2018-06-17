@@ -1,6 +1,7 @@
 use command::{Command, Context, CommandResult, Response};
 
 use futures::prelude::*;
+use lavalink::rest::hyper::LavalinkRestRequester;
 
 pub fn play() -> Command {
     Command {
@@ -12,6 +13,20 @@ pub fn play() -> Command {
 
 #[async(boxed)]
 fn run(ctx: Context) -> CommandResult {
+    let tracks = {
+        let id = ctx.args[0].clone();
+
+        let (host, password) = {
+            let node_manager = ctx.node_manager.borrow_mut();
+            let node = node_manager.get_node(node_manager.best_node()?)?;
+
+            (node.http_host.clone(), node.password.clone())
+        };
+
+        debug!("requesting tracks for {}", &id);
+        await!(ctx.http_client.load_tracks(&host, &password, id))?
+    };
+
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
     
@@ -31,8 +46,8 @@ fn run(ctx: Context) -> CommandResult {
             return Response::text("no player in this guild");
         }
     };
-    
-    if let Err(e) = player.play("QAAAoQIALk1JTkUgRElBTU9ORFMgfCBtaU5FQ1JBRlQgUEFST0RZIE9GIFRBS0UgT04gTUUAGU1pbmVDcmFmdCBBd2Vzb21lIFBhcm9keXMAAAAAAAOKQAALZGdoYTlTMzlZNk0AAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kZ2hhOVMzOVk2TQAHeW91dHViZQAAAAAAAAAA==", None, None) {
+
+    if let Err(e) = player.play(&tracks[0].track, None, None) {
         error!("error playing track: {:?}", e);
         Response::text("error playing track")
     } else {

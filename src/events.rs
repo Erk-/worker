@@ -5,6 +5,9 @@ use cache::DiscordCache;
 
 use futures::prelude::*;
 use futures::future;
+use hyper::Client;
+use hyper::client::HttpConnector;
+use hyper_tls::HttpsConnector;
 use tokio_core::reactor::Handle;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -16,10 +19,12 @@ use lavalink_futures::nodes::NodeManager;
 use lavalink::model::VoiceUpdate;
 use tungstenite::Message as TungsteniteMessage;
 
+pub type HyperHttpClient = Client<HttpsConnector<HttpConnector>>;
 type LavalinkHandlerFuture<T> = Box<Future<Item = T, Error = ()>>;
 
 pub struct DiscordEventHandler {
     handle: Handle,
+    http_client: Rc<HyperHttpClient>,
     serenity_http: Rc<SerenityHttpClient>,
     command_manager: Rc<RefCell<CommandManager>>,
     discord_cache: Rc<RefCell<DiscordCache>>,
@@ -30,6 +35,7 @@ pub struct DiscordEventHandler {
 impl DiscordEventHandler {
     pub fn new(
         handle: Handle, 
+        http_client: Rc<HyperHttpClient>,
         serenity_http: Rc<SerenityHttpClient>, 
         command_manager: Rc<RefCell<CommandManager>>,
         discord_cache: Rc<RefCell<DiscordCache>>,
@@ -37,6 +43,7 @@ impl DiscordEventHandler {
     ) -> Result<Self, Error> {
         Ok(Self {
             handle,
+            http_client,
             serenity_http,
             command_manager,
             discord_cache,
@@ -61,6 +68,7 @@ impl DiscordEventHandler {
                     e, 
                     self.command_manager.clone(), 
                     self.handle.clone(), 
+                    self.http_client.clone(),
                     self.serenity_http.clone(),
                     self.discord_cache.clone(),
                     shard,
@@ -141,6 +149,7 @@ fn on_message(
     event: MessageCreateEvent, 
     command_manager: Rc<RefCell<CommandManager>>, 
     handle: Handle, 
+    http_client: Rc<HyperHttpClient>,
     serenity_http: Rc<SerenityHttpClient>,
     discord_cache: Rc<RefCell<DiscordCache>>,
     shard: Rc<RefCell<Shard>>,
@@ -169,6 +178,7 @@ fn on_message(
 
     let context = Context {
         handle: handle.clone(), 
+        http_client: http_client.clone(),
         serenity_http: serenity_http.clone(),
         discord_cache: discord_cache,
         node_manager,

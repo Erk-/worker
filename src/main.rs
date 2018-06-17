@@ -91,6 +91,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let mut event_handler = DiscordEventHandler::new(
         handle.clone(), 
+        http_client.clone(),
         serenity_http.clone(), 
         command_manager.clone(),
         discord_cache.clone(),

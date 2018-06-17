@@ -7,7 +7,8 @@ use serenity::Error as SerenityError;
 use serenity::prelude::HttpError as SerenityHttpError;
 use tungstenite::error::Error as TungsteniteError;
 use serde_json::error::Error as SerdeJsonError;
-use lavalink_futures::Error as LavalinkError;
+use lavalink_futures::Error as LavalinkFuturesError;
+use lavalink::Error as LavalinkError;
 
 #[derive(Debug)]
 pub enum Error {
@@ -19,6 +20,7 @@ pub enum Error {
     Tungstenite(TungsteniteError),
     SerdeJson(SerdeJsonError),
     Lavalink(LavalinkError),
+    LavalinkFutures(LavalinkFuturesError),
 }
 
 impl From<IoError> for Error {
@@ -69,6 +71,12 @@ impl From<LavalinkError> for Error {
     }
 }
 
+impl From<LavalinkFuturesError> for Error {
+    fn from(e: LavalinkFuturesError) -> Self {
+        Error::LavalinkFutures(e)
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         f.write_str(self.description())
@@ -86,6 +94,7 @@ impl StdError for Error {
             Error::Tungstenite(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
+            Error::LavalinkFutures(ref e) => e.description(),
         }
     }
 }
