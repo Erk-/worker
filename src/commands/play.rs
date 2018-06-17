@@ -12,11 +12,10 @@ pub fn play() -> Command {
 
 #[async(boxed)]
 fn run(ctx: Context) -> CommandResult {
-    let channel_id = ctx.msg.channel_id.0;
     let user_id = ctx.msg.author.id.0;
+    let guild_id = ctx.msg.guild_id?.0;
     
     let cache_lock = ctx.discord_cache.borrow();
-    let guild_id = cache_lock.get_guild_by_channel(&channel_id)?.clone();
     let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
 
     if voice_state.is_none() {
@@ -33,7 +32,7 @@ fn run(ctx: Context) -> CommandResult {
         }
     };
     
-    if let Err(e) = player.play("QAAAoQIALk1JTkUgRElBTU9ORFMgfCBtaU5FQ1JBRlQgUEFST0RZIE9GIFRBS0UgT04gTUUAGU1pbmVDcmFmdCBBd2Vzb21lIFBhcm9keXMAAAAAAAOKQAALZGdoYTlTMzlZNk0AAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kZ2hhOVMzOVk2TQAHeW91dHViZQAAAAAAAAAA", None, None) {
+    if let Err(e) = player.play("QAAAoQIALk1JTkUgRElBTU9ORFMgfCBtaU5FQ1JBRlQgUEFST0RZIE9GIFRBS0UgT04gTUUAGU1pbmVDcmFmdCBBd2Vzb21lIFBhcm9keXMAAAAAAAOKQAALZGdoYTlTMzlZNk0AAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kZ2hhOVMzOVk2TQAHeW91dHViZQAAAAAAAAAA==", None, None) {
         error!("error playing track: {:?}", e);
         Response::text("error playing track")
     } else {

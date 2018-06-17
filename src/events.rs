@@ -152,12 +152,8 @@ fn on_message(
     }
     
     let content = msg.content.clone();
-    let channel_id = msg.channel_id.0;
 
-    let guild_id = {
-        let cache_lock = discord_cache.borrow();
-        cache_lock.get_guild_by_channel(&channel_id)?.clone()
-    };
+    let guild_id = msg.guild_id?.0;
 
     let prefix = await!(get_prefix(guild_id))?;
     if !content.starts_with(&prefix) {
@@ -214,6 +210,7 @@ impl ::lavalink_futures::EventHandler for LavalinkEventHandler {
         };
 
         let mut lock = shard.borrow_mut();
+        debug!("forwarding {}", message);
         if let Err(e) = lock.send(TungsteniteMessage::Text(message.to_owned())) {
             error!("error sending message to shard {} websocket {}: {:?}", shard_id, message, e);
         }
