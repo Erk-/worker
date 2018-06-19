@@ -214,19 +214,16 @@ fn on_message(
 
 pub struct LavalinkEventHandler {
     shard_manager: Rc<ShardManager>,
-    //queue_manager: Rc<RefCell<QueueManager>>,
     playback_manager: Rc<RefCell<PlaybackManager>>,
 }
 
 impl LavalinkEventHandler {
     pub fn new(
         shard_manager: Rc<ShardManager>, 
-        //queue_manager: Rc<RefCell<QueueManager>>,
         playback_manager: Rc<RefCell<PlaybackManager>>
     ) -> Self {
         Self {
             shard_manager,
-            //queue_manager,
             playback_manager
         }
     }

@@ -37,23 +37,7 @@ impl PlaybackManager {
 
     pub fn play_next(&self, player: &mut AudioPlayer, force: bool) -> Result<(), Error> {
         // check that the player is not in use before popping queue
-        /*{
-            debug!("trying to acquire node locks");
-            let node_manager_lock = self.node_manager.as_ref().unwrap();
-            let node_manager = node_manager_lock.borrow();
-
-            debug!("trying to acquire player manager");
-            let mut player_manager = node_manager.player_manager.try_borrow_mut()?;
-
-            let player = player_manager.get_mut(&guild_id)?;
-            debug!("player acquired.");
-
-            // TODO: check player.track.is_some() (it doesn't work right now thanks zeyla)
-            if player.position > 0 && player.time > 0 && !force  {
-                debug!("dropping play command in {} - already in use", &guild_id);
-                return Ok(())
-            }
-        }*/
+        // TODO: check player.track.is_some() (it doesn't work right now thanks zeyla)
         if player.position > 0 && player.time > 0 && !force  {
             debug!("dropping play command in {} - already in use", &player.guild_id);
             return Ok(())
@@ -78,21 +62,7 @@ impl PlaybackManager {
     }
 
     pub fn play(&self, player: &mut AudioPlayer, track: &str) -> Result<(), Error> {
-        debug!("trying to play {} in {}", &player.guild_id, track);
-        /*let node_manager_lock = self.node_manager.as_ref().unwrap();
-        let node_manager = node_manager_lock.borrow();
-
-        let mut player_manager = node_manager.player_manager.try_borrow_mut()?;
-
-        let player = match player_manager.get_mut(&guild_id) {
-            Some(player) => player,
-            None => {
-                warn!("dropping play command in {} - player doesn't exist!", &guild_id);
-                return Ok(())
-            }
-        };*/
-
-        debug!("make the player play");
+        debug!("trying to play {} in {}", track, &player.guild_id);
         player.play(track, None, None)?;
         Ok(())
     }

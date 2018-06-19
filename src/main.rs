@@ -95,7 +95,6 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let lavalink_event_handler = RefCell::new(box LavalinkEventHandler::new(
         shard_manager.clone(),
-        //queue_manager.clone(),
         playback_manager.clone(),
     ));
 
