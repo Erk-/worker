@@ -25,12 +25,16 @@ mod commands;
 mod events;
 mod cache;
 mod config;
+mod streams;
 mod shards;
+mod queue;
 
 use error::Error;
 use command::{CommandManager};
 use events::{DiscordEventHandler, LavalinkEventHandler};
 use cache::DiscordCache;
+use queue::QueueManager;
+use streams::PlaybackManager;
 
 use futures::prelude::*;
 use futures_stream_select_all::select_all;
@@ -76,17 +80,36 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let mut command_manager = CommandManager::new(handle.clone(), vec![
         commands::test(), commands::join(),
         commands::leave(), commands::play(),
+        commands::skip(),
     ]);
     let command_manager = Rc::new(RefCell::new(command_manager));
 
+    let mut queue_manager = QueueManager::default();
+    let queue_manager = Rc::new(RefCell::new(queue_manager));
+
     let discord_cache = Rc::new(RefCell::new(DiscordCache::default()));
 
-    let lavalink_event_handler = RefCell::new(box LavalinkEventHandler::new(shard_manager.clone()));
+    let playback_manager = Rc::new(RefCell::new(PlaybackManager::new(
+        queue_manager.clone()
+    )));
+
+    let lavalink_event_handler = RefCell::new(box LavalinkEventHandler::new(
+        shard_manager.clone(),
+        //queue_manager.clone(),
+        playback_manager.clone(),
+    ));
+
     let mut node_manager = NodeManager::new(handle.clone(), lavalink_event_handler);
 
     for node_config in config.node_configs().into_iter() {
         let future = node_manager.add_node(node_config);
         node_manager = await!(future)?;
+    }
+    let node_manager = Rc::new(RefCell::new(node_manager));
+    
+    {
+        let mut playback_manager = playback_manager.borrow_mut();
+        playback_manager.set_node_manager(node_manager.clone());
     }
 
     let mut event_handler = DiscordEventHandler::new(
@@ -95,7 +118,9 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         serenity_http.clone(), 
         command_manager.clone(),
         discord_cache.clone(),
-        Rc::new(RefCell::new(node_manager)),
+        node_manager,
+        queue_manager,
+        playback_manager
     )?;
 
     let shards = shard_manager.shards();

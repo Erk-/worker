@@ -1,6 +1,8 @@
 use error::Error;
 use events::HyperHttpClient;
 use cache::DiscordCache;
+use queue::QueueManager;
+use streams::PlaybackManager;
 
 use futures::prelude::*;
 use tokio_core::reactor::Handle;
@@ -29,6 +31,8 @@ pub struct Context {
     pub serenity_http: Rc<SerenityHttpClient>,
     pub discord_cache: Rc<RefCell<DiscordCache>>,
     pub node_manager: Rc<RefCell<NodeManager>>,
+    pub queue_manager: Rc<RefCell<QueueManager>>,
+    pub playback_manager: Rc<RefCell<PlaybackManager>>,
     pub shard: Rc<RefCell<Shard>>,
     pub msg: Message,
     pub args: Vec<String>,

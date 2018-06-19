@@ -27,9 +27,17 @@ fn run(ctx: Context) -> CommandResult {
         await!(ctx.http_client.load_tracks(host, password, id))?
     };
     debug!("returned tracks: {:?}", &tracks);
+    let track = tracks[0].clone().track;
 
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
+    
+    {
+        let mut queue_manager = ctx.queue_manager.try_borrow_mut()?;
+        let queue_lock = queue_manager.get_or_create(guild_id);
+        let mut queue = queue_lock.try_borrow_mut()?;
+        queue.push(track);
+    }
     
     let cache_lock = ctx.discord_cache.borrow();
     let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
@@ -38,20 +46,11 @@ fn run(ctx: Context) -> CommandResult {
         return Response::text("NO VOICE STATE");
     }
 
-    let node_manager = ctx.node_manager.borrow_mut();
-    let mut player_manager = node_manager.player_manager.borrow_mut();
-    
-    let mut player = match player_manager.get_mut(&guild_id) {
-        Some(player) => player,
-        None => {
-            return Response::text("no player in this guild");
-        }
-    };
-
-    if let Err(e) = player.play(&tracks[0].track, None, None) {
+    let playback_manager = ctx.playback_manager.borrow();
+    if let Err(e) = playback_manager.play_next_guild(guild_id, false) {
         error!("error playing track: {:?}", e);
         Response::text("error playing track")
     } else {
-        Response::text("playing song")
+        Response::text("enqueued or playing,")
     }
 }

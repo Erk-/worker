@@ -1,3 +1,4 @@
+use std::cell::BorrowMutError;
 use std::option::NoneError;
 use std::io::Error as IoError;
 use std::error::Error as StdError;
@@ -12,6 +13,7 @@ use lavalink::Error as LavalinkError;
 
 #[derive(Debug)]
 pub enum Error {
+    BorrowMut(BorrowMutError),
     Io(IoError),
     None(NoneError),
     NativeTls(NativeTlsError),
@@ -21,6 +23,12 @@ pub enum Error {
     SerdeJson(SerdeJsonError),
     Lavalink(LavalinkError),
     LavalinkFutures(LavalinkFuturesError),
+}
+
+impl From<BorrowMutError> for Error {
+    fn from(e: BorrowMutError) -> Self {
+        Error::BorrowMut(e)
+    }
 }
 
 impl From<IoError> for Error {
@@ -86,6 +94,7 @@ impl Display for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
+            Error::BorrowMut(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
             Error::None(_) => "Option value not present",
             Error::NativeTls(ref e) => e.description(),

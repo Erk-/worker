@@ -20,6 +20,10 @@ fn run(ctx: Context) -> CommandResult {
     let shard_lock = ctx.shard.borrow();
     let shard_info = shard_lock.shard_info();
     
-    Response::text(format!("guild id: {}\nvoice state: {:?}\nshard info: {:?}", 
-                guild_id, voice_state, shard_info))
+    let mut queue_manager = ctx.queue_manager.borrow_mut();
+    let queue_lock = queue_manager.get_or_create(guild_id);
+    let queue = queue_lock.borrow();
+    
+    Response::text(format!("guild id: {}\nvoice state: {:?}\nshard info: {:?}\nqueue size: {:?}", 
+                guild_id, voice_state, shard_info, queue.size()))
 }

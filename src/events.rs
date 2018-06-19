@@ -2,6 +2,8 @@ use error::Error;
 use command::{CommandManager, Context, run as run_command};
 use shards::ShardManager;
 use cache::DiscordCache;
+use queue::QueueManager;
+use streams::PlaybackManager;
 
 use futures::prelude::*;
 use futures::future;
@@ -16,6 +18,7 @@ use serenity::http::Client as SerenityHttpClient;
 use serenity::gateway::Shard;
 use lavalink_futures::reexports::OwnedMessage;
 use lavalink_futures::nodes::NodeManager;
+use lavalink_futures::player::AudioPlayer;
 use lavalink::model::VoiceUpdate;
 use tungstenite::Message as TungsteniteMessage;
 
@@ -29,6 +32,8 @@ pub struct DiscordEventHandler {
     command_manager: Rc<RefCell<CommandManager>>,
     discord_cache: Rc<RefCell<DiscordCache>>,
     node_manager: Rc<RefCell<NodeManager>>,
+    queue_manager: Rc<RefCell<QueueManager>>,
+    playback_manager: Rc<RefCell<PlaybackManager>>,
     current_user_id: Option<u64>,
 }
 
@@ -40,6 +45,8 @@ impl DiscordEventHandler {
         command_manager: Rc<RefCell<CommandManager>>,
         discord_cache: Rc<RefCell<DiscordCache>>,
         node_manager: Rc<RefCell<NodeManager>>,
+        queue_manager: Rc<RefCell<QueueManager>>,
+        playback_manager: Rc<RefCell<PlaybackManager>>
     ) -> Result<Self, Error> {
         Ok(Self {
             handle,
@@ -48,6 +55,8 @@ impl DiscordEventHandler {
             command_manager,
             discord_cache,
             node_manager,
+            queue_manager,
+            playback_manager,
             current_user_id: None,
         })
     }
@@ -73,6 +82,8 @@ impl DiscordEventHandler {
                     self.discord_cache.clone(),
                     shard,
                     self.node_manager.clone(),
+                    self.queue_manager.clone(),
+                    self.playback_manager.clone(),
                 ).map_err(|e| match e {
                     Error::None(_) => debug!("none error handling MessageCreate"),
                     _ => error!("error handling MessageCreate: {:?}", e),
@@ -154,6 +165,8 @@ fn on_message(
     discord_cache: Rc<RefCell<DiscordCache>>,
     shard: Rc<RefCell<Shard>>,
     node_manager: Rc<RefCell<NodeManager>>,
+    queue_manager: Rc<RefCell<QueueManager>>,
+    playback_manager: Rc<RefCell<PlaybackManager>>,
 ) -> Result<(), Error> {
     let msg = event.message;
     if msg.author.bot {
@@ -182,6 +195,8 @@ fn on_message(
         serenity_http: serenity_http.clone(),
         discord_cache: discord_cache,
         node_manager,
+        queue_manager,
+        playback_manager,
         shard,
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),
@@ -199,12 +214,20 @@ fn on_message(
 
 pub struct LavalinkEventHandler {
     shard_manager: Rc<ShardManager>,
+    //queue_manager: Rc<RefCell<QueueManager>>,
+    playback_manager: Rc<RefCell<PlaybackManager>>,
 }
 
 impl LavalinkEventHandler {
-    pub fn new(shard_manager: Rc<ShardManager>) -> Self {
+    pub fn new(
+        shard_manager: Rc<ShardManager>, 
+        //queue_manager: Rc<RefCell<QueueManager>>,
+        playback_manager: Rc<RefCell<PlaybackManager>>
+    ) -> Self {
         Self {
             shard_manager,
+            //queue_manager,
+            playback_manager
         }
     }
 }
@@ -238,17 +261,24 @@ impl ::lavalink_futures::EventHandler for LavalinkEventHandler {
         box future::ok(true)
     }
 
-    fn track_end(&mut self, track: String, reason: String) -> LavalinkHandlerFuture<()> {
+    fn track_end(&mut self, player: &mut AudioPlayer, track: String, reason: String) -> LavalinkHandlerFuture<()> {
         debug!("track end: track: {}, reason: {}", track, reason);
+
+        let playback_manager = self.playback_manager.borrow();
+
+        if let Err(e) = playback_manager.play_next(player, false) {
+            error!("error playing track {:?}", e);
+        }
+
         box future::ok(())
     }
 
-    fn track_exception(&mut self, track: String, error: String) -> LavalinkHandlerFuture<()> {
+    fn track_exception(&mut self, _player: &mut AudioPlayer, track: String, error: String) -> LavalinkHandlerFuture<()> {
         debug!("track exception: track: {}, error: {}", track, error);
         box future::ok(())
     }
 
-    fn track_stuck(&mut self, track: String, threshold_ms: i64) -> LavalinkHandlerFuture<()> {
+    fn track_stuck(&mut self, _player: &mut AudioPlayer, track: String, threshold_ms: i64) -> LavalinkHandlerFuture<()> {
         debug!("track stuck: track: {}, threshold_ms: {}", track, threshold_ms);
         box future::ok(())
     }
