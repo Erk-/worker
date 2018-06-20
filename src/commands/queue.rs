@@ -24,14 +24,15 @@ fn run(ctx: Context) -> CommandResult {
         (queue.size(), queue.peek())
     };
 
-    let formatted = queue.iter()
+    let mut formatted = queue.iter()
         .filter_map(|track| decoder::decode_track_base64(&track).ok())
         .enumerate()
         //.take_while(|e| e.0 < 10)
         .map(|e| format!("`{}` {} by {} ({:#?})", e.0, e.1.title, e.1.author, Duration::from_millis(e.1.length)).to_string())
         .collect::<Vec<_>>();
     
-    let content = formatted[..10].join("\n");
+    formatted.truncate(10);
+    let content = formatted.join("\n");
 
     Response::text(format!("**Queue:** {} tracks: \n\n{}", size, content))
 }
