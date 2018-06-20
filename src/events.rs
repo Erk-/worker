@@ -268,6 +268,12 @@ impl ::lavalink_futures::EventHandler for LavalinkEventHandler {
     fn track_end(&mut self, player: &mut AudioPlayer, track: String, reason: String) -> LavalinkHandlerFuture<()> {
         debug!("track end: track: {}, reason: {}", track, reason);
 
+        // WE DID THIS
+        // if we don't break out here the bot will Die
+        if reason == "REPLACED" {
+            return box future::ok(())
+        }
+
         let playback_manager = self.playback_manager.borrow();
 
         if let Err(e) = playback_manager.play_next(player, false) {
