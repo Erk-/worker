@@ -49,7 +49,7 @@ impl PlaybackManager {
         let mut queue = queue_lock.try_borrow_mut()?;
         debug!("queue locks acquired.");
 
-        let next = match queue.pop() {
+        let next = match queue.pop_front() {
             Some(t) => t,
             None => {
                 debug!("queue was empty? {:?}", queue.size());

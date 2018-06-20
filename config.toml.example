@@ -3,6 +3,7 @@ discord_token = "Bot <token>"
 lavalink_user_id =
 postgres_addr = ""
 owners = []
+owo_token = ""
 
 [sharding]
 lower = 0

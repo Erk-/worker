@@ -13,8 +13,14 @@ pub fn play() -> Command {
 
 #[async(boxed)]
 fn run(ctx: Context) -> CommandResult {
+    if ctx.args.len() < 1 {
+        return Response::text("NEED ARGS");
+    }
+    let arg = ctx.args[0].clone();
+    let has_arg = arg.starts_with("-");
+
     let tracks = {
-        let id = ctx.args.join(" ");
+        let id = if has_arg { ctx.args[1..].join(" ") } else { ctx.args.join(" ") };
 
         let (host, password) = {
             let node_manager = ctx.node_manager.borrow_mut();
@@ -27,7 +33,6 @@ fn run(ctx: Context) -> CommandResult {
         await!(ctx.http_client.load_tracks(host, password, id))?
     };
     debug!("returned tracks: {:?}", &tracks);
-    let track = tracks[0].clone().track;
 
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
@@ -36,7 +41,18 @@ fn run(ctx: Context) -> CommandResult {
         let mut queue_manager = ctx.queue_manager.try_borrow_mut()?;
         let queue_lock = queue_manager.get_or_create(guild_id);
         let mut queue = queue_lock.try_borrow_mut()?;
-        queue.push(track);
+
+        if !has_arg {
+            let track = tracks[0].clone().track;
+            queue.push_back(track);
+        } else if arg == "-first" {
+            let track = tracks[0].clone().track;
+            queue.push_front(track);
+        } else if arg == "-playlist" {
+            let tracks = tracks.iter().map(|t| t.track.clone()).collect();
+            queue.push_back_many(tracks);
+        }
+        
     }
     
     let cache_lock = ctx.discord_cache.borrow();

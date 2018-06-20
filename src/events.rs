@@ -1,4 +1,5 @@
 use error::Error;
+use config::Config;
 use command::{CommandManager, Context, run as run_command};
 use shards::ShardManager;
 use cache::DiscordCache;
@@ -12,7 +13,7 @@ use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
 use tokio_core::reactor::Handle;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use serenity::model::event::{GatewayEvent, MessageCreateEvent};
 use serenity::http::Client as SerenityHttpClient;
 use serenity::gateway::Shard;
@@ -35,6 +36,7 @@ pub struct DiscordEventHandler {
     queue_manager: Rc<RefCell<QueueManager>>,
     playback_manager: Rc<RefCell<PlaybackManager>>,
     current_user_id: Option<u64>,
+    config: Rc<Cell<Config>>,
 }
 
 impl DiscordEventHandler {
@@ -46,7 +48,8 @@ impl DiscordEventHandler {
         discord_cache: Rc<RefCell<DiscordCache>>,
         node_manager: Rc<RefCell<NodeManager>>,
         queue_manager: Rc<RefCell<QueueManager>>,
-        playback_manager: Rc<RefCell<PlaybackManager>>
+        playback_manager: Rc<RefCell<PlaybackManager>>,
+        config: Rc<Cell<Config>>,
     ) -> Result<Self, Error> {
         Ok(Self {
             handle,
@@ -58,6 +61,7 @@ impl DiscordEventHandler {
             queue_manager,
             playback_manager,
             current_user_id: None,
+            config
         })
     }
 
@@ -84,6 +88,7 @@ impl DiscordEventHandler {
                     self.node_manager.clone(),
                     self.queue_manager.clone(),
                     self.playback_manager.clone(),
+                    self.config.clone(),
                 ).map_err(|e| match e {
                     Error::None(_) => debug!("none error handling MessageCreate"),
                     _ => error!("error handling MessageCreate: {:?}", e),
@@ -167,6 +172,7 @@ fn on_message(
     node_manager: Rc<RefCell<NodeManager>>,
     queue_manager: Rc<RefCell<QueueManager>>,
     playback_manager: Rc<RefCell<PlaybackManager>>,
+    config: Rc<Cell<Config>>,
 ) -> Result<(), Error> {
     let msg = event.message;
     if msg.author.bot {
@@ -197,6 +203,7 @@ fn on_message(
         node_manager,
         queue_manager,
         playback_manager,
+        config,
         shard,
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),

@@ -4,6 +4,7 @@ use std::io::Error as IoError;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use native_tls::Error as NativeTlsError;
+use hyper::Error as HyperError;
 use serenity::Error as SerenityError;
 use serenity::prelude::HttpError as SerenityHttpError;
 use tungstenite::error::Error as TungsteniteError;
@@ -19,6 +20,7 @@ pub enum Error {
     NativeTls(NativeTlsError),
     Serenity(SerenityError),
     SerenityHttp(SerenityHttpError),
+    Hyper(HyperError),
     Tungstenite(TungsteniteError),
     SerdeJson(SerdeJsonError),
     Lavalink(LavalinkError),
@@ -61,6 +63,12 @@ impl From<SerenityHttpError> for Error {
     }
 }
 
+impl From<HyperError> for Error {
+    fn from(e: HyperError) -> Self {
+        Error::Hyper(e)
+    }
+}
+
 impl From<TungsteniteError> for Error {
     fn from(e: TungsteniteError) -> Self {
         Error::Tungstenite(e)
@@ -100,6 +108,7 @@ impl StdError for Error {
             Error::NativeTls(ref e) => e.description(),
             Error::Serenity(ref e) => e.description(),
             Error::SerenityHttp(ref e) => e.description(),
+            Error::Hyper(ref e) => e.description(),
             Error::Tungstenite(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),

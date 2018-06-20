@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -22,23 +22,37 @@ impl QueueManager {
 // TODO: move to postgres
 pub struct Queue {
     pub guild_id: u64,
-    queue: Vec<String>
+    queue: VecDeque<String>
 }
 
 impl Queue {
     pub fn new(guild_id: u64) -> Self {
         Self {
             guild_id,
-            queue: Vec::new(),
+            queue: VecDeque::new(),
         }
     }
 
-    pub fn pop(&mut self) -> Option<String> {
-        self.queue.pop()
+    pub fn pop_front(&mut self) -> Option<String> {
+        self.queue.pop_front()
     }
 
-    pub fn push(&mut self, track: String) {
-        self.queue.push(track)
+    pub fn push_front(&mut self, track: String) {
+        self.queue.push_front(track)
+    }
+
+    pub fn push_back(&mut self, track: String) {
+        self.queue.push_back(track)
+    }
+
+    pub fn push_back_many(&mut self, tracks: Vec<String>) {
+        for track in tracks.iter() {
+            self.queue.push_back(track.clone());
+        }
+    }
+
+    pub fn peek(&self) -> Vec<String> {
+        Vec::from(self.queue.clone())
     }
 
     pub fn size(&self) -> usize {

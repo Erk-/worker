@@ -25,6 +25,7 @@ pub struct Config {
     pub lavalink_nodes: Vec<Node>,
     pub postgres_addr: String,
     pub owners: Vec<u64>,
+    pub owo_token: String,
     sharding: Sharding,
 }
 

@@ -18,6 +18,7 @@ extern crate toml;
 extern crate serde;
 extern crate futures_stream_select_all;
 extern crate websocket;
+//extern crate owo; TODO USE THIS
 
 mod error;
 mod command;
@@ -40,7 +41,7 @@ use futures::prelude::*;
 use futures_stream_select_all::select_all;
 use tokio_core::reactor::{Core, Handle};
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;
 use serenity::model::event::{Event, GatewayEvent};
@@ -80,7 +81,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
     let mut command_manager = CommandManager::new(handle.clone(), vec![
         commands::test(), commands::join(),
         commands::leave(), commands::play(),
-        commands::skip(),
+        commands::skip(), commands::queue(),
     ]);
     let command_manager = Rc::new(RefCell::new(command_manager));
 
@@ -111,6 +112,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         playback_manager.set_node_manager(node_manager.clone());
     }
 
+    let config = Rc::new(Cell::new(config));
     let mut event_handler = DiscordEventHandler::new(
         handle.clone(), 
         http_client.clone(),
@@ -119,7 +121,8 @@ fn try_main(handle: Handle) -> Result<(), Error> {
         discord_cache.clone(),
         node_manager,
         queue_manager,
-        playback_manager
+        playback_manager,
+        config
     )?;
 
     let shards = shard_manager.shards();

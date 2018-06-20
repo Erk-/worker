@@ -1,4 +1,5 @@
 use error::Error;
+use config::Config;
 use events::HyperHttpClient;
 use cache::DiscordCache;
 use queue::QueueManager;
@@ -8,7 +9,7 @@ use futures::prelude::*;
 use tokio_core::reactor::Handle;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use serenity::model::channel::Message;
 use serenity::http::Client as SerenityHttpClient;
 use serenity::gateway::Shard;
@@ -33,6 +34,7 @@ pub struct Context {
     pub node_manager: Rc<RefCell<NodeManager>>,
     pub queue_manager: Rc<RefCell<QueueManager>>,
     pub playback_manager: Rc<RefCell<PlaybackManager>>,
+    pub config: Rc<Cell<Config>>,
     pub shard: Rc<RefCell<Shard>>,
     pub msg: Message,
     pub args: Vec<String>,
