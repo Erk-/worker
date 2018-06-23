@@ -1,20 +1,20 @@
-use error::Error;
-use config::Config;
-use events::HyperHttpClient;
 use cache::DiscordCache;
+use config::Config;
+use error::Error;
+use events::HyperHttpClient;
 use queue::QueueManager;
 use streams::PlaybackManager;
 
 use futures::prelude::*;
-use tokio_core::reactor::Handle;
+use lavalink_futures::nodes::NodeManager;
+use serenity::builder::CreateMessage;
+use serenity::gateway::Shard;
+use serenity::http::Client as SerenityHttpClient;
+use serenity::model::channel::Message;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::{Cell, RefCell};
-use serenity::model::channel::Message;
-use serenity::http::Client as SerenityHttpClient;
-use serenity::gateway::Shard;
-use serenity::builder::CreateMessage;
-use lavalink_futures::nodes::NodeManager;
+use tokio_core::reactor::Handle;
 
 pub type CommandResult = Result<Response, Error>;
 type CommandExecutor = fn(Context) -> Box<Future<Item = Response, Error = Error>>;
@@ -57,10 +57,14 @@ pub fn run(executor: CommandExecutor, ctx: Context) -> Result<(), Error> {
 
     let response = await!((executor)(ctx))?;
     let m = match response {
-        Response::Text(content) => |mut m: CreateMessage| { m.content(content); m },
+        Response::Text(content) => |mut m: CreateMessage| {
+            m.content(content);
+            m
+        },
     };
 
-    let future = serenity_http.send_message(channel_id, m)
+    let future = serenity_http
+        .send_message(channel_id, m)
         .map(move |m| trace!("Sent message to channel {}: {}", channel_id, m.content))
         .map_err(From::from);
 
@@ -74,19 +78,21 @@ pub struct CommandManager {
 
 impl CommandManager {
     pub fn new(handle: Handle, commands: Vec<Command>) -> Self {
-        let commands = commands.into_iter()
+        let commands = commands
+            .into_iter()
             .map(Rc::new)
-            .flat_map(|command| command.names.iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .into_iter()
-                .map(move |name| (name, command.clone())))
+            .flat_map(|command| {
+                command
+                    .names
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .map(move |name| (name, command.clone()))
+            })
             .collect();
 
-        Self {
-            handle,
-            commands,
-        }
+        Self { handle, commands }
     }
 
     pub fn get(&self, name: &str) -> Result<ICommand, Error> {

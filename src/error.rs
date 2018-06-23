@@ -1,16 +1,16 @@
+use hyper::Error as HyperError;
+use lavalink::Error as LavalinkError;
+use lavalink_futures::Error as LavalinkFuturesError;
+use native_tls::Error as NativeTlsError;
+use serde_json::error::Error as SerdeJsonError;
+use serenity::prelude::HttpError as SerenityHttpError;
+use serenity::Error as SerenityError;
 use std::cell::BorrowMutError;
-use std::option::NoneError;
-use std::io::Error as IoError;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use native_tls::Error as NativeTlsError;
-use hyper::Error as HyperError;
-use serenity::Error as SerenityError;
-use serenity::prelude::HttpError as SerenityHttpError;
+use std::io::Error as IoError;
+use std::option::NoneError;
 use tungstenite::error::Error as TungsteniteError;
-use serde_json::error::Error as SerdeJsonError;
-use lavalink_futures::Error as LavalinkFuturesError;
-use lavalink::Error as LavalinkError;
 
 #[derive(Debug)]
 pub enum Error {

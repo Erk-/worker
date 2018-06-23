@@ -1,22 +1,22 @@
 use error::Error;
 use queue::QueueManager;
 
-use std::rc::Rc;
-use std::cell::RefCell;
 use lavalink_futures::nodes::NodeManager;
 use lavalink_futures::player::AudioPlayer;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct PlaybackManager {
     node_manager: Option<Rc<RefCell<NodeManager>>>,
-    queue_manager: Rc<RefCell<QueueManager>>
+    queue_manager: Rc<RefCell<QueueManager>>,
 }
 
 impl PlaybackManager {
     pub fn new(queue_manager: Rc<RefCell<QueueManager>>) -> Self {
         Self {
             node_manager: None,
-            queue_manager
+            queue_manager,
         }
     }
 
@@ -27,7 +27,7 @@ impl PlaybackManager {
     pub fn play_next_guild(&self, guild_id: u64, force: bool) -> Result<(), Error> {
         let node_manager_lock = self.node_manager.as_ref()?;
         let node_manager = node_manager_lock.borrow();
-        
+
         let mut player_manager = node_manager.player_manager.try_borrow_mut()?;
         let player = player_manager.get_mut(&guild_id)?;
 
@@ -38,9 +38,12 @@ impl PlaybackManager {
     pub fn play_next(&self, player: &mut AudioPlayer, force: bool) -> Result<(), Error> {
         // check that the player is not in use before popping queue
         // TODO: check player.track.is_some() (it doesn't work right now thanks zeyla)
-        if player.position > 0 && player.time > 0 && !force  {
-            debug!("dropping play command in {} - already in use", &player.guild_id);
-            return Ok(())
+        if player.position > 0 && player.time > 0 && !force {
+            debug!(
+                "dropping play command in {} - already in use",
+                &player.guild_id
+            );
+            return Ok(());
         }
 
         debug!("trying to acquire queue locks.");
@@ -53,8 +56,8 @@ impl PlaybackManager {
             Some(t) => t,
             None => {
                 debug!("queue was empty? {:?}", queue.size());
-                return Ok(())
-            },
+                return Ok(());
+            }
         };
         debug!("queue popped {}", next);
         self.play(player, &next)?;

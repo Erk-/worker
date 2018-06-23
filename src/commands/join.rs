@@ -1,8 +1,8 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
-use tungstenite::Message as TungsteniteMessage;
 use serenity::constants::VoiceOpCode;
+use tungstenite::Message as TungsteniteMessage;
 
 pub fn join() -> Command {
     Command {
@@ -24,11 +24,11 @@ fn run(ctx: Context) -> CommandResult {
         Some(voice_state) => voice_state,
         None => {
             return Response::text("no voice state");
-        },
+        }
     };
 
     let mut node_manager = ctx.node_manager.borrow_mut();
-    
+
     {
         let player_manager = node_manager.player_manager.borrow();
         if player_manager.has(&guild_id) {
@@ -50,12 +50,12 @@ fn run(ctx: Context) -> CommandResult {
     });
 
     let mut shard_lock = ctx.shard.borrow_mut();
-    
+
     match shard_lock.send(TungsteniteMessage::Text(map.to_string())) {
         Ok(_) => Response::text("joined voice channel"),
         Err(e) => {
             error!("Error joining voice channel {:?}", e);
             Response::text("error joining voice channel!")
-        },
+        }
     }
 }

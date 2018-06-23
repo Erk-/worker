@@ -1,8 +1,8 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
-use tungstenite::Message as TungsteniteMessage;
 use serenity::constants::VoiceOpCode;
+use tungstenite::Message as TungsteniteMessage;
 
 pub fn leave() -> Command {
     Command {

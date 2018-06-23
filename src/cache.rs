@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use std::cell::RefCell;
 use serenity::model::event::GatewayEvent::{self, Dispatch};
 use serenity::model::voice::VoiceState;
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 #[derive(Default)]
-pub struct DiscordCache {    
+pub struct DiscordCache {
     // <guild id, <user id, voice state>>
-    voice_state_updates: HashMap<u64, RefCell<HashMap<u64, CacheVoiceState>>>
+    voice_state_updates: HashMap<u64, RefCell<HashMap<u64, CacheVoiceState>>>,
 }
 
 impl DiscordCache {
@@ -17,21 +17,30 @@ impl DiscordCache {
             Dispatch(_, GuildCreate(e)) => {
                 let guild_id = e.guild.id.0;
 
-                let inner = RefCell::new(e.guild.voice_states.iter()
-                    .filter(|(_, voice_state)| voice_state.channel_id.is_some())
-                    .map(|(user_id, voice_state)| {
-                        let VoiceState { ref channel_id, ref session_id, ref token, .. } = voice_state;
-                        let state = CacheVoiceState {
-                            channel_id: channel_id.unwrap().0,
-                            session_id: session_id.to_owned(),
-                            token: token.to_owned(),
-                        };
-                        (user_id.0, state)
-                    })
-                    .collect());
+                let inner = RefCell::new(
+                    e.guild
+                        .voice_states
+                        .iter()
+                        .filter(|(_, voice_state)| voice_state.channel_id.is_some())
+                        .map(|(user_id, voice_state)| {
+                            let VoiceState {
+                                ref channel_id,
+                                ref session_id,
+                                ref token,
+                                ..
+                            } = voice_state;
+                            let state = CacheVoiceState {
+                                channel_id: channel_id.unwrap().0,
+                                session_id: session_id.to_owned(),
+                                token: token.to_owned(),
+                            };
+                            (user_id.0, state)
+                        })
+                        .collect(),
+                );
 
                 self.voice_state_updates.insert(guild_id, inner);
-            },
+            }
             Dispatch(_, GuildDelete(e)) => {
                 let guild_id = e.guild.id.0;
 
@@ -39,7 +48,7 @@ impl DiscordCache {
                 if has_guild {
                     self.voice_state_updates.remove(&guild_id);
                 }
-            },
+            }
             Dispatch(_, VoiceStateUpdate(e)) => {
                 let guild_id = match e.guild_id {
                     Some(guild_id) => guild_id.0,
@@ -48,21 +57,27 @@ impl DiscordCache {
                         return;
                     }
                 };
-                
-                let VoiceState { ref channel_id, ref session_id, ref token, ref user_id, .. } = e.voice_state;
+
+                let VoiceState {
+                    ref channel_id,
+                    ref session_id,
+                    ref token,
+                    ref user_id,
+                    ..
+                } = e.voice_state;
                 let user_id = user_id.0;
 
                 let has_guild = self.voice_state_updates.contains_key(&guild_id);
                 let has_voice_state = has_guild && match self.voice_state_updates.get(&guild_id) {
                     Some(ref inner) => inner.borrow().contains_key(&user_id),
-                    None => false
+                    None => false,
                 };
 
                 match channel_id {
                     Some(channel_id) => {
                         let state = CacheVoiceState {
-                            channel_id: channel_id.0, 
-                            session_id: session_id.to_owned(), 
+                            channel_id: channel_id.0,
+                            session_id: session_id.to_owned(),
                             token: token.to_owned(),
                         };
 
@@ -79,7 +94,7 @@ impl DiscordCache {
                             map.insert(user_id, state);
                             self.voice_state_updates.insert(guild_id, RefCell::new(map));
                         }
-                    },
+                    }
                     None if has_voice_state => {
                         let mut inner_len: usize;
 
@@ -97,11 +112,11 @@ impl DiscordCache {
                             trace!("removing empty voice state map for guild {}", &guild_id);
                             self.voice_state_updates.remove(&guild_id);
                         }
-                    }, 
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
-            _ => {},
+            _ => {}
         }
     }
 

@@ -1,7 +1,7 @@
+use lavalink_futures::nodes::NodeConfig;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Result as IOResult;
-use lavalink_futures::nodes::NodeConfig;
 
 #[derive(Deserialize, Debug)]
 struct Sharding {
@@ -33,8 +33,7 @@ pub fn load(path: &str) -> IOResult<Config> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let config: Config = ::toml::from_str(&contents)
-        .expect("could not parse config");
+    let config: Config = ::toml::from_str(&contents).expect("could not parse config");
     Ok(config)
 }
 
@@ -48,7 +47,8 @@ impl Config {
         let num_shards = self.sharding.total;
         let user_id = self.lavalink_user_id;
 
-        self.lavalink_nodes.iter()
+        self.lavalink_nodes
+            .iter()
             .map(move |node| NodeConfig {
                 http_host: node.http_host.clone(),
                 num_shards,

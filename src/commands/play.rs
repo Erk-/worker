@@ -1,4 +1,4 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
 use lavalink::rest::hyper::LavalinkRestRequester;
@@ -20,7 +20,11 @@ fn run(ctx: Context) -> CommandResult {
     let has_arg = arg.starts_with("-");
 
     let tracks = {
-        let id = if has_arg { ctx.args[1..].join(" ") } else { ctx.args.join(" ") };
+        let id = if has_arg {
+            ctx.args[1..].join(" ")
+        } else {
+            ctx.args.join(" ")
+        };
 
         let (host, password) = {
             let node_manager = ctx.node_manager.borrow_mut();
@@ -36,7 +40,7 @@ fn run(ctx: Context) -> CommandResult {
 
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
-    
+
     {
         let mut queue_manager = ctx.queue_manager.try_borrow_mut()?;
         let queue_lock = queue_manager.get_or_create(guild_id);
@@ -52,9 +56,8 @@ fn run(ctx: Context) -> CommandResult {
             let tracks = tracks.iter().map(|t| t.track.clone()).collect();
             queue.push_back_many(tracks);
         }
-        
     }
-    
+
     let cache_lock = ctx.discord_cache.borrow();
     let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
 

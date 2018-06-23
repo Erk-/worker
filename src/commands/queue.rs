@@ -1,4 +1,4 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
 use lavalink::decoder;
@@ -24,12 +24,21 @@ fn run(ctx: Context) -> CommandResult {
         (queue.size(), queue.peek())
     };
 
-    let mut formatted = queue.iter()
+    let mut formatted = queue
+        .iter()
         .filter_map(|track| decoder::decode_track_base64(&track).ok())
         .enumerate()
-        .map(|e| format!("`{}` {} by {} ({:#?})", e.0, e.1.title, e.1.author, Duration::from_millis(e.1.length)).to_string())
+        .map(|e| {
+            format!(
+                "`{}` {} by {} ({:#?})",
+                e.0,
+                e.1.title,
+                e.1.author,
+                Duration::from_millis(e.1.length)
+            ).to_string()
+        })
         .collect::<Vec<_>>();
-    
+
     formatted.truncate(10);
     let content = formatted.join("\n");
 

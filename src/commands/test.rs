@@ -1,4 +1,4 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
 
@@ -19,11 +19,16 @@ fn run(ctx: Context) -> CommandResult {
     let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
     let shard_lock = ctx.shard.borrow();
     let shard_info = shard_lock.shard_info();
-    
+
     let mut queue_manager = ctx.queue_manager.borrow_mut();
     let queue_lock = queue_manager.get_or_create(guild_id);
     let queue = queue_lock.borrow();
-    
-    Response::text(format!("guild id: {}\nvoice state: {:?}\nshard info: {:?}\nqueue size: {:?}", 
-                guild_id, voice_state, shard_info, queue.size()))
+
+    Response::text(format!(
+        "guild id: {}\nvoice state: {:?}\nshard info: {:?}\nqueue size: {:?}",
+        guild_id,
+        voice_state,
+        shard_info,
+        queue.size()
+    ))
 }

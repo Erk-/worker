@@ -1,16 +1,16 @@
+use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
-use std::cell::RefCell;
 
 #[derive(Default)]
 pub struct QueueManager {
-    queues: HashMap<u64, Rc<RefCell<Queue>>>
+    queues: HashMap<u64, Rc<RefCell<Queue>>>,
 }
 
 impl QueueManager {
     pub fn get_or_create(&mut self, guild_id: u64) -> Rc<RefCell<Queue>> {
         if self.queues.contains_key(&guild_id) {
-            return Rc::clone(&self.queues.get(&guild_id).unwrap())
+            return Rc::clone(&self.queues.get(&guild_id).unwrap());
         }
         debug!("creating a queue for {}", guild_id);
         let queue = Rc::new(RefCell::new(Queue::new(guild_id)));
@@ -22,7 +22,7 @@ impl QueueManager {
 // TODO: move to postgres
 pub struct Queue {
     pub guild_id: u64,
-    queue: VecDeque<String>
+    queue: VecDeque<String>,
 }
 
 impl Queue {

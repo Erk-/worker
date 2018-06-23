@@ -1,4 +1,4 @@
-use command::{Command, Context, CommandResult, Response};
+use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
 
@@ -17,13 +17,13 @@ fn run(ctx: Context) -> CommandResult {
 
     let cache_lock = ctx.discord_cache.borrow();
     let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
-    
+
     if voice_state.is_none() {
         return Response::text("NO VOICE STATE");
     }
-    
+
     let playback_manager = ctx.playback_manager.borrow();
-    
+
     if let Err(e) = playback_manager.play_next_guild(guild_id, true) {
         error!("error playing {:?}", e);
         Response::text("error skipping")
