@@ -27,7 +27,6 @@ fn run(ctx: Context) -> CommandResult {
     let mut formatted = queue.iter()
         .filter_map(|track| decoder::decode_track_base64(&track).ok())
         .enumerate()
-        //.take_while(|e| e.0 < 10)
         .map(|e| format!("`{}` {} by {} ({:#?})", e.0, e.1.title, e.1.author, Duration::from_millis(e.1.length)).to_string())
         .collect::<Vec<_>>();
     
