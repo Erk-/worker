@@ -89,14 +89,7 @@ fn try_main(handle: Handle) -> Result<(), Error> {
 
     let mut command_manager = CommandManager::new(
         handle.clone(),
-        vec![
-            commands::test(),
-            commands::join(),
-            commands::leave(),
-            commands::play(),
-            commands::skip(),
-            commands::queue(),
-        ],
+        commands::create(),
     );
     let command_manager = Rc::new(RefCell::new(command_manager));
 
