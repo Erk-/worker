@@ -9,8 +9,11 @@ use std::cell::BorrowMutError;
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::io::Error as IoError;
+use std::num::ParseIntError;
 use std::option::NoneError;
 use tungstenite::error::Error as TungsteniteError;
+
+// TODO: can we do this with a macro
 
 #[derive(Debug)]
 pub enum Error {
@@ -21,6 +24,7 @@ pub enum Error {
     Serenity(SerenityError),
     SerenityHttp(SerenityHttpError),
     Hyper(HyperError),
+    ParseInt(ParseIntError),
     Tungstenite(TungsteniteError),
     SerdeJson(SerdeJsonError),
     Lavalink(LavalinkError),
@@ -69,6 +73,12 @@ impl From<HyperError> for Error {
     }
 }
 
+impl From<ParseIntError> for Error {
+    fn from(e: ParseIntError) -> Self {
+        Error::ParseInt(e)
+    }
+}
+
 impl From<TungsteniteError> for Error {
     fn from(e: TungsteniteError) -> Self {
         Error::Tungstenite(e)
@@ -109,6 +119,7 @@ impl StdError for Error {
             Error::Serenity(ref e) => e.description(),
             Error::SerenityHttp(ref e) => e.description(),
             Error::Hyper(ref e) => e.description(),
+            Error::ParseInt(ref e) => e.description(),
             Error::Tungstenite(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),

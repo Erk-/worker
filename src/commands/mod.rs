@@ -8,6 +8,7 @@ mod queue;
 mod resume;
 mod skip;
 mod test;
+mod volume;
 
 use command::Command;
 
@@ -19,6 +20,7 @@ use self::queue::queue;
 use self::resume::resume;
 use self::skip::skip;
 use self::test::test;
+use self::volume::volume;
 
 pub fn create() -> Vec<Command> {
     // todo: should this be alphabetized or grouped as-is
@@ -30,6 +32,7 @@ pub fn create() -> Vec<Command> {
         play(),
         pause(),
         resume(),
+        volume(),
         // queue state
         skip(),
         queue(),
