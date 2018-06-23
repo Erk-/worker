@@ -69,4 +69,23 @@ impl PlaybackManager {
         player.play(track, None, None)?;
         Ok(())
     }
+
+    pub fn pause(&self, guild_id: u64) -> Result<(), Error> {
+        self.play_state(guild_id, true)
+    }
+    pub fn resume(&self, guild_id: u64) -> Result<(), Error> {
+        self.play_state(guild_id, false)
+    }
+
+    fn play_state(&self, guild_id: u64, pause: bool) -> Result<(), Error> {
+        let node_manager_lock = self.node_manager.as_ref()?;
+        let node_manager = node_manager_lock.borrow();
+
+        let mut player_manager = node_manager.player_manager.try_borrow_mut()?;
+        let player = player_manager.get_mut(&guild_id)?;
+
+        player.pause(pause)?;
+
+        Ok(())
+    }
 }
