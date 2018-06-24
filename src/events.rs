@@ -199,7 +199,8 @@ fn on_message(
     let command_name = content_iter.next()?;
 
     let command_manager = command_manager.borrow();
-    let command = command_manager.get(&command_name.to_lowercase())?;
+    let alias = command_name.to_lowercase();
+    let command = command_manager.get(&alias)?;
 
     let context = Context {
         handle: handle.clone(),
@@ -213,6 +214,7 @@ fn on_message(
         shard,
         msg,
         args: content_iter.map(|s| s.to_string()).collect(),
+        alias
     };
 
     let future = run_command(command.executor, context).map_err(|e| match e {

@@ -5,7 +5,7 @@ use lavalink::rest::hyper::LavalinkRestRequester;
 
 pub fn play() -> Command {
     Command {
-        names: vec!["play", "p"],
+        names: vec!["play", "p", "search", "youtube", "soundcloud"],
         description: "plays a song",
         executor: run,
     }
@@ -34,9 +34,19 @@ fn run(ctx: Context) -> CommandResult {
         };
 
         debug!("requesting tracks for {}", id);
-        await!(ctx.http_client.load_tracks(host, password, id))?
+        let is_search = id.starts_with("ytsearch:") || id.starts_with("scsearch:");
+        let tracks = await!(ctx.http_client.load_tracks(host.clone(), password.clone(), id.clone()))?;
+
+        if tracks.len() < 1 && !is_search {
+            let prefix = if ctx.alias == "soundcloud" { "scsearch:" } else { "ytsearch:" };
+            let id = format!("{}:{}", prefix, id);
+            await!(ctx.http_client.load_tracks(host, password, id))?
+        } else {
+            tracks
+        }
     };
     debug!("returned tracks: {:?}", &tracks);
+    // TODO: choose command
 
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;

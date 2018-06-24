@@ -38,6 +38,7 @@ pub struct Context {
     pub shard: Rc<RefCell<Shard>>,
     pub msg: Message,
     pub args: Vec<String>,
+    pub alias: String,
 }
 
 pub enum Response {
