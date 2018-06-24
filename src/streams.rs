@@ -89,7 +89,7 @@ impl PlaybackManager {
         Ok(())
     }
 
-    #[cfg(not(feature = "patron"))]
+    #[cfg(feature = "patron")]
     pub fn volume(&self, guild_id: u64, volume: i32) -> Result<(), Error> {
         let node_manager_lock = self.node_manager.as_ref()?;
         let node_manager = node_manager_lock.borrow();
