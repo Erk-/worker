@@ -4,6 +4,7 @@ mod join;
 mod leave;
 mod pause;
 mod play;
+mod playing;
 mod queue;
 mod resume;
 mod skip;
@@ -16,6 +17,7 @@ use self::join::join;
 use self::leave::leave;
 use self::pause::pause;
 use self::play::play;
+use self::playing::playing;
 use self::queue::queue;
 use self::resume::resume;
 use self::skip::skip;
@@ -33,6 +35,7 @@ pub fn create() -> Vec<Command> {
         pause(),
         resume(),
         volume(),
+        playing(),
         // queue state
         skip(),
         queue(),

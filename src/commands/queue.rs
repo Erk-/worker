@@ -42,5 +42,15 @@ fn run(ctx: Context) -> CommandResult {
     formatted.truncate(10);
     let content = formatted.join("\n");
 
-    Response::text(format!("**Queue:** {} tracks: \n\n{}", size, content))
+    let current = {
+        let playback_manager = ctx.playback_manager.borrow();
+        let state = playback_manager.current(guild_id)?;
+
+        match state.track.as_ref() {
+            Some(track) => format!("{} by {}", track.title, track.author),
+            None => "Nothing!".to_owned()
+        }
+    };
+
+    Response::text(format!("**Queue:** {} tracks remain.\n**Currently playing**: {} \n\n{}", current, size, content))
 }

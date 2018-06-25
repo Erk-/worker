@@ -60,6 +60,7 @@ fn main() {
 
     if let Err(e) = core.run(future) {
         error!("Error running future: {:?}", e);
+        panic!(e);
     }
 }
 
