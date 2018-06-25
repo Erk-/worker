@@ -1,6 +1,7 @@
 use command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
+use humantime::format_duration;
 use lavalink::decoder;
 use std::time::Duration;
 
@@ -30,11 +31,11 @@ fn run(ctx: Context) -> CommandResult {
         .enumerate()
         .map(|e| {
             format!(
-                "`{}` {} by {} ({:#?})",
+                "`{}` {} by {} `({})`",
                 e.0,
                 e.1.title,
                 e.1.author,
-                Duration::from_millis(e.1.length)
+                format_duration(Duration::from_millis(e.1.length))
             ).to_string()
         })
         .collect::<Vec<_>>();

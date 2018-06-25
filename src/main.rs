@@ -1,14 +1,12 @@
 #![feature(proc_macro, generators, try_trait, box_syntax)]
 
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
+#[macro_use] extern crate log;
 extern crate env_logger;
 extern crate futures_await as futures;
 extern crate futures_stream_select_all;
+extern crate humantime;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate lavalink;

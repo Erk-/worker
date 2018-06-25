@@ -1,6 +1,7 @@
 use error::Error;
 use queue::QueueManager;
 
+use humantime::format_duration;
 use lavalink::decoder::{DecodedTrack, decode_track_base64};
 use lavalink_futures::nodes::NodeManager;
 use lavalink_futures::player::AudioPlayer;
@@ -8,6 +9,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::rc::Rc;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub struct PlayerState {
@@ -24,8 +26,8 @@ impl Display for PlayerState {
                 (if self.paused { "(paused)" } else { "" }),
                 track.title,
                 track.author,
-                self.position,
-                track.length,
+                format_duration(Duration::from_millis(self.position as u64)),
+                format_duration(Duration::from_millis(track.length)),
                 track.url.as_ref().unwrap_or(&"(no url)".to_owned())),
             None => write!(f, "nothing playing ")
         }
