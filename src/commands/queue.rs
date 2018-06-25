@@ -52,5 +52,5 @@ fn run(ctx: Context) -> CommandResult {
         }
     };
 
-    Response::text(format!("**Queue:** {} tracks remain.\n**Currently playing**: {} \n\n{}", current, size, content))
+    Response::text(format!("**Queue:** {} tracks remain.\n**Currently playing**: {} \n\n{}", size, current, content))
 }
