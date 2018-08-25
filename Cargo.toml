@@ -8,6 +8,7 @@ env_logger = "0.5"
 error-chain = "0.12"
 futures-await = "0.1"
 futures-stream-select-all = "0.1"
+humantime = "1"
 hyper = "0.12"
 hyper-tls = "0.3"
 lavalink = { git = "https://github.com/serenity-rs/lavalink.rs" }
