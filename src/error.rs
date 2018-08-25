@@ -18,52 +18,22 @@ use tungstenite::error::Error as TungsteniteError;
 #[derive(Debug)]
 pub enum Error {
     BorrowMut(BorrowMutError),
-    Io(IoError),
-    None(NoneError),
-    NativeTls(NativeTlsError),
-    Serenity(SerenityError),
-    SerenityHttp(SerenityHttpError),
     Hyper(HyperError),
-    ParseInt(ParseIntError),
-    Tungstenite(TungsteniteError),
-    SerdeJson(SerdeJsonError),
+    Io(IoError),
     Lavalink(LavalinkError),
     LavalinkFutures(LavalinkFuturesError),
+    NativeTls(NativeTlsError),
+    None(NoneError),
+    ParseInt(ParseIntError),
+    SerdeJson(SerdeJsonError),
+    Serenity(SerenityError),
+    SerenityHttp(SerenityHttpError),
+    Tungstenite(TungsteniteError),
 }
 
 impl From<BorrowMutError> for Error {
     fn from(e: BorrowMutError) -> Self {
         Error::BorrowMut(e)
-    }
-}
-
-impl From<IoError> for Error {
-    fn from(e: IoError) -> Self {
-        Error::Io(e)
-    }
-}
-
-impl From<NoneError> for Error {
-    fn from(e: NoneError) -> Self {
-        Error::None(e)
-    }
-}
-
-impl From<NativeTlsError> for Error {
-    fn from(e: NativeTlsError) -> Self {
-        Error::NativeTls(e)
-    }
-}
-
-impl From<SerenityError> for Error {
-    fn from(e: SerenityError) -> Self {
-        Error::Serenity(e)
-    }
-}
-
-impl From<SerenityHttpError> for Error {
-    fn from(e: SerenityHttpError) -> Self {
-        Error::SerenityHttp(e)
     }
 }
 
@@ -73,21 +43,9 @@ impl From<HyperError> for Error {
     }
 }
 
-impl From<ParseIntError> for Error {
-    fn from(e: ParseIntError) -> Self {
-        Error::ParseInt(e)
-    }
-}
-
-impl From<TungsteniteError> for Error {
-    fn from(e: TungsteniteError) -> Self {
-        Error::Tungstenite(e)
-    }
-}
-
-impl From<SerdeJsonError> for Error {
-    fn from(e: SerdeJsonError) -> Self {
-        Error::SerdeJson(e)
+impl From<IoError> for Error {
+    fn from(e: IoError) -> Self {
+        Error::Io(e)
     }
 }
 
@@ -103,6 +61,48 @@ impl From<LavalinkFuturesError> for Error {
     }
 }
 
+impl From<NativeTlsError> for Error {
+    fn from(e: NativeTlsError) -> Self {
+        Error::NativeTls(e)
+    }
+}
+
+impl From<NoneError> for Error {
+    fn from(e: NoneError) -> Self {
+        Error::None(e)
+    }
+}
+
+impl From<ParseIntError> for Error {
+    fn from(e: ParseIntError) -> Self {
+        Error::ParseInt(e)
+    }
+}
+
+impl From<SerdeJsonError> for Error {
+    fn from(e: SerdeJsonError) -> Self {
+        Error::SerdeJson(e)
+    }
+}
+
+impl From<SerenityError> for Error {
+    fn from(e: SerenityError) -> Self {
+        Error::Serenity(e)
+    }
+}
+
+impl From<SerenityHttpError> for Error {
+    fn from(e: SerenityHttpError) -> Self {
+        Error::SerenityHttp(e)
+    }
+}
+
+impl From<TungsteniteError> for Error {
+    fn from(e: TungsteniteError) -> Self {
+        Error::Tungstenite(e)
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         f.write_str(self.description())
@@ -113,17 +113,17 @@ impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
             Error::BorrowMut(ref e) => e.description(),
-            Error::Io(ref e) => e.description(),
-            Error::None(_) => "Option value not present",
-            Error::NativeTls(ref e) => e.description(),
-            Error::Serenity(ref e) => e.description(),
-            Error::SerenityHttp(ref e) => e.description(),
             Error::Hyper(ref e) => e.description(),
-            Error::ParseInt(ref e) => e.description(),
-            Error::Tungstenite(ref e) => e.description(),
-            Error::SerdeJson(ref e) => e.description(),
+            Error::Io(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
             Error::LavalinkFutures(ref e) => e.description(),
+            Error::NativeTls(ref e) => e.description(),
+            Error::None(_) => "Option value not present",
+            Error::ParseInt(ref e) => e.description(),
+            Error::SerdeJson(ref e) => e.description(),
+            Error::Serenity(ref e) => e.description(),
+            Error::SerenityHttp(ref e) => e.description(),
+            Error::Tungstenite(ref e) => e.description(),
         }
     }
 }
