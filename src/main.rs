@@ -38,7 +38,7 @@ use events::{DiscordEventHandler, LavalinkEventHandler};
 use queue::QueueManager;
 use streams::PlaybackManager;
 
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use futures_stream_select_all::select_all;
 use hyper::Client as HyperClient;
 use hyper_tls::HttpsConnector;

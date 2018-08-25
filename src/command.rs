@@ -5,7 +5,7 @@ use events::HyperHttpClient;
 use queue::QueueManager;
 use streams::PlaybackManager;
 
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use lavalink_futures::nodes::NodeManager;
 use serenity::builder::CreateMessage;
 use serenity::gateway::Shard;

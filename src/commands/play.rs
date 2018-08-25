@@ -1,6 +1,6 @@
 use command::{Command, CommandResult, Context, Response};
 
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use lavalink::rest::hyper::LavalinkRestRequester;
 
 pub fn play() -> Command {

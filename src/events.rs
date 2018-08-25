@@ -7,7 +7,7 @@ use shards::ShardManager;
 use streams::PlaybackManager;
 
 use futures::future;
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use hyper::client::HttpConnector;
 use hyper::Client;
 use hyper_tls::HttpsConnector;

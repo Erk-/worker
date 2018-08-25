@@ -1,6 +1,6 @@
 use error::Error;
 
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use serenity::gateway::Shard;
 use std::cell::RefCell;
 use std::collections::HashMap;
