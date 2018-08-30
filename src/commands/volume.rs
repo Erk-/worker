@@ -1,24 +1,19 @@
-use command::{Command, CommandResult, Context, Response};
-
-use futures::prelude::*;
+use crate::command::{Command, CommandResult, Context, Response};
 
 pub fn volume() -> Command {
     Command {
         names: vec!["volume", "vol"],
         description: "Change the track volume",
-        executor: run,
     }
 }
 
-#[async(boxed)]
 #[cfg(not(feature = "patron"))]
-fn run(_ctx: Context) -> CommandResult {
+async fn run(_ctx: Context) -> CommandResult {
     Response::text("give me money to use this")
 }
 
-#[async(boxed)]
 #[cfg(feature = "patron")]
-fn run(ctx: Context) -> CommandResult {
+async fn run(ctx: Context) -> CommandResult {
     if ctx.args.len() != 1 {
         return Response::text("invalid args");
     }
@@ -29,7 +24,7 @@ fn run(ctx: Context) -> CommandResult {
     }
 
     let guild_id = ctx.msg.guild_id?.0;
-    let playback_manager = ctx.playback_manager.borrow();
+    let playback_manager = ctx.playback_manager.lock();
 
     if let Err(e) = playback_manager.volume(guild_id, volume) {
         error!("error pausing {:?}", e);

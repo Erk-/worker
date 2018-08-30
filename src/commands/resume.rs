@@ -1,19 +1,15 @@
-use command::{Command, CommandResult, Context, Response};
-
-use futures::prelude::*;
+use crate::command::{Command, CommandResult, Context, Response};
 
 pub fn resume() -> Command {
     Command {
         names: vec!["resume", "unpause", "unhold"],
         description: "Resumes the current song",
-        executor: run,
     }
 }
 
-#[async(boxed)]
 fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.msg.guild_id?.0;
-    let playback_manager = ctx.playback_manager.borrow();
+    let playback_manager = ctx.playback_manager.lock();
 
     if let Err(e) = playback_manager.resume(guild_id) {
         error!("error resuming {:?}", e);

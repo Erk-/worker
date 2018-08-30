@@ -1,34 +1,53 @@
 use hyper::Error as HyperError;
 use lavalink::Error as LavalinkError;
-use lavalink_futures::Error as LavalinkFuturesError;
+use lavalink_http_server_requester::Error as LavalinkHttpServerRequesterError;
 use native_tls::Error as NativeTlsError;
-use serde_json::error::Error as SerdeJsonError;
-use serenity::prelude::HttpError as SerenityHttpError;
-use serenity::Error as SerenityError;
-use std::cell::BorrowMutError;
-use std::error::Error as StdError;
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::io::Error as IoError;
-use std::num::ParseIntError;
-use std::option::NoneError;
+use redis_async::error::Error as RedisError;
+use serde_json::Error as SerdeJsonError;
+use serenity::{
+    prelude::HttpError as SerenityHttpError,
+    Error as SerenityError,
+};
+use std::{
+    cell::BorrowMutError,
+    error::Error as StdError,
+    fmt::{Display, Formatter, Result as FmtResult},
+    io::Error as IoError,
+    net::AddrParseError,
+    num::ParseIntError,
+    option::NoneError,
+    result::Result as StdResult,
+};
+use tokio::timer::Error as TokioTimerError;
+use toml::de::Error as TomlDeError;
 use tungstenite::error::Error as TungsteniteError;
 
-// TODO: can we do this with a macro
+pub type Result<T> = StdResult<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    AddrParse(AddrParseError),
     BorrowMut(BorrowMutError),
     Hyper(HyperError),
     Io(IoError),
     Lavalink(LavalinkError),
-    LavalinkFutures(LavalinkFuturesError),
+    LavalinkHttpServerRequester(LavalinkHttpServerRequesterError),
     NativeTls(NativeTlsError),
     None(NoneError),
     ParseInt(ParseIntError),
+    Redis(RedisError),
     SerdeJson(SerdeJsonError),
     Serenity(SerenityError),
     SerenityHttp(SerenityHttpError),
+    Timer(TokioTimerError),
+    TomlDe(TomlDeError),
     Tungstenite(TungsteniteError),
+}
+
+impl From<AddrParseError> for Error {
+    fn from(e: AddrParseError) -> Self {
+        Error::AddrParse(e)
+    }
 }
 
 impl From<BorrowMutError> for Error {
@@ -55,9 +74,9 @@ impl From<LavalinkError> for Error {
     }
 }
 
-impl From<LavalinkFuturesError> for Error {
-    fn from(e: LavalinkFuturesError) -> Self {
-        Error::LavalinkFutures(e)
+impl From<LavalinkHttpServerRequesterError> for Error {
+    fn from(e: LavalinkHttpServerRequesterError) -> Self {
+        Error::LavalinkHttpServerRequester(e)
     }
 }
 
@@ -79,6 +98,12 @@ impl From<ParseIntError> for Error {
     }
 }
 
+impl From<RedisError> for Error {
+    fn from(e: RedisError) -> Self {
+        Error::Redis(e)
+    }
+}
+
 impl From<SerdeJsonError> for Error {
     fn from(e: SerdeJsonError) -> Self {
         Error::SerdeJson(e)
@@ -97,6 +122,18 @@ impl From<SerenityHttpError> for Error {
     }
 }
 
+impl From<TokioTimerError> for Error {
+    fn from(e: TokioTimerError) -> Self {
+        Error::Timer(e)
+    }
+}
+
+impl From<TomlDeError> for Error {
+    fn from(e: TomlDeError) -> Self {
+        Error::TomlDe(e)
+    }
+}
+
 impl From<TungsteniteError> for Error {
     fn from(e: TungsteniteError) -> Self {
         Error::Tungstenite(e)
@@ -112,17 +149,21 @@ impl Display for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
+            Error::AddrParse(ref e) => e.description(),
             Error::BorrowMut(ref e) => e.description(),
             Error::Hyper(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
-            Error::LavalinkFutures(ref e) => e.description(),
+            Error::LavalinkHttpServerRequester(ref e) => e.description(),
             Error::NativeTls(ref e) => e.description(),
             Error::None(_) => "Option value not present",
             Error::ParseInt(ref e) => e.description(),
+            Error::Redis(ref e) => e.description(),
             Error::SerdeJson(ref e) => e.description(),
             Error::Serenity(ref e) => e.description(),
             Error::SerenityHttp(ref e) => e.description(),
+            Error::Timer(ref e) => e.description(),
+            Error::TomlDe(ref e) => e.description(),
             Error::Tungstenite(ref e) => e.description(),
         }
     }

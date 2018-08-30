@@ -1,24 +1,23 @@
-use command::{Command, CommandResult, Context, Response};
+use super::prelude::*;
 
-use futures::prelude::*;
-
-pub fn pause() -> Command {
-    Command {
-        names: vec!["pause", "hold"],
-        description: "Pause the current song",
-        executor: run,
-    }
+#[allow(dead_code)]
+pub fn description() -> &'static str {
+    "Pause the current song"
 }
 
-#[async(boxed)]
-fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
-    let playback_manager = ctx.playback_manager.borrow();
+#[allow(dead_code)]
+pub fn names() -> &'static [&'static str] {
+    &["hold", "pause"]
+}
 
-    if let Err(e) = playback_manager.pause(guild_id) {
-        error!("error pausing {:?}", e);
-        Response::text("error pausing")
-    } else {
-        Response::text("put it on hold")
+pub async fn run(ctx: Context) -> CommandResult {
+    let guild_id = ctx.msg.guild_id?.0;
+    match await!(ctx.state.playback.pause(guild_id)) {
+        Ok(()) => Response::text("paused"),
+        Err(why) => {
+            warn!("Error pausing guild id {}: {:?}", guild_id, why);
+
+            Response::text("error pausing")
+        },
     }
 }

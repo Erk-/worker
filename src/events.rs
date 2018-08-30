@@ -1,101 +1,51 @@
-use cache::DiscordCache;
-use command::{run as run_command, CommandManager, Context};
-use config::Config;
-use error::Error;
-use queue::QueueManager;
-use shards::ShardManager;
-use streams::PlaybackManager;
-
-use futures::future;
-use futures::prelude::{async, await};
-use hyper::client::HttpConnector;
-use hyper::Client;
+use crate::{
+    command::Context,
+    commands,
+    error::{Error, Result},
+    worker::WorkerState,
+};
+use futures::future::TryFutureExt;
+use hyper::client::{Client, HttpConnector};
 use hyper_tls::HttpsConnector;
 use lavalink::model::VoiceUpdate;
-use lavalink_futures::nodes::NodeManager;
-use lavalink_futures::player::AudioPlayer;
-use lavalink_futures::reexports::OwnedMessage;
-use serenity::gateway::Shard;
-use serenity::http::Client as SerenityHttpClient;
-use serenity::model::event::{GatewayEvent, MessageCreateEvent};
-use std::cell::{Cell, RefCell};
-use std::rc::Rc;
-use tokio_core::reactor::Handle;
-use tungstenite::Message as TungsteniteMessage;
+use parking_lot::RwLock;
+use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent};
+use std::sync::Arc;
 
 pub type HyperHttpClient = Client<HttpsConnector<HttpConnector>>;
-type LavalinkHandlerFuture<T> = Box<Future<Item = T, Error = ()>>;
 
 pub struct DiscordEventHandler {
-    handle: Handle,
-    http_client: Rc<HyperHttpClient>,
-    serenity_http: Rc<SerenityHttpClient>,
-    command_manager: Rc<RefCell<CommandManager>>,
-    discord_cache: Rc<RefCell<DiscordCache>>,
-    node_manager: Rc<RefCell<NodeManager>>,
-    queue_manager: Rc<RefCell<QueueManager>>,
-    playback_manager: Rc<RefCell<PlaybackManager>>,
-    current_user_id: Option<u64>,
-    config: Rc<Cell<Config>>,
+    state: Arc<WorkerState>,
+    current_user_id: Arc<RwLock<u64>>,
 }
 
 impl DiscordEventHandler {
-    pub fn new(
-        handle: Handle,
-        http_client: Rc<HyperHttpClient>,
-        serenity_http: Rc<SerenityHttpClient>,
-        command_manager: Rc<RefCell<CommandManager>>,
-        discord_cache: Rc<RefCell<DiscordCache>>,
-        node_manager: Rc<RefCell<NodeManager>>,
-        queue_manager: Rc<RefCell<QueueManager>>,
-        playback_manager: Rc<RefCell<PlaybackManager>>,
-        config: Rc<Cell<Config>>,
-    ) -> Result<Self, Error> {
-        Ok(Self {
-            handle,
-            http_client,
-            serenity_http,
-            command_manager,
-            discord_cache,
-            node_manager,
-            queue_manager,
-            playback_manager,
-            current_user_id: None,
-            config,
-        })
+    pub fn new(state: Arc<WorkerState>) -> Self {
+        Self {
+            current_user_id: Arc::new(RwLock::new(0)),
+            state,
+        }
     }
 
-    pub fn on_event(&mut self, event: GatewayEvent, shard: Rc<RefCell<Shard>>) {
-        use Event::*;
-        use GatewayEvent::Dispatch;
+    pub async fn dispatch(
+        &self,
+        event: GatewayEvent,
+        shard_id: u64,
+    ) -> Result<()> {
+        use self::Event::*;
+        use self::GatewayEvent::Dispatch;
 
         match event {
             Dispatch(_, Ready(e)) => {
-                self.current_user_id = Some(e.ready.user.id.0);
-                info!("Received Ready event! User id: {:?}", self.current_user_id);
+                let id = e.ready.user.id.0;
+                *self.current_user_id.write() = id;
+                info!("Received Ready event! User id: {:?}", id);
             }
             Dispatch(_, MessageCreate(e)) => {
                 trace!("Received MessageCreate event");
 
-                let future = on_message(
-                    e,
-                    self.command_manager.clone(),
-                    self.handle.clone(),
-                    self.http_client.clone(),
-                    self.serenity_http.clone(),
-                    self.discord_cache.clone(),
-                    shard,
-                    self.node_manager.clone(),
-                    self.queue_manager.clone(),
-                    self.playback_manager.clone(),
-                    self.config.clone(),
-                ).map_err(|e| match e {
-                    Error::None(_) => debug!("none error handling MessageCreate"),
-                    _ => error!("error handling MessageCreate: {:?}", e),
-                });
-
-                self.handle.spawn(future);
-            }
+                await!(on_message(e, Arc::clone(&self.state), shard_id))?;
+            },
             Dispatch(_, VoiceServerUpdate(e)) => {
                 trace!("Received VoiceServerUpdate event: {:?}", &e);
 
@@ -103,83 +53,58 @@ impl DiscordEventHandler {
                     Some(guild_id) => guild_id.0,
                     None => {
                         trace!("No guild id for voice server update");
-                        return;
+                        return Ok(());
                     }
                 };
 
-                let session_id = match &self.current_user_id {
-                    Some(user_id) => {
-                        let discord_cache = self.discord_cache.borrow();
+                let session_id = {
+                    let discord_cache = self.state.cache.read();
 
-                        match discord_cache.get_user_voice_state(&guild_id, &user_id) {
-                            Some(voice_state) => voice_state.session_id.clone(),
-                            None => {
-                                error!("bot user has no voice state to get session id");
-                                return;
-                            }
+                    match discord_cache.get_user_voice_state(&guild_id, &self.current_user_id.read()) {
+                        Some(voice_state) => voice_state.session_id.clone(),
+                        None => {
+                            error!("bot user has no voice state to get session id");
+                            return Ok(());
                         }
                     }
-                    None => {
-                        error!("received voice server update before ready event!");
-                        return;
-                    }
                 };
 
-                let node_manager = self.node_manager.borrow();
-                let mut player_manager = node_manager.player_manager.borrow_mut();
-
-                let mut player = match player_manager.get_mut(&guild_id) {
-                    Some(player) => player,
-                    None => {
-                        error!(
-                            "no player for guild {} to send voice server update to",
-                            &guild_id
-                        );
-                        return;
-                    }
-                };
-
-                let json = ::serde_json::to_string(&VoiceUpdate::new(
+                let update = VoiceUpdate::new(
                     session_id,
                     guild_id.to_string(),
                     e.token,
                     e.endpoint.unwrap(),
-                )).expect("could not encode VoiceUpdate as json");
+                );
 
-                if let Err(e) = player.send(OwnedMessage::Text(json)) {
-                    error!(
-                        "error sending voice server update to lavalink node: {:?}",
-                        e
-                    );
-                } else {
-                    trace!("sent voice server update to lavalink node");
+                match await!(self.state.playback.voice_update(update)) {
+                    Ok(()) => {
+                        trace!("Sent voice server update to lavalink server");
+                    },
+                    Err(why) => {
+                        warn!(
+                            "Error sending voice update to lavalink server: {:?}",
+                            why,
+                        );
+                    },
                 }
-            }
+            },
             _ => {}
         }
+
+        Ok(())
     }
 }
 
-#[async]
-fn get_prefix(_guild_id: u64) -> Result<String, Error> {
+async fn get_prefix(_guild_id: u64) -> Result<String> {
     // todo dynamic prefix
     Ok(">".into())
 }
 
-#[async]
-fn on_message(
+async fn on_message(
     event: MessageCreateEvent,
-    command_manager: Rc<RefCell<CommandManager>>,
-    handle: Handle,
-    http_client: Rc<HyperHttpClient>,
-    serenity_http: Rc<SerenityHttpClient>,
-    discord_cache: Rc<RefCell<DiscordCache>>,
-    shard: Rc<RefCell<Shard>>,
-    node_manager: Rc<RefCell<NodeManager>>,
-    queue_manager: Rc<RefCell<QueueManager>>,
-    playback_manager: Rc<RefCell<PlaybackManager>>,
-    config: Rc<Cell<Config>>,
-) -> Result<(), Error> {
+    state: Arc<WorkerState>,
+    shard_id: u64,
+) -> Result<()> {
     let msg = event.message;
     if msg.author.bot {
         return Ok(());
@@ -198,137 +123,29 @@ fn on_message(
     let mut content_iter = content_trimmed.split_whitespace();
     let command_name = content_iter.next()?;
 
-    let command_manager = command_manager.borrow();
-    let alias = command_name.to_lowercase();
-    let command = command_manager.get(&alias)?;
-
-    let context = Context {
-        handle: handle.clone(),
-        http_client: http_client.clone(),
-        serenity_http: serenity_http.clone(),
-        discord_cache: discord_cache,
-        node_manager,
-        queue_manager,
-        playback_manager,
-        config,
-        shard,
-        msg,
-        args: content_iter.map(|s| s.to_string()).collect(),
-        alias
-    };
-
-    let future = run_command(command.executor, context).map_err(|e| match e {
-        Error::None(_) => debug!("none error running command"),
-        _ => error!("error running command: {:?}", e),
-    });
-
-    handle.spawn(future);
-    Ok(())
-}
-
-pub struct LavalinkEventHandler {
-    shard_manager: Rc<ShardManager>,
-    playback_manager: Rc<RefCell<PlaybackManager>>,
-}
-
-impl LavalinkEventHandler {
-    pub fn new(
-        shard_manager: Rc<ShardManager>,
-        playback_manager: Rc<RefCell<PlaybackManager>>,
-    ) -> Self {
-        Self {
-            shard_manager,
-            playback_manager,
-        }
-    }
-}
-
-impl ::lavalink_futures::EventHandler for LavalinkEventHandler {
-    fn forward(
-        &mut self,
-        shard_id: u64,
-        message: &str,
-    ) -> LavalinkHandlerFuture<Option<OwnedMessage>> {
-        let shard = match self.shard_manager.get_shard(&shard_id) {
-            Some(shard) => shard,
-            None => {
-                error!("could not get shard {} from manager", shard_id);
-                return box future::ok(None);
-            }
+    {
+        let alias = command_name.to_lowercase();
+        let ctx = Context {
+            state,
+            shard_id,
+            msg,
+            args: content_iter.map(|s| s.to_string()).collect(),
+            alias: alias.clone(),
         };
 
-        let mut lock = shard.borrow_mut();
-        debug!("forwarding {}", message);
-        if let Err(e) = lock.send(TungsteniteMessage::Text(message.to_owned())) {
-            error!(
-                "error sending message to shard {} websocket {}: {:?}",
-                shard_id, message, e
-            );
+        let result = match &*alias {
+            "connect" | "j" | "join" => await!(commands::join::run(ctx)),
+            "disconnect" | "l" | "leave" => await!(commands::leave::run(ctx)),
+            _ => None?,
+        };
+
+        if let Err(why) = result {
+            match why {
+                Error::None(_) => debug!("none error running command"),
+                other => error!("error running command: {:?}", other),
+            }
         }
-
-        box future::ok(None)
     }
 
-    fn is_connected(&mut self, shard_id: u64) -> LavalinkHandlerFuture<bool> {
-        debug!("is connected: {}", shard_id);
-        box future::ok(true)
-    }
-
-    fn is_valid(
-        &mut self,
-        guild_id: &str,
-        channel_id: Option<String>,
-    ) -> LavalinkHandlerFuture<bool> {
-        debug!(
-            "is valid: guild_id: {}, channel_id: {:?}",
-            guild_id, channel_id
-        );
-        box future::ok(true)
-    }
-
-    fn track_end(
-        &mut self,
-        player: &mut AudioPlayer,
-        track: String,
-        reason: String,
-    ) -> LavalinkHandlerFuture<()> {
-        debug!("track end: track: {}, reason: {}", track, reason);
-
-        // WE DID THIS
-        // if we don't break out here the bot will Die
-        if reason == "REPLACED" {
-            return box future::ok(());
-        }
-
-        let playback_manager = self.playback_manager.borrow();
-
-        if let Err(e) = playback_manager.play_next(player, false) {
-            error!("error playing track {:?}", e);
-        }
-
-        box future::ok(())
-    }
-
-    fn track_exception(
-        &mut self,
-        _player: &mut AudioPlayer,
-        track: String,
-        error: String,
-    ) -> LavalinkHandlerFuture<()> {
-        debug!("track exception: track: {}, error: {}", track, error);
-        box future::ok(())
-    }
-
-    fn track_stuck(
-        &mut self,
-        _player: &mut AudioPlayer,
-        track: String,
-        threshold_ms: i64,
-    ) -> LavalinkHandlerFuture<()> {
-        debug!(
-            "track stuck: track: {}, threshold_ms: {}",
-            track, threshold_ms
-        );
-        box future::ok(())
-    }
+    Ok(())
 }

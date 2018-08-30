@@ -1,44 +1,35 @@
-use cache::DiscordCache;
-use config::Config;
-use error::Error;
-use events::HyperHttpClient;
-use queue::QueueManager;
-use streams::PlaybackManager;
+use crate::{
+    worker::WorkerState,
+    Result,
+};
+use futures::{
+    compat::Future01CompatExt,
+    FutureExt,
+    TryFutureExt,
+};
+use serenity::{
+    builder::CreateMessage,
+    model::channel::Message,
+};
+use std::{
+    future::FutureObj,
+    sync::Arc,
+};
 
-use futures::prelude::{async, await};
-use lavalink_futures::nodes::NodeManager;
-use serenity::builder::CreateMessage;
-use serenity::gateway::Shard;
-use serenity::http::Client as SerenityHttpClient;
-use serenity::model::channel::Message;
-use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
-use std::rc::Rc;
-use tokio_core::reactor::Handle;
+pub type CommandResult = Result<Response>;
 
-pub type CommandResult = Result<Response, Error>;
-type CommandExecutor = fn(Context) -> Box<Future<Item = Response, Error = Error>>;
-type ICommand = Rc<Command>;
-
-pub struct Command {
-    pub names: Vec<&'static str>,
-    pub description: &'static str,
-    pub executor: CommandExecutor,
+pub trait Command: Sync {
+    fn description(&self) -> String;
+    fn executor(&self, ctx: Context) -> FutureObj<CommandResult>;
+    fn names(&self) -> Vec<String>;
 }
 
 pub struct Context {
-    pub handle: Handle,
-    pub http_client: Rc<HyperHttpClient>,
-    pub serenity_http: Rc<SerenityHttpClient>,
-    pub discord_cache: Rc<RefCell<DiscordCache>>,
-    pub node_manager: Rc<RefCell<NodeManager>>,
-    pub queue_manager: Rc<RefCell<QueueManager>>,
-    pub playback_manager: Rc<RefCell<PlaybackManager>>,
-    pub config: Rc<Cell<Config>>,
-    pub shard: Rc<RefCell<Shard>>,
-    pub msg: Message,
-    pub args: Vec<String>,
     pub alias: String,
+    pub args: Vec<String>,
+    pub shard_id: u64,
+    pub state: Arc<WorkerState>,
+    pub msg: Message,
 }
 
 pub enum Response {
@@ -46,57 +37,38 @@ pub enum Response {
 }
 
 impl Response {
-    pub fn text<S: Into<String>>(content: S) -> CommandResult {
+    pub fn text(content: impl Into<String>) -> CommandResult {
+        Self::_text(content.into())
+    }
+
+    fn _text(content: String) -> CommandResult {
         Ok(Response::Text(content.into()))
     }
 }
 
-#[async]
-pub fn run(executor: CommandExecutor, ctx: Context) -> Result<(), Error> {
-    let serenity_http = ctx.serenity_http.clone();
+pub async fn run(command: Box<Command + 'static>, ctx: Context) -> Result<()> {
+    let serenity_http = Arc::clone(&ctx.state.serenity);
     let channel_id = ctx.msg.channel_id.0;
 
-    let response = await!((executor)(ctx))?;
+    let response = await!(command.executor(ctx))?;
     let m = match response {
         Response::Text(content) => |mut m: CreateMessage| {
             m.content(content);
+
             m
         },
     };
 
     let future = serenity_http
         .send_message(channel_id, m)
-        .map(move |m| trace!("Sent message to channel {}: {}", channel_id, m.content))
-        .map_err(From::from);
+        .compat()
+        .map_ok(move |msg| {
+            trace!("Sent message to channel {}: {}", channel_id, msg.content);
+        })
+        .unit_error()
+        .boxed();
 
-    await!(future)
-}
+    await!(future);
 
-pub struct CommandManager {
-    pub handle: Handle,
-    pub commands: HashMap<String, ICommand>,
-}
-
-impl CommandManager {
-    pub fn new(handle: Handle, commands: Vec<Command>) -> Self {
-        let commands = commands
-            .into_iter()
-            .map(Rc::new)
-            .flat_map(|command| {
-                command
-                    .names
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .into_iter()
-                    .map(move |name| (name, command.clone()))
-            })
-            .collect();
-
-        Self { handle, commands }
-    }
-
-    pub fn get(&self, name: &str) -> Result<ICommand, Error> {
-        Ok(self.commands.get(name)?.clone())
-    }
+    Ok(())
 }

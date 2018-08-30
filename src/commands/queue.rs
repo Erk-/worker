@@ -1,4 +1,4 @@
-use command::{Command, CommandResult, Context, Response};
+use crate::command::{Command, CommandResult, Context, Response};
 
 use futures::prelude::*;
 use humantime::format_duration;
@@ -9,18 +9,16 @@ pub fn queue() -> Command {
     Command {
         names: vec!["queue", "q"],
         description: "Show the queue",
-        executor: run,
     }
 }
 
-#[async(boxed)]
-fn run(ctx: Context) -> CommandResult {
+async fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.msg.guild_id?.0;
 
     let (size, queue) = {
-        let mut queue_manager = ctx.queue_manager.try_borrow_mut()?;
+        let mut queue_manager = ctx.queue_manager.lock();
         let queue_lock = queue_manager.get_or_create(guild_id);
-        let queue = queue_lock.borrow();
+        let queue = queue_lock.lock();
 
         (queue.size(), queue.peek())
     };
@@ -44,7 +42,7 @@ fn run(ctx: Context) -> CommandResult {
     let content = formatted.join("\n");
 
     let current = {
-        let playback_manager = ctx.playback_manager.borrow();
+        let playback_manager = ctx.playback_manager.lock();
         let state = playback_manager.current(guild_id)?;
 
         match state.track.as_ref() {
