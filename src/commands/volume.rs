@@ -1,35 +1,61 @@
-use crate::command::{Command, CommandResult, Context, Response};
+use super::prelude::*;
 
-pub fn volume() -> Command {
-    Command {
-        names: vec!["volume", "vol"],
-        description: "Change the track volume",
-    }
+pub const fn description() -> &'static str {
+    "Change the track volume"
+}
+
+pub const fn names() -> &'static [&'static str] {
+    &["volume", "vol", "v"]
 }
 
 #[cfg(not(feature = "patron"))]
-async fn run(_ctx: Context) -> CommandResult {
-    Response::text("give me money to use this")
+pub async fn run(_: Context) -> CommandResult {
+    Response::text(r#"**The volume command is dabBot premium only!**
+
+Donate for the `Volume Control` tier on Patreon at https://patreon.com/dabbot to gain access."#)
 }
 
 #[cfg(feature = "patron")]
-async fn run(ctx: Context) -> CommandResult {
-    if ctx.args.len() != 1 {
-        return Response::text("invalid args");
-    }
+pub async fn run(ctx: Context) -> CommandResult {
+    let arg_len = ctx.args.len();
 
-    let volume = ctx.args[0].parse::<i32>()?;
-    if volume < 0 || volume > 150 {
-        return Response::text("volume gotta be in [0, 150] or else");
-    }
+    if arg_len == 0 {
+        let guild_id = ctx.msg.guild_id?.0;
 
-    let guild_id = ctx.msg.guild_id?.0;
-    let playback_manager = ctx.playback_manager.lock();
+        let player = match await!(ctx.state.playback.current(guild_id)) {
+            Ok(player) => player,
+            Err(why) => {
+                warn!("Err getting current player: {:?}", why);
 
-    if let Err(e) = playback_manager.volume(guild_id, volume) {
-        error!("error pausing {:?}", e);
-        Response::text("error pausing")
+                return Response::text("There was an error getting the volume");
+            },
+        };
+
+        Response::text(format!("The volume is currently {}", player.volume))
+    } else if arg_len == 1 {
+        let volume = match ctx.args[0].parse::<u64>() {
+            Ok(volume @ 0 ... 150) => volume,
+            Ok(_) | Err(_) => {
+                return Response::text("The volume must be between 0 and 150");
+            },
+        };
+
+        let guild_id = ctx.msg.guild_id?.0;
+
+        match await!(ctx.state.playback.volume(guild_id, volume)) {
+            Ok(()) => Response::text("Updated the volume"),
+            Err(why) => {
+                warn!(
+                    "Error updating volume to {} for {}: {:?}",
+                    volume,
+                    guild_id,
+                    why,
+                );
+
+                Response::text("Error updating the volume")
+            },
+        }
     } else {
-        Response::text("put it on hold")
+        Response::text("You passed too many arguments!")
     }
 }

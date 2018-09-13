@@ -1,22 +1,27 @@
 mod prelude;
 
-// todo: it would be so hot if this could not repeat itself so much
-// figure it out if i can do some big magic with a macro here
+pub mod about;
+pub mod invite;
 pub mod join;
 pub mod leave;
 pub mod pause;
-// pub mod play;
-// pub mod playing;
-// pub mod queue;
-// pub mod resume;
-// pub mod skip;
-// pub mod test;
-// pub mod volume;
+pub mod ping;
+pub mod play;
+pub mod playing;
+pub mod providers;
+pub mod queue;
+pub mod remove;
+pub mod restart;
+pub mod resume;
+pub mod seek;
+pub mod skip;
+pub mod volume;
 
-// use self::play::play;
-// use self::playing::playing;
-// use self::queue::queue;
-// use self::resume::resume;
-// use self::skip::skip;
-// use self::test::test;
-// use self::volume::volume;
+use crate::{
+    command::Response,
+    Result,
+};
+
+fn no_song() -> Result<Response> {
+    Response::text("No music is queued or playing on this guild! Add some using `!!!play <song name/link>`")
+}

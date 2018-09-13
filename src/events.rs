@@ -1,111 +1,101 @@
 use crate::{
-    command::Context,
+    command::{Context, Response},
     commands,
     error::{Error, Result},
     worker::WorkerState,
 };
-use futures::future::TryFutureExt;
-use hyper::client::{Client, HttpConnector};
-use hyper_tls::HttpsConnector;
+use futures::{
+    compat::{Future01CompatExt as _, TokioDefaultSpawner},
+    future::{FutureExt as _, TryFutureExt as _},
+};
 use lavalink::model::VoiceUpdate;
-use parking_lot::RwLock;
-use serenity::model::event::{Event, GatewayEvent, MessageCreateEvent};
+use serenity::model::event::{
+    Event,
+    GatewayEvent,
+    MessageCreateEvent,
+    ReadyEvent,
+    VoiceServerUpdateEvent,
+};
 use std::sync::Arc;
-
-pub type HyperHttpClient = Client<HttpsConnector<HttpConnector>>;
+use tokio::prelude::Future as Future01;
 
 pub struct DiscordEventHandler {
     state: Arc<WorkerState>,
-    current_user_id: Arc<RwLock<u64>>,
 }
 
 impl DiscordEventHandler {
     pub fn new(state: Arc<WorkerState>) -> Self {
         Self {
-            current_user_id: Arc::new(RwLock::new(0)),
             state,
         }
     }
 
-    pub async fn dispatch(
+    pub fn dispatch(
         &self,
         event: GatewayEvent,
         shard_id: u64,
     ) -> Result<()> {
+        trace!(
+            "Discord dispatcher received event on shard {}: {:?}",
+            shard_id,
+            event,
+        );
         use self::Event::*;
         use self::GatewayEvent::Dispatch;
 
         match event {
-            Dispatch(_, Ready(e)) => {
-                let id = e.ready.user.id.0;
-                *self.current_user_id.write() = id;
-                info!("Received Ready event! User id: {:?}", id);
-            }
+            Dispatch(_, Ready(e)) => self.ready(e),
             Dispatch(_, MessageCreate(e)) => {
-                trace!("Received MessageCreate event");
-
-                await!(on_message(e, Arc::clone(&self.state), shard_id))?;
-            },
-            Dispatch(_, VoiceServerUpdate(e)) => {
-                trace!("Received VoiceServerUpdate event: {:?}", &e);
-
-                let guild_id = match e.guild_id {
-                    Some(guild_id) => guild_id.0,
-                    None => {
-                        trace!("No guild id for voice server update");
-                        return Ok(());
-                    }
-                };
-
-                let session_id = {
-                    let discord_cache = self.state.cache.read();
-
-                    match discord_cache.get_user_voice_state(&guild_id, &self.current_user_id.read()) {
-                        Some(voice_state) => voice_state.session_id.clone(),
-                        None => {
-                            error!("bot user has no voice state to get session id");
-                            return Ok(());
-                        }
-                    }
-                };
-
-                let update = VoiceUpdate::new(
-                    session_id,
-                    guild_id.to_string(),
-                    e.token,
-                    e.endpoint.unwrap(),
-                );
-
-                match await!(self.state.playback.voice_update(update)) {
-                    Ok(()) => {
-                        trace!("Sent voice server update to lavalink server");
-                    },
-                    Err(why) => {
+                let future = message_create(e, shard_id, Arc::clone(&self.state))
+                    .boxed()
+                    .compat(TokioDefaultSpawner)
+                    .map_err(|why| {
                         warn!(
-                            "Error sending voice update to lavalink server: {:?}",
+                            "Error dispatching message create: {:?}",
                             why,
                         );
-                    },
-                }
+                    });
+
+                tokio::spawn(future);
             },
-            _ => {}
+            Dispatch(_, VoiceServerUpdate(e)) => {
+                let future = voice_server_update(e, Arc::clone(&self.state))
+                    .boxed()
+                    .compat(TokioDefaultSpawner)
+                    .map_err(|why| {
+                        warn!(
+                            "Error dispatching voice server update: {:?}",
+                            why,
+                        );
+                    });
+
+                tokio::spawn(future);
+            },
+            _ => {},
         }
 
         Ok(())
     }
+
+    fn ready(&self, event: ReadyEvent) {
+        info!("Received Ready event! User id: {:?}", event.ready.user.id);
+    }
 }
 
 async fn get_prefix(_guild_id: u64) -> Result<String> {
-    // todo dynamic prefix
+    // todo
     Ok(">".into())
 }
 
-async fn on_message(
+async fn message_create(
     event: MessageCreateEvent,
-    state: Arc<WorkerState>,
     shard_id: u64,
+    state: Arc<WorkerState>,
 ) -> Result<()> {
+    debug!("Received MessageCreate event: {:?}", event);
+
     let msg = event.message;
+
     if msg.author.bot {
         return Ok(());
     }
@@ -114,37 +104,119 @@ async fn on_message(
 
     let guild_id = msg.guild_id?.0;
 
+    debug!("Getting guild prefix");
     let prefix = await!(get_prefix(guild_id))?;
+
     if !content.starts_with(&prefix) {
+        debug!("Message doesn't start with prefix: {}", prefix);
+
         return Ok(());
     }
 
     let content_trimmed: String = content.chars().skip(prefix.len()).collect();
-    let mut content_iter = content_trimmed.split_whitespace();
+    let content_iter = content_trimmed.split_whitespace().collect::<Vec<&str>>();
+    debug!("content iter: {:?}", content_iter);
+    let mut content_iter = content_iter.iter();
+    debug!("Determining command name");
     let command_name = content_iter.next()?;
+
+    debug!("Command name: {}", command_name);
 
     {
         let alias = command_name.to_lowercase();
+        let channel_id = msg.channel_id.0;
         let ctx = Context {
-            state,
-            shard_id,
-            msg,
             args: content_iter.map(|s| s.to_string()).collect(),
             alias: alias.clone(),
+            state: Arc::clone(&state),
+            msg,
+            shard_id,
         };
 
         let result = match &*alias {
-            "connect" | "j" | "join" => await!(commands::join::run(ctx)),
-            "disconnect" | "l" | "leave" => await!(commands::leave::run(ctx)),
-            _ => None?,
+            "about" => await!(commands::about::run(ctx)),
+            "invite" => await!(commands::invite::run(ctx)),
+            "join" | "j" | "connect" => await!(commands::join::run(ctx)),
+            "leave" | "l" | "disconnect" => await!(commands::leave::run(ctx)),
+            "pause" | "hold" => await!(commands::pause::run(ctx)),
+            "ping" => await!(commands::ping::run(ctx)),
+            "play" | "p" => await!(commands::play::run(ctx)),
+            "playing" | "np" | "nowplaying" | "current" => {
+                await!(commands::playing::run(ctx))
+            },
+            "providers" => await!(commands::providers::run(ctx)),
+            "queue" | "q" | "que" => await!(commands::queue::run(ctx)),
+            "remove" => await!(commands::remove::run(ctx)),
+            "restart" => await!(commands::restart::run(ctx)),
+            "resume" | "unpause" => await!(commands::resume::run(ctx)),
+            "seek" => await!(commands::seek::run(ctx)),
+            "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
+            "volume" | "v" => await!(commands::volume::run(ctx)),
+            _ => {
+                debug!("No command matched alias: {}", alias);
+
+                return Ok(());
+            },
         };
 
-        if let Err(why) = result {
-            match why {
-                Error::None(_) => debug!("none error running command"),
-                other => error!("error running command: {:?}", other),
-            }
+        match result {
+            Ok(Response::Text(content)) => {
+                await!(state.serenity.send_message(
+                    channel_id,
+                    |mut m| {
+                        m.content(content);
+
+                        m
+                    },
+                ).compat())?;
+            },
+            Err(Error::None(_)) => debug!("None error running command"),
+            Err(other) => error!("Error running command: {:?}", other),
         }
+    }
+
+    Ok(())
+}
+
+async fn voice_server_update(
+    event: VoiceServerUpdateEvent,
+    state: Arc<WorkerState>,
+) -> Result<()> {
+    debug!("Received VoiceServerUpdate event: {:?}", &event);
+
+    let guild_id = event.guild_id.map(|x| x.0)?;
+
+    debug!("Got guild id");
+
+    let session_id = {
+        let discord_cache = state.cache.read();
+
+        debug!("Getting session id for current user");
+        discord_cache.get_user_voice_state(
+            &guild_id,
+            &state.config.discord_user_id,
+        ).map(|x| x.session_id.clone())?
+    };
+
+    debug!("Got session id for current user");
+
+    let update = VoiceUpdate::new(
+        session_id,
+        guild_id.to_string(),
+        event.token,
+        event.endpoint.unwrap(),
+    );
+
+    match await!(state.playback.voice_update(update)) {
+        Ok(()) => {
+            debug!("Sent voice server update to lavalink server");
+        },
+        Err(why) => {
+            warn!(
+                "Error sending voice update to lavalink server: {:?}",
+                why,
+            );
+        },
     }
 
     Ok(())

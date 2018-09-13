@@ -1,12 +1,12 @@
-cargo-features = ["edition"]
-
 [package]
 edition = "2018"
-name = "rust-music-bot-futures"
+name = "dabbot"
+publish = false
 version = "0.1.0"
 authors = ["SpongyBacon <spongybacon@hotmail.co.uk>"]
 
 [dependencies]
+byteorder = "1"
 env_logger = "0.5"
 humantime = "1"
 hyper = "0.12"
@@ -14,17 +14,17 @@ hyper-tls = "0.3"
 log = "0.4"
 native-tls = "0.2"
 parking_lot = "0.6"
-redis-async = "0.4"
+redis-async = { git = "https://github.com/zeyla/redis-async-rs" }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
 toml = "0.4"
 tungstenite = "0.6"
-tokio-async-await = "0.1"
+tokio = "0.1"
 
 [dependencies.futures-preview]
 features = ["compat", "tokio-compat"]
-git = "https://github.com/rust-lang-nursery/futures-rs"
+version = "0.3.0-alpha.6"
 
 [dependencies.lavalink]
 git = "https://github.com/zeyla/lavalink.rs"
@@ -32,7 +32,14 @@ git = "https://github.com/zeyla/lavalink.rs"
 [dependencies.lavalink-http-server-requester]
 git = "https://github.com/zeyla/lavalink-http-server-requester.rs"
 
+[dependencies.lavalink-queue-requester]
+git = "https://github.com/zeyla/lavalink-queue"
+
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
 branch = "futures"
 default-features = true
+
+[features]
+default = []
+patron = []

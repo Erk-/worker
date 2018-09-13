@@ -1,82 +1,50 @@
-use crate::command::{Command, CommandResult, Context, Response};
+use super::prelude::*;
 
-pub fn play() -> Command {
-    Command {
-        names: vec!["play", "p", "search", "youtube", "soundcloud"],
-        description: "plays a song",
-    }
+pub const fn description() -> &'static str {
+    "plays a song"
 }
 
-async fn run(ctx: Context) -> CommandResult {
-    // if ctx.args.len() < 1 {
-    //     return Response::text("NEED ARGS");
-    // }
-    // let arg = ctx.args[0].clone();
-    // let has_arg = arg.starts_with("-");
+pub const fn names() -> &'static [&'static str] {
+    &["play", "p", "search", "youtube", "soundcloud"]
+}
 
-    // let tracks = {
-    //     let id = if has_arg {
-    //         ctx.args[1..].join(" ")
-    //     } else {
-    //         ctx.args.join(" ")
-    //     };
+pub async fn run(mut ctx: Context) -> CommandResult {
+    if ctx.args.len() < 1 {
+        return Response::text("You need to say the link to the song or the name of what you want to play");
+    }
 
-    //     let (host, password) = {
-    //         let node_manager = ctx.node_manager.lock();
-    //         let node = node_manager.get_node(&node_manager.best_node()?)?;
-    //         let node = node.lock();
+    let query = ctx.args.remove(0);
 
-    //         (node.http_host.clone(), node.password.clone())
-    //     };
+    let mut tracks = match await!(ctx.state.playback.search(query.clone())) {
+        Ok(tracks) => tracks,
+        Err(why) => {
+            warn!("Err searching tracks for query '{}': {:?}", query, why);
 
-    //     debug!("requesting tracks for {}", id);
-    //     let is_search = id.starts_with("ytsearch:") || id.starts_with("scsearch:");
-    //     let load = await!(ctx.http_client.load_tracks(host.clone(), password.clone(), id.clone()))?;
+            return Response::text("There was an error searching for that");
+        },
+    };
 
-    //     if load.tracks.len() < 1 && !is_search {
-    //         let prefix = if ctx.alias == "soundcloud" { "scsearch:" } else { "ytsearch:" };
-    //         let id = format!("{}:{}", prefix, id);
-    //         await!(ctx.http_client.load_tracks(host, password, id))?.tracks
-    //     } else {
-    //         load.tracks
-    //     }
-    // };
-    // debug!("returned tracks: {:?}", &tracks);
-    // // TODO: choose command
+    let song = tracks.tracks.remove(0);
 
-    // let user_id = ctx.msg.author.id.0;
-    // let guild_id = ctx.msg.guild_id?.0;
+    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
+        Ok(()) => {
+            let seconds_total = (song.info.length as f64 / 1000f64).floor() as i64;
+            let minutes = (seconds_total as f64 / 60f64).floor();
+            let seconds = seconds_total % 60;
+            let text = format!(
+                "Now playing **{}** by **{}** `[{:02}:{:02}]`",
+                song.info.title,
+                song.info.author,
+                minutes,
+                seconds,
+            );
 
-    // {
-    //     let mut queue_manager = ctx.queue_manager.lock();
-    //     let queue_lock = queue_manager.get_or_create(guild_id);
-    //     let mut queue = queue_lock.lock();
+            Response::text(text)
+        },
+        Err(why) => {
+            warn!("Err playing song: {:?}", why);
 
-    //     if !has_arg {
-    //         let track = tracks[0].clone().track;
-    //         queue.push_back(track);
-    //     } else if arg == "-first" {
-    //         let track = tracks[0].clone().track;
-    //         queue.push_front(track);
-    //     } else if arg == "-playlist" {
-    //         let tracks = tracks.iter().map(|t| t.track.clone()).collect();
-    //         queue.push_back_many(tracks);
-    //     }
-    // }
-
-    // let cache_lock = ctx.discord_cache.lock();
-    // let voice_state = cache_lock.get_user_voice_state(&guild_id, &user_id);
-
-    // if voice_state.is_none() {
-    //     return Response::text("NO VOICE STATE");
-    // }
-
-    // let playback_manager = ctx.playback_manager.lock();
-    // if let Err(e) = playback_manager.play_next_guild(guild_id, false) {
-    //     error!("error playing track: {:?}", e);
-    //     Response::text("error playing track")
-    // } else {
-    //     Response::text("enqueued or playing,")
-    // }
-    Response::text("todo")
+            Response::text("There was an error playing the song")
+        },
+    }
 }

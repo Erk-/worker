@@ -1,55 +1,50 @@
-use crate::command::{Command, CommandResult, Context, Response};
+use std::fmt::Write as _;
+use super::prelude::*;
 
-use futures::prelude::*;
-use humantime::format_duration;
-use lavalink::decoder;
-use std::time::Duration;
-
-pub fn queue() -> Command {
-    Command {
-        names: vec!["queue", "q"],
-        description: "Show the queue",
-    }
+pub const fn description() -> &'static str {
+    "Shows the song queue"
 }
 
-async fn run(ctx: Context) -> CommandResult {
+pub const fn names() -> &'static [&'static str] {
+    &["queue", "q"]
+}
+
+pub async fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.msg.guild_id?.0;
 
-    let (size, queue) = {
-        let mut queue_manager = ctx.queue_manager.lock();
-        let queue_lock = queue_manager.get_or_create(guild_id);
-        let queue = queue_lock.lock();
+    let queue = match await!(ctx.state.queue.get(guild_id)) {
+        Ok(queue) => queue,
+        Err(why) => {
+            warn!("Err getting queue for {}: {:?}", guild_id, why);
 
-        (queue.size(), queue.peek())
+            return Response::text("There was an error getting the queue");
+        },
     };
 
-    let mut formatted = queue
-        .iter()
-        .filter_map(|track| decoder::decode_track_base64(&track).ok())
-        .enumerate()
-        .map(|e| {
-            format!(
-                "`{}` {} by {} `({})`",
-                e.0,
-                e.1.title,
-                e.1.author,
-                format_duration(Duration::from_millis(e.1.length))
-            ).to_string()
-        })
-        .collect::<Vec<_>>();
+    let current = match await!(ctx.state.playback.current(guild_id)) {
+        Ok(current) => current,
+        Err(why) => {
+            warn!("Err getting current music for {}: {:?}", guild_id, why);
 
-    formatted.truncate(10);
-    let content = formatted.join("\n");
+            return Response::text("There was an error getting the current song in the queue");
+        },
+    };
 
-    let current = {
-        let playback_manager = ctx.playback_manager.lock();
-        let state = playback_manager.current(guild_id)?;
+    let mut s = format!("__Currently playing:__\n{}\n\n", current);
 
-        match state.track.as_ref() {
-            Some(track) => format!("{} by {}", track.title, track.author),
-            None => "Nothing!".to_owned()
+    if queue.is_empty() {
+        s.push_str("There are no songs in the queue.");
+    } else {
+        for (idx, item) in queue.iter().enumerate() {
+            write!(
+                s,
+                "`{:02}` **{}** by **{}** `[foo`]",
+                idx,
+                item.song_title,
+                item.song_author,
+            );
         }
-    };
+    }
 
-    Response::text(format!("**Queue:** {} tracks remain.\n**Currently playing**: {} \n\n{}", size, current, content))
+    Response::text(s)
 }

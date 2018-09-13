@@ -12,6 +12,7 @@ pub fn names() -> &'static [&'static str] {
 
 pub async fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.msg.guild_id?.0;
+    
     match await!(ctx.state.playback.pause(guild_id)) {
         Ok(()) => Response::text("paused"),
         Err(why) => {

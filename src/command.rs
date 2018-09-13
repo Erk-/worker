@@ -1,28 +1,12 @@
 use crate::{
+    lavalink::PlayerState,
     worker::WorkerState,
     Result,
 };
-use futures::{
-    compat::Future01CompatExt,
-    FutureExt,
-    TryFutureExt,
-};
-use serenity::{
-    builder::CreateMessage,
-    model::channel::Message,
-};
-use std::{
-    future::FutureObj,
-    sync::Arc,
-};
+use serenity::model::channel::Message;
+use std::sync::Arc;
 
 pub type CommandResult = Result<Response>;
-
-pub trait Command: Sync {
-    fn description(&self) -> String;
-    fn executor(&self, ctx: Context) -> FutureObj<CommandResult>;
-    fn names(&self) -> Vec<String>;
-}
 
 pub struct Context {
     pub alias: String,
@@ -30,6 +14,31 @@ pub struct Context {
     pub shard_id: u64,
     pub state: Arc<WorkerState>,
     pub msg: Message,
+}
+
+impl Context {
+    pub async fn current(&self) -> Result<PlayerState> {
+        let id = self.msg.guild_id?.0;
+
+        await!(self.state.playback.current(id)).map_err(From::from)
+    }
+
+    pub async fn is_playing(&self) -> Result<bool> {
+        await!(self.current())?;
+
+        Ok(true)
+    }
+
+    pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
+        let key = format!("sharder:to:{}", self.shard_id);
+        let cmd = resp_array!["RPUSH", key, payload];
+
+        debug!("cmd: {:?}", cmd);
+
+        self.state.redis.send_and_forget(cmd);
+
+        Ok(())
+    }
 }
 
 pub enum Response {
@@ -44,31 +53,4 @@ impl Response {
     fn _text(content: String) -> CommandResult {
         Ok(Response::Text(content.into()))
     }
-}
-
-pub async fn run(command: Box<Command + 'static>, ctx: Context) -> Result<()> {
-    let serenity_http = Arc::clone(&ctx.state.serenity);
-    let channel_id = ctx.msg.channel_id.0;
-
-    let response = await!(command.executor(ctx))?;
-    let m = match response {
-        Response::Text(content) => |mut m: CreateMessage| {
-            m.content(content);
-
-            m
-        },
-    };
-
-    let future = serenity_http
-        .send_message(channel_id, m)
-        .compat()
-        .map_ok(move |msg| {
-            trace!("Sent message to channel {}: {}", channel_id, msg.content);
-        })
-        .unit_error()
-        .boxed();
-
-    await!(future);
-
-    Ok(())
 }

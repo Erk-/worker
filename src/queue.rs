@@ -1,63 +1,45 @@
-use parking_lot::Mutex;
-use std::{
-    collections::{HashMap, VecDeque},
-    sync::Arc,
+use crate::{
+    config::Config,
+    error::Result,
 };
+use futures::compat::Future01CompatExt as _;
+use hyper::{
+    client::HttpConnector,
+    Body,
+    Client,
+};
+use hyper_tls::HttpsConnector;
+use lavalink_queue_requester::{
+    model::QueuedItem,
+    QueueRequester as _,
+};
+use std::sync::Arc;
 
-#[derive(Default)]
 pub struct QueueManager {
-    queues: HashMap<u64, Arc<Mutex<Queue>>>,
+    config: Arc<Config>,
+    http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
 }
 
 impl QueueManager {
-    pub fn get_or_create(&mut self, guild_id: u64) -> Arc<Mutex<Queue>> {
-        if self.queues.contains_key(&guild_id) {
-            return Arc::clone(&self.queues.get(&guild_id).unwrap());
-        }
-        debug!("creating a queue for {}", guild_id);
-        let queue = Arc::new(Mutex::new(Queue::new(guild_id)));
-        self.queues.insert(guild_id, Arc::clone(&queue));
-        queue
-    }
-}
-
-// TODO: move to postgres
-pub struct Queue {
-    pub guild_id: u64,
-    queue: VecDeque<String>,
-}
-
-impl Queue {
-    pub fn new(guild_id: u64) -> Self {
+    pub fn new(
+        config: Arc<Config>,
+        http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
+    ) -> Self {
         Self {
-            guild_id,
-            queue: VecDeque::new(),
+            config,
+            http,
         }
     }
 
-    pub fn pop_front(&mut self) -> Option<String> {
-        self.queue.pop_front()
+    pub async fn get(&self, guild_id: u64) -> Result<Vec<QueuedItem>> {
+        await!(self.http.get_queue(
+            self.address(),
+            guild_id.to_string(),
+        ).compat()).map_err(From::from)
     }
 
-    pub fn push_front(&mut self, track: String) {
-        self.queue.push_front(track)
-    }
-
-    pub fn push_back(&mut self, track: String) {
-        self.queue.push_back(track)
-    }
-
-    pub fn push_back_many(&mut self, tracks: Vec<String>) {
-        for track in tracks.iter() {
-            self.queue.push_back(track.clone());
-        }
-    }
-
-    pub fn peek(&self) -> Vec<String> {
-        Vec::from(self.queue.clone())
-    }
-
-    pub fn size(&self) -> usize {
-        self.queue.len()
+    #[inline]
+    fn address(&self) -> &str {
+        &self.config.queue.address
     }
 }

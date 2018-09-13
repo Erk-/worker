@@ -1,18 +1,19 @@
+use byteorder::{LE, ReadBytesExt as _};
 use crate::{
     cache::DiscordCache,
     config::Config,
     events::DiscordEventHandler,
+    lavalink::PlaybackManager,
     queue::QueueManager,
-    streams::PlaybackManager,
     Result,
 };
-use futures::compat::Future01CompatExt;
+use futures::compat::Future01CompatExt as _;
 use hyper::{
     client::{Client as HyperClient, HttpConnector},
     Body,
 };
 use hyper_tls::HttpsConnector;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use redis_async::{
     client::{self as redis_client, PairedConnection},
     resp::{FromResp, RespValue},
@@ -28,7 +29,7 @@ pub struct WorkerState {
     pub config: Arc<Config>,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<PlaybackManager>,
-    pub queue: Arc<Mutex<QueueManager>>,
+    pub queue: Arc<QueueManager>,
     pub redis: Arc<PairedConnection>,
     pub serenity: Arc<SerenityHttpClient>,
 }
@@ -42,25 +43,35 @@ pub struct Worker {
 impl Worker {
     pub async fn new(config: Config) -> Result<Self> {
         let config = Arc::new(config);
+        debug!("Initializing hyper client");
         let hyper = Arc::new(
             HyperClient::builder().build(HttpsConnector::new(4)?)
         );
+        debug!("Initialized hyper client");
         let serenity = Arc::new(SerenityHttpClient::new(
             Arc::clone(&hyper),
             Arc::new(config.discord_token.clone()),
         )?);
+        debug!("Initialized serenity http client");
 
         let discord_cache = Arc::new(RwLock::new(DiscordCache::default()));
-        let queue = Arc::new(Mutex::new(QueueManager::default()));
+        let queue = Arc::new(QueueManager::new(
+            Arc::clone(&config),
+            Arc::clone(&hyper),
+        ));
 
         let playback = Arc::new(PlaybackManager::new(
             Arc::clone(&config),
             Arc::clone(&hyper),
         ));
 
+        debug!("Initializing redis paired connection");
         let redis_addr = config.redis.addr()?;
+        debug!("Connecting to {}...", redis_addr);
         let redis = await!(redis_client::paired_connect(&redis_addr).compat())?;
+        debug!("Made first connection to redis, making second...");
         let redis2 = await!(redis_client::paired_connect(&redis_addr).compat())?;
+        debug!("Connected two redis connections");
 
         let state = Arc::new(WorkerState {
             cache: discord_cache,
@@ -92,13 +103,21 @@ impl Worker {
                 }
             };
 
+            trace!("Updating cache");
             self.state.cache.write().update(&event);
-            self.discord.dispatch(event, shard_id);
+            trace!("Updated cache");
+            trace!("Dispatching event to discord dispatcher");
+
+            if let Err(why) = self.discord.dispatch(event, shard_id) {
+                warn!("Error dispatching event to discord handler: {:?}", why);
+            }
+
+            trace!("Dispatched event to discord dispatcher");
         }
     }
 
     async fn blpop(&self) -> Result<Vec<RespValue>> {
-        let array = resp_array!["BLPOP", "exchange:gateway_events", 0];
+        let array = resp_array!["BLPOP", "sharder:from", 0];
 
         await!(self.redis_popper.send(array).compat()).map_err(From::from)
     }
@@ -127,11 +146,15 @@ impl Worker {
             },
         };
         let message_len = message.len();
-        let b1 = u64::from(message.remove(message_len - 1));
-        let b2 = u64::from(message.remove(message_len - 1));
-        let shard_id = (b1 * 256) + b2;
+        let shard_id = {
+            let mut shard_bytes = &message[message_len - 2..];
+            shard_bytes.read_u16::<LE>()? as u64
+        };
+        message.truncate(message_len - 2);
 
         let event = serde_json::from_slice(&message)?;
+
+        trace!("Got event: {:?}", event);
 
         Ok((event, shard_id))
     }

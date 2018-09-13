@@ -4,7 +4,7 @@ use std::{
     io::prelude::*,
     net::{IpAddr, SocketAddr},
     path::Path,
-    str::FromStr,
+    str::FromStr as _,
 };
 
 #[derive(Deserialize, Debug)]
@@ -25,8 +25,10 @@ pub struct Node {
 pub struct Config {
     pub bot_prefix: String,
     pub discord_token: String,
+    pub discord_user_id: u64,
     pub lavalink: LavalinkConfig,
     pub postgres_addr: String,
+    pub queue: QueueConfig,
     pub owners: Vec<u64>,
     pub owo_token: String,
     pub redis: RedisConfig,
@@ -48,6 +50,11 @@ impl Config {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct LavalinkConfig {
+    pub address: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct QueueConfig {
     pub address: String,
 }
 

@@ -1,6 +1,7 @@
 use hyper::Error as HyperError;
 use lavalink::Error as LavalinkError;
 use lavalink_http_server_requester::Error as LavalinkHttpServerRequesterError;
+use lavalink_queue_requester::Error as LavalinkQueueRequesterError;
 use native_tls::Error as NativeTlsError;
 use redis_async::error::Error as RedisError;
 use serde_json::Error as SerdeJsonError;
@@ -32,6 +33,7 @@ pub enum Error {
     Io(IoError),
     Lavalink(LavalinkError),
     LavalinkHttpServerRequester(LavalinkHttpServerRequesterError),
+    LavalinkQueueRequester(LavalinkQueueRequesterError),
     NativeTls(NativeTlsError),
     None(NoneError),
     ParseInt(ParseIntError),
@@ -77,6 +79,12 @@ impl From<LavalinkError> for Error {
 impl From<LavalinkHttpServerRequesterError> for Error {
     fn from(e: LavalinkHttpServerRequesterError) -> Self {
         Error::LavalinkHttpServerRequester(e)
+    }
+}
+
+impl From<LavalinkQueueRequesterError> for Error {
+    fn from(e: LavalinkQueueRequesterError) -> Self {
+        Error::LavalinkQueueRequester(e)
     }
 }
 
@@ -155,6 +163,7 @@ impl StdError for Error {
             Error::Io(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
             Error::LavalinkHttpServerRequester(ref e) => e.description(),
+            Error::LavalinkQueueRequester(ref e) => e.description(),
             Error::NativeTls(ref e) => e.description(),
             Error::None(_) => "Option value not present",
             Error::ParseInt(ref e) => e.description(),
