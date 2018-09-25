@@ -104,7 +104,7 @@ async fn message_create(
     shard_id: u64,
     state: Arc<WorkerState>,
 ) -> Result<()> {
-    debug!("Received MessageCreate event: {:?}", event);
+    trace!("Received MessageCreate event: {:?}", event);
 
     let msg = event.message;
 
@@ -170,7 +170,7 @@ async fn message_create(
             "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
             "volume" | "v" => await!(commands::volume::run(ctx)),
             _ => {
-                debug!("No command matched alias: {}", alias);
+                trace!("No command matched alias: {}", alias);
 
                 return Ok(());
             },

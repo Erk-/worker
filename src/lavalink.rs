@@ -176,8 +176,11 @@ impl PlaybackManager {
     }
 
     pub async fn voice_update(&self, voice_update: VoiceUpdate) -> Result<()> {
+        trace!("Serializing voice update");
         let json = serde_json::to_string(&voice_update)?;
+        trace!("Sending voice update: {}", json);
         await!(self.http.audio_voice_update(self.address(), json).compat())?;
+        trace!("Sent voice update");
 
         Ok(())
     }
