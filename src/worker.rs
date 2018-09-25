@@ -1,6 +1,6 @@
 use byteorder::{LE, ReadBytesExt as _};
 use crate::{
-    cache::DiscordCache,
+    cache::Cache,
     config::Config,
     events::DiscordEventHandler,
     lavalink::PlaybackManager,
@@ -13,7 +13,6 @@ use hyper::{
     Body,
 };
 use hyper_tls::HttpsConnector;
-use parking_lot::RwLock;
 use redis_async::{
     client::{self as redis_client, PairedConnection},
     resp::{FromResp, RespValue},
@@ -25,7 +24,7 @@ use serenity::{
 use std::sync::Arc;
 
 pub struct WorkerState {
-    pub cache: Arc<RwLock<DiscordCache>>,
+    pub cache: Arc<Cache>,
     pub config: Arc<Config>,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<PlaybackManager>,
@@ -42,6 +41,14 @@ pub struct Worker {
 
 impl Worker {
     pub async fn new(config: Config) -> Result<Self> {
+        debug!("Initializing redis paired connection");
+        let redis_addr = config.redis.addr()?;
+        debug!("Connecting to {}...", redis_addr);
+        let redis = Arc::new(await!(redis_client::paired_connect(&redis_addr).compat())?);
+        debug!("Made first connection to redis, making second...");
+        let redis2 = await!(redis_client::paired_connect(&redis_addr).compat())?;
+        debug!("Connected two redis connections");
+
         let config = Arc::new(config);
         debug!("Initializing hyper client");
         let hyper = Arc::new(
@@ -54,7 +61,10 @@ impl Worker {
         )?);
         debug!("Initialized serenity http client");
 
-        let discord_cache = Arc::new(RwLock::new(DiscordCache::default()));
+        let cache = Arc::new(Cache::new(
+            Arc::clone(&config),
+            Arc::clone(&redis),
+        ));
         let queue = Arc::new(QueueManager::new(
             Arc::clone(&config),
             Arc::clone(&hyper),
@@ -65,21 +75,13 @@ impl Worker {
             Arc::clone(&hyper),
         ));
 
-        debug!("Initializing redis paired connection");
-        let redis_addr = config.redis.addr()?;
-        debug!("Connecting to {}...", redis_addr);
-        let redis = await!(redis_client::paired_connect(&redis_addr).compat())?;
-        debug!("Made first connection to redis, making second...");
-        let redis2 = await!(redis_client::paired_connect(&redis_addr).compat())?;
-        debug!("Connected two redis connections");
-
         let state = Arc::new(WorkerState {
-            cache: discord_cache,
-            redis: Arc::new(redis),
+            cache,
             config,
             http: hyper,
             playback,
             queue,
+            redis,
             serenity,
         });
 
@@ -104,7 +106,11 @@ impl Worker {
             };
 
             trace!("Updating cache");
-            self.state.cache.write().update(&event);
+
+            if let Err(why) = await!(self.state.cache.dispatch(&event)) {
+                warn!("Err updating cache: {:?}", why);
+            }
+
             trace!("Updated cache");
             trace!("Dispatching event to discord dispatcher");
 

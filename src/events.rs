@@ -206,13 +206,7 @@ async fn voice_server_update(
     debug!("Got guild id");
 
     let session_id = {
-        let discord_cache = state.cache.read();
-
-        debug!("Getting session id for current user");
-        discord_cache.get_user_voice_state(
-            &guild_id,
-            &state.config.discord_user_id,
-        ).map(|x| x.session_id.clone())?
+        await!(state.cache.voice_state(guild_id, state.config.discord_user_id))??.session_id
     };
 
     debug!("Got session id for current user");

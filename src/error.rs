@@ -1,3 +1,4 @@
+use cache::Error as CacheError;
 use hyper::Error as HyperError;
 use lavalink::Error as LavalinkError;
 use lavalink_http_server_requester::Error as LavalinkHttpServerRequesterError;
@@ -29,6 +30,7 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     AddrParse(AddrParseError),
     BorrowMut(BorrowMutError),
+    Cache(CacheError),
     Hyper(HyperError),
     Io(IoError),
     Lavalink(LavalinkError),
@@ -55,6 +57,12 @@ impl From<AddrParseError> for Error {
 impl From<BorrowMutError> for Error {
     fn from(e: BorrowMutError) -> Self {
         Error::BorrowMut(e)
+    }
+}
+
+impl From<CacheError> for Error {
+    fn from(e: CacheError) -> Self {
+        Error::Cache(e)
     }
 }
 
@@ -159,6 +167,7 @@ impl StdError for Error {
         match *self {
             Error::AddrParse(ref e) => e.description(),
             Error::BorrowMut(ref e) => e.description(),
+            Error::Cache(ref e) => e.description(),
             Error::Hyper(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),
