@@ -16,7 +16,10 @@ use serenity::model::event::{
     ReadyEvent,
     VoiceServerUpdateEvent,
 };
-use std::sync::Arc;
+use std::{
+    borrow::Cow,
+    sync::Arc,
+};
 use tokio::prelude::Future as Future01;
 
 pub struct DiscordEventHandler {
@@ -82,9 +85,18 @@ impl DiscordEventHandler {
     }
 }
 
-async fn get_prefix(_guild_id: u64) -> Result<String> {
+async fn get_prefixes<'a>(
+    config: &'a Arc<Config>,
+    _guild_id: u64,
+) -> Result<Vec<Cow<'a, str>>> {
     // todo
-    Ok(">".into())
+    let mut prefixes = Vec::with_capacity(config.bot_prefixes.len());
+
+    for prefix in &config.bot_prefixes {
+        prefixes.push(Cow::from(prefix));
+    }
+
+    Ok(prefixes)
 }
 
 async fn message_create(
@@ -104,23 +116,28 @@ async fn message_create(
 
     let guild_id = msg.guild_id?.0;
 
-    debug!("Getting guild prefix");
-    let prefix = await!(get_prefix(guild_id))?;
+    trace!("Getting guild prefix");
+    let prefixes = await!(get_prefixes(&state.config, guild_id))?;
 
-    if !content.starts_with(&prefix) {
-        debug!("Message doesn't start with prefix: {}", prefix);
+    let prefix = {
+        match prefixes.iter().find(|prefix| content.starts_with(prefix.as_ref())) {
+            Some(prefix) => prefix,
+            None => {
+                debug!("Message doesn't start with prefix");
 
-        return Ok(());
-    }
+                return Ok(());
+            },
+        }
+    };
 
     let content_trimmed: String = content.chars().skip(prefix.len()).collect();
     let content_iter = content_trimmed.split_whitespace().collect::<Vec<&str>>();
-    debug!("content iter: {:?}", content_iter);
+    trace!("content iter: {:?}", content_iter);
     let mut content_iter = content_iter.iter();
-    debug!("Determining command name");
+    trace!("Determining command name");
     let command_name = content_iter.next()?;
 
-    debug!("Command name: {}", command_name);
+    trace!("Command name: {}", command_name);
 
     {
         let alias = command_name.to_lowercase();

@@ -23,7 +23,7 @@ pub struct Node {
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    pub bot_prefix: String,
+    pub bot_prefixes: Vec<String>,
     pub discord_token: String,
     pub discord_user_id: u64,
     pub lavalink: LavalinkConfig,
