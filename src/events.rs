@@ -1,6 +1,6 @@
 use crate::{
-    command::{Context, Response},
-    commands,
+    commands::{self, Context, Response},
+    config::Config,
     error::{Error, Result},
     worker::WorkerState,
 };

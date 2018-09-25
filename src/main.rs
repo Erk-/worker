@@ -18,7 +18,6 @@
 #[macro_use] extern crate serde_json;
 
 mod cache;
-mod command;
 mod commands;
 mod config;
 mod error;
