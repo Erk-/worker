@@ -9,5 +9,5 @@ pub const fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(_: Context) -> CommandResult {
-    Response::text("falcon")
+    Response::text("Pong!")
 }

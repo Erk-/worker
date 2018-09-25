@@ -35,9 +35,9 @@ pub async fn run(ctx: Context) -> CommandResult {
             "guild_id": guild_id,
             "self_deaf": true,
             "self_mute": false,
-        }
+        },
     }))?;
     await!(ctx.to_sharder(map))?;
 
-    Response::text("Joined the voice channel")
+    Response::text("Joined the voice channel.")
 }
