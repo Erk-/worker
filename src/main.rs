@@ -43,7 +43,7 @@ fn main() {
     trace_macros!(false);
 
     if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "debug,tokio_reactor=info");
+        env::set_var("RUST_LOG", "debug,hyper=info,tokio_reactor=info");
     }
 
     env_logger::init();
