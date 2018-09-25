@@ -8,12 +8,14 @@ pub const fn names() -> &'static [&'static str] {
     &["about"]
 }
 
-pub async fn run(_: Context) -> CommandResult {
-    Response::text(r#"
+pub async fn run(ctx: Context) -> CommandResult {
+    let prefix = ctx.state.config.bot_prefixes.first()?;
+
+    Response::text(format!("
 **dabBot**
-Command prefix: `!!!`
+Command prefix: `{prefix}`
 Invite me to your server: https://dabbot.org/invite
 Support server: https://dabbot.org/support
 Github: https://github.com/dabbotorg
-"#)
+", prefix=prefix))
 }
