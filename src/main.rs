@@ -36,7 +36,7 @@ use futures::{
     compat::TokioDefaultSpawner,
     future::{FutureExt as _, TryFutureExt as _},
 };
-use hyper::rt::Future as Future01;
+use hyper::rt::Future as _;
 use std::env;
 
 fn main() {
