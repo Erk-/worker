@@ -9,12 +9,12 @@ pub const fn names() -> &'static [&'static str] {
     &["play", "p", "search", "youtube", "soundcloud"]
 }
 
-pub async fn run(mut ctx: Context) -> CommandResult {
+pub async fn run(ctx: Context) -> CommandResult {
     if ctx.args.len() < 1 {
         return Response::text("You need to say the link to the song or the name of what you want to play");
     }
 
-    let query = ctx.args.remove(0);
+    let query = ctx.args.join(" ");
 
     let mut tracks = match await!(ctx.state.playback.search(query.clone())) {
         Ok(tracks) => tracks,
