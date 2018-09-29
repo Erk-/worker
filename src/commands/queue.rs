@@ -1,3 +1,4 @@
+use crate::utils;
 use std::fmt::Write as _;
 use super::prelude::*;
 
@@ -30,7 +31,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         },
     };
 
-    let mut s = format!("__Currently playing:__\n{}\n\n", current);
+    let mut s = format!("{}\n\n", current);
 
     if queue.is_empty() {
         s.push_str("There are no songs in the queue.");
@@ -38,10 +39,11 @@ pub async fn run(ctx: Context) -> CommandResult {
         for (idx, item) in queue.iter().enumerate() {
             write!(
                 s,
-                "`{:02}` **{}** by **{}** `[foo`]",
-                idx,
+                "`{:02}` **{}** by **{}** `[{}]`",
+                idx + 1,
                 item.song_title,
                 item.song_author,
+                utils::track_length_readable(item.song_length as u64),
             );
         }
     }

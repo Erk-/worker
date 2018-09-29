@@ -24,6 +24,7 @@ mod error;
 mod events;
 mod lavalink;
 mod queue;
+mod utils;
 mod worker;
 
 pub use crate::error::{Error, Result};

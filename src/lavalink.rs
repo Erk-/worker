@@ -1,9 +1,9 @@
 use crate::{
     config::Config,
     error::{Error, Result},
+    utils,
 };
 use futures::compat::Future01CompatExt as _;
-use humantime::format_duration;
 use hyper::{
     client::HttpConnector,
     Body,
@@ -24,7 +24,6 @@ use std::{
     fmt::{Display, Formatter, Result as FmtResult},
     result::Result as StdResult,
     sync::Arc,
-    time::Duration,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -47,15 +46,24 @@ pub struct PlayerState {
 impl Display for PlayerState {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self.track.as_ref() {
-            Some(track) => write!(f,
-                "{}{} by {} (`{}/{}`) {}",
-                (if self.paused { "(paused)" } else { "" }),
-                track.title,
-                track.author,
-                format_duration(Duration::from_millis(self.position as u64)),
-                format_duration(Duration::from_millis(track.length)),
-                track.url.as_ref().unwrap_or(&"(no url)".to_owned())),
-            None => write!(f, "nothing playing ")
+            Some(track) => {
+                let status = if self.paused {
+                    "Paused"
+                } else {
+                    "Currently Playing"
+                };
+
+                write!(f,
+                    "{}: **{}** by **{}** (`{}/{}`)\n{}",
+                    status,
+                    track.title,
+                    track.author,
+                    utils::track_length_readable(self.position as u64),
+                    utils::track_length_readable(track.length),
+                    track.url.as_ref().unwrap_or(&"(no url)".to_owned()),
+                )
+            },
+            None => write!(f, "No song is currently playing.")
         }
     }
 }
@@ -196,5 +204,41 @@ impl PlaybackManager {
     #[inline]
     fn address(&self) -> &str {
         &self.config.lavalink.address
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use lavalink::decoder::DecodedTrack;
+    use super::PlayerState;
+
+    #[test]
+    fn test_state_format() {
+        let mut state = PlayerState {
+            guild_id: 1,
+            paused: true,
+            position: 6250,
+            time: 0,
+            track: None,
+            volume: 100,
+        };
+
+        assert_eq!(format!("{}", state), "No song is currently playing.");
+
+        state.track = Some(DecodedTrack {
+            author: "xKito Music".to_owned(),
+            identifier: "zcn4-taGvlg".to_owned(),
+            length: 184_000,
+            source: "youtube".to_owned(),
+            stream: false,
+            title: "she - Prismatic".to_owned(),
+            url: "https://www.youtube.com/watch?v=zcn4-taGvlg".to_owned().into(),
+            version: 1,
+        });
+
+        assert_eq!(
+            format!("{}", state),
+            "Paused: **she - Prismatic** by **xKito Music** (`6s/3m 4s`)
+https://www.youtube.com/watch?v=zcn4-taGvlg");
     }
 }

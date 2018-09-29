@@ -1,3 +1,4 @@
+use crate::utils;
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
@@ -28,18 +29,12 @@ pub async fn run(mut ctx: Context) -> CommandResult {
 
     match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
         Ok(()) => {
-            let seconds_total = (song.info.length as f64 / 1000f64).floor() as i64;
-            let minutes = (seconds_total as f64 / 60f64).floor();
-            let seconds = seconds_total % 60;
-            let text = format!(
-                "Now playing **{}** by **{}** `[{:02}:{:02}]`",
+            Response::text(format!(
+                "Now playing **{}** by **{}** `[{}]`",
                 song.info.title,
                 song.info.author,
-                minutes,
-                seconds,
-            );
-
-            Response::text(text)
+                utils::track_length_readable(song.info.length as u64),
+            ))
         },
         Err(why) => {
             warn!("Err playing song: {:?}", why);
