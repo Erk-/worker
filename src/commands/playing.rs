@@ -16,11 +16,12 @@ pub async fn run(ctx: Context) -> CommandResult {
             warn!("Err getting state for {}: {:?}", guild_id, why);
 
             return Response::text(
-                "There was an error getting the currents song",
+                "There was an error getting the current song.",
             );
         },
     };
 
     info!("state said {:?}", state);
+
     Response::text(format!("**Currently Playing:** {}", state))
 }

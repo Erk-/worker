@@ -12,11 +12,11 @@ pub async fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.msg.guild_id?.0;
 
     match await!(ctx.state.playback.resume(guild_id)) {
-        Ok(()) => Response::text("Resumed"),
+        Ok(()) => Response::text("Resumed music playback!"),
         Err(why) => {
             warn!("Error resuming guild {}: {:?}", guild_id, why);
 
-            Response::text("There was an error resuming")
+            Response::text("There was an error resuming the music.")
         },
     }
 }
