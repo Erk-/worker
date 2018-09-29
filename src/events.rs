@@ -154,7 +154,9 @@ async fn message_create(
             "about" => await!(commands::about::run(ctx)),
             "invite" => await!(commands::invite::run(ctx)),
             "join" | "j" | "connect" => await!(commands::join::run(ctx)),
-            "leave" | "l" | "disconnect" => await!(commands::leave::run(ctx)),
+            "leave" | "l" | "disconnect" | "stop" => {
+                await!(commands::leave::run(ctx))
+            },
             "pause" | "hold" => await!(commands::pause::run(ctx)),
             "ping" => await!(commands::ping::run(ctx)),
             "play" | "p" => await!(commands::play::run(ctx)),
