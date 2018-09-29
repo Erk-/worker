@@ -82,7 +82,7 @@ impl TryFrom<AudioPlayerState> for PlayerState {
         } = state;
 
         let decoded = match track {
-            Some(bytes) => Some(decoder::decode_track(bytes)?),
+            Some(bytes) => Some(decoder::decode_track_base64(bytes)?),
             None => None,
         };
 
