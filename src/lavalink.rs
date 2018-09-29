@@ -175,10 +175,14 @@ impl PlaybackManager {
     }
 
     pub async fn current(&self, guild_id: u64) -> Result<PlayerState> {
+        debug!("Getting player for guild {}", guild_id);
+
         let state = await!(self.http.audio_player(
             self.address(),
             guild_id,
         ).compat())?;
+
+        debug!("Current player state: {:?}", state);
 
         PlayerState::try_from(state)
     }

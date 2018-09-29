@@ -123,7 +123,7 @@ async fn message_create(
         match prefixes.iter().find(|prefix| content.starts_with(prefix.as_ref())) {
             Some(prefix) => prefix,
             None => {
-                debug!("Message doesn't start with prefix");
+                trace!("Message doesn't start with prefix");
 
                 return Ok(());
             },
