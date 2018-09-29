@@ -1,4 +1,5 @@
 use crate::utils;
+use lavalink_queue_requester::model::QueuedItem;
 use std::fmt::Write as _;
 use super::prelude::*;
 
@@ -36,17 +37,52 @@ pub async fn run(ctx: Context) -> CommandResult {
     if queue.is_empty() {
         s.push_str("There are no songs in the queue.");
     } else {
-        for (idx, item) in queue.iter().enumerate() {
-            write!(
-                s,
-                "`{:02}` **{}** by **{}** `[{}]`",
-                idx + 1,
-                item.song_title,
-                item.song_author,
-                utils::track_length_readable(item.song_length as u64),
-            );
-        }
+        format_queue(queue, &mut s);
     }
 
     Response::text(s)
+}
+
+fn format_queue(queue: impl IntoIterator<Item = QueuedItem>, buf: &mut String) {
+    for (idx, item) in queue.into_iter().enumerate() {
+        write!(
+            buf,
+            "`{:02}` **{}** by **{}** `[{}]`\n",
+            idx + 1,
+            item.song_title,
+            item.song_author,
+            utils::track_length_readable(item.song_length as u64),
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::QueuedItem;
+
+    #[test]
+    fn test_queue_one_song() {
+        let item = vec![QueuedItem {
+            song_id: 5,
+            song_author: "xKito Music".to_owned(),
+            song_identifier: "zcn4-taGvlg".to_owned(),
+            song_length: 184_000,
+            song_source: "youtube".to_owned(),
+            song_stream: false,
+            song_title: "she - Prismatic".to_owned(),
+            song_track: "QAAAdAIAD3NoZSAtIFByaXNtYXRpYwALeEtpdG8gTXVzaWMAAAAAAA\
+LOwAALemNuNC10YUd2bGcAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj16Y240LXRhR\
+3ZsZwAHeW91dHViZQAAAAAAAAAA".to_owned(),
+            song_url: "https://www.youtube.com/watch?v=zcn4-taGvlg".to_owned().into(),
+        }];
+
+        let mut buf = String::new();
+
+        super::format_queue(item, &mut buf);
+
+        assert_eq!(
+            buf,
+            "`01` **she - Prismatic** by **xKito Music** `[3m 4s]`\n",
+        );
+    }
 }
