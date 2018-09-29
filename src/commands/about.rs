@@ -14,8 +14,8 @@ pub async fn run(ctx: Context) -> CommandResult {
     Response::text(format!("
 **dabBot**
 Command prefix: `{prefix}`
-Invite me to your server: https://dabbot.org/invite
-Support server: https://dabbot.org/support
-Github: https://github.com/dabbotorg
+Invite me to your server: <https://dabbot.org/invite>
+Support server: <https://dabbot.org/support>
+Github: <https://github.com/dabbotorg>
 ", prefix=prefix))
 }
