@@ -21,7 +21,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         },
     };
 
-    info!("state said {:?}", state);
+    debug!("Player state for {}: {:?}", guild_id, state);
 
-    Response::text(format!("**Currently Playing:** {}", state))
+    Response::text(state.to_string())
 }
