@@ -22,7 +22,10 @@ pub async fn run(ctx: Context) -> CommandResult {
         Ok(None) => return Response::text("You aren't in a voice channel."),
         Err(why) => {
             warn!("Err getting user voice state: {:?}", why);
-            return Response::text("There was an error joining the voice channel.");
+
+            return Response::err(
+                "There was an error joining the voice channel.",
+            );
         },
     };
 

@@ -18,7 +18,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Error pausing guild id {}: {:?}", guild_id, why);
 
-            Response::text("There was an error pausing the music.")
+            Response::err("There was an error pausing the music.")
         },
     }
 }

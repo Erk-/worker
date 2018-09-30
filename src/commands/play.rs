@@ -21,7 +21,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err searching tracks for query '{}': {:?}", query, why);
 
-            return Response::text("There was an error searching for that");
+            return Response::err("There was an error searching for that.");
         },
     };
 
@@ -39,7 +39,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err playing song: {:?}", why);
 
-            Response::text("There was an error playing the song")
+            Response::err("There was an error playing the song.")
         },
     }
 }

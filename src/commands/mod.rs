@@ -60,11 +60,22 @@ impl Context {
     }
 }
 
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Response {
     Text(String),
 }
 
 impl Response {
+    #[inline]
+    pub fn err(content: impl AsRef<str>) -> CommandResult {
+        Self::_err(content.as_ref())
+    }
+
+    fn _err(content: &str) -> CommandResult {
+        Ok(Response::Text(format!("⚠ {}", content)))
+    }
+
+    #[inline]
     pub fn text(content: impl Into<String>) -> CommandResult {
         Self::_text(content.into())
     }
@@ -76,4 +87,29 @@ impl Response {
 
 fn no_song() -> Result<Response> {
     Response::text("No music is queued or playing on this guild! Add some using `!!!play <song name/link>`")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Response;
+
+    #[test]
+    fn test_responses() {
+        assert_eq!(
+            Response::err("foo").unwrap(),
+            Response::Text("⚠ foo".to_owned()),
+        );
+        assert_eq!(
+            Response::err("").unwrap(),
+            Response::Text("⚠ ".to_owned()),
+        );
+        assert_eq!(
+            Response::text("hello").unwrap(),
+            Response::Text("hello".to_owned()),
+        );
+        assert_eq!(
+            Response::text("").unwrap(),
+            Response::Text("".to_owned()),
+        );
+    }
 }

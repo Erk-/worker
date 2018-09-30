@@ -15,7 +15,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err getting state for {}: {:?}", guild_id, why);
 
-            return Response::text(
+            return Response::err(
                 "There was an error getting the current song.",
             );
         },

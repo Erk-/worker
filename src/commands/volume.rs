@@ -27,7 +27,7 @@ pub async fn run(ctx: Context) -> CommandResult {
             Err(why) => {
                 warn!("Err getting current player: {:?}", why);
 
-                return Response::text("There was an error getting the volume");
+                return Response::err("There was an error getting the volume");
             },
         };
 
@@ -43,7 +43,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         let guild_id = ctx.msg.guild_id?.0;
 
         match await!(ctx.state.playback.volume(guild_id, volume)) {
-            Ok(()) => Response::text("Updated the volume"),
+            Ok(()) => Response::text("Updated the volume."),
             Err(why) => {
                 warn!(
                     "Error updating volume to {} for {}: {:?}",
@@ -52,10 +52,10 @@ pub async fn run(ctx: Context) -> CommandResult {
                     why,
                 );
 
-                Response::text("Error updating the volume")
+                Response::err("There was an error updating the volume.")
             },
         }
     } else {
-        Response::text("You passed too many arguments!")
+        Response::err("You passed too many arguments!")
     }
 }

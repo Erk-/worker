@@ -19,7 +19,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err getting queue for {}: {:?}", guild_id, why);
 
-            return Response::text("There was an error getting the queue");
+            return Response::err("There was an error getting the queue.");
         },
     };
 
@@ -28,7 +28,9 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err getting current music for {}: {:?}", guild_id, why);
 
-            return Response::text("There was an error getting the current song in the queue");
+            return Response::err(
+                "There was an error getting the current song in the queue",
+            );
         },
     };
 

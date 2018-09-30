@@ -36,7 +36,7 @@ pub async fn run(ctx: Context) -> CommandResult {
                 why,
             );
 
-            Response::text("There was an error leaving the voice channel.")
+            Response::err("There was an error leaving the voice channel.")
         }
     }
 }

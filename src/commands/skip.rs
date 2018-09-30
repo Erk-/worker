@@ -16,7 +16,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Error skipping guild {}: {:?}", guild_id, why);
 
-            Response::text("There was an error skipping")
+            Response::err("There was an error skipping the song.")
         },
     }
 }

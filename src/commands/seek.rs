@@ -19,7 +19,7 @@ pub async fn run(ctx: Context) -> CommandResult {
             return super::no_song();
         },
         Err(_) => {
-            return Response::text(ERROR_SEEKING);
+            return Response::err(ERROR_SEEKING);
         },
     };
 
@@ -30,7 +30,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err seeking song for {} to {}: {:?}", guild_id, 0, why);
 
-            Response::text(ERROR_SEEKING)
+            Response::err(ERROR_SEEKING)
         },
     }
 }
