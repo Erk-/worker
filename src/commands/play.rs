@@ -27,6 +27,8 @@ pub async fn run(ctx: Context) -> CommandResult {
 
     let song = tracks.tracks.remove(0);
 
+    await!(super::join::join_ctx(&ctx))?;
+
     match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
         Ok(()) => {
             Response::text(format!(
