@@ -43,6 +43,13 @@ pub struct PlayerState {
     pub volume: i32,
 }
 
+impl PlayerState {
+    #[inline]
+    pub fn is_playing(&self) -> bool {
+        self.track.is_some()
+    }
+}
+
 impl Display for PlayerState {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self.track.as_ref() {
@@ -216,18 +223,19 @@ mod tests {
     use lavalink::decoder::DecodedTrack;
     use super::PlayerState;
 
-    #[test]
-    fn test_state_format() {
-        let mut state = PlayerState {
+    fn state_empty() -> PlayerState {
+        PlayerState {
             guild_id: 1,
             paused: true,
             position: 6250,
             time: 0,
             track: None,
             volume: 100,
-        };
+        }
+    }
 
-        assert_eq!(format!("{}", state), "No song is currently playing.");
+    fn state_track() -> PlayerState {
+        let mut state = state_empty();
 
         state.track = Some(DecodedTrack {
             author: "xKito Music".to_owned(),
@@ -240,8 +248,24 @@ mod tests {
             version: 1,
         });
 
+        state
+    }
+
+    #[test]
+    fn test_is_playing() {
+        assert!(!state_empty().is_playing());
+        assert!(state_track().is_playing());
+    }
+
+    #[test]
+    fn test_state_format() {
         assert_eq!(
-            format!("{}", state),
+            format!("{}", state_empty()),
+            "No song is currently playing.",
+        );
+
+        assert_eq!(
+            format!("{}", state_track()),
             "Paused: **she - Prismatic** by **xKito Music** (`6s/3m 4s`)
 https://www.youtube.com/watch?v=zcn4-taGvlg");
     }
