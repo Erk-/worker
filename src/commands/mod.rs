@@ -22,6 +22,7 @@ use crate::{
     worker::WorkerState,
     Result,
 };
+use lavalink_queue_requester::model::QueuedItem;
 use serenity::model::channel::Message;
 use std::sync::Arc;
 
@@ -46,6 +47,10 @@ impl Context {
         await!(self.current())?;
 
         Ok(true)
+    }
+
+    pub async fn queue(&self) -> Result<Vec<QueuedItem>> {
+        await!(self.state.queue.get(self.msg.guild_id?.0)).map_err(From::from)
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
