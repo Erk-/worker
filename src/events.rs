@@ -5,7 +5,7 @@ use crate::{
     worker::WorkerState,
 };
 use futures::{
-    compat::Future01CompatExt as _,
+    compat::{Future01CompatExt as _, TokioDefaultSpawner},
     future::{FutureExt as _, TryFutureExt as _},
 };
 use lavalink::model::VoiceUpdate;
@@ -51,7 +51,7 @@ impl DiscordEventHandler {
             Dispatch(_, MessageCreate(e)) => {
                 let future = message_create(e, shard_id, Arc::clone(&self.state))
                     .boxed()
-                    .compat()
+                    .compat(TokioDefaultSpawner)
                     .map_err(|why| {
                         warn!(
                             "Error dispatching message create: {:?}",
@@ -64,7 +64,7 @@ impl DiscordEventHandler {
             Dispatch(_, VoiceServerUpdate(e)) => {
                 let future = voice_server_update(e, Arc::clone(&self.state))
                     .boxed()
-                    .compat()
+                    .compat(TokioDefaultSpawner)
                     .map_err(|why| {
                         warn!(
                             "Error dispatching voice server update: {:?}",
