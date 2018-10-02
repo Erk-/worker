@@ -40,12 +40,38 @@ pub const fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    match await!(join_ctx(&ctx)) {
-        Ok(join) => join.into_response(),
+    let join = match await!(join_ctx(&ctx)) {
+        Ok(join) => join,
         Err(why) => {
             warn!("Err joining user voice state: {:?}", why);
 
-            Response::err("There was an error joining the voice channel.")
+            return Response::err(
+                "There was an error joining the voice channel.",
+            );
+        },
+    };
+
+    let current = await!(ctx.current())?;
+
+    if current.is_playing() {
+        return join.into_response();
+    }
+
+    let song = match await!(ctx.queue_pop())? {
+        Some(song) => song,
+        None => return join.into_response(),
+    };
+
+    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
+        Ok(()) => {
+            Response::text("Joined the voice channel!
+
+Leaving off from your last queue.")
+        },
+        Err(why) => {
+            warn!("Err playing next song: {:?}", why);
+
+            Response::err("Joined the voice channel!")
         },
     }
 }

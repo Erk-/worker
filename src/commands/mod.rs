@@ -22,7 +22,7 @@ use crate::{
     worker::WorkerState,
     Result,
 };
-use lavalink_queue_requester::model::QueuedItem;
+use lavalink_queue_requester::model::{QueuedItem, Song};
 use serenity::model::channel::Message;
 use std::sync::Arc;
 
@@ -50,7 +50,11 @@ impl Context {
     }
 
     pub async fn queue(&self) -> Result<Vec<QueuedItem>> {
-        await!(self.state.queue.get(self.msg.guild_id?.0)).map_err(From::from)
+        await!(self.state.queue.get(self.msg.guild_id?.0))
+    }
+
+    pub async fn queue_pop(&self) -> Result<Option<Song>> {
+        await!(self.state.queue.pop(self.msg.guild_id?.0))
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
