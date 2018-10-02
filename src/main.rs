@@ -33,10 +33,7 @@ use crate::{
     config::Config,
     worker::Worker,
 };
-use futures::{
-    compat::TokioDefaultSpawner,
-    future::{FutureExt as _, TryFutureExt as _},
-};
+use futures::future::{FutureExt as _, TryFutureExt as _};
 use hyper::rt::Future as _;
 use std::env;
 
@@ -49,7 +46,7 @@ fn main() {
 
     env_logger::init();
 
-    tokio::run(try_main().boxed().compat(TokioDefaultSpawner).map_err(|why| {
+    tokio::run(try_main().boxed().compat().map_err(|why| {
         warn!("Error running tokio loop: {:?}", why);
     }));
 }

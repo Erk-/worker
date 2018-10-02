@@ -30,7 +30,7 @@ package = "dabbot-cache"
 
 [dependencies.futures-preview]
 features = ["compat", "tokio-compat"]
-version = "0.3.0-alpha.6"
+version = "0.3.0-alpha.7"
 
 [dependencies.lavalink]
 git = "https://github.com/zeyla/lavalink.rs"
@@ -40,9 +40,6 @@ git = "https://github.com/zeyla/lavalink-http-server-requester.rs"
 
 [dependencies.lavalink-queue-requester]
 git = "https://github.com/zeyla/lavalink-queue"
-
-[dependencies.pin-utils]
-version = "=0.1.0-alpha.2"
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
