@@ -23,18 +23,22 @@ pub async fn run(ctx: Context) -> CommandResult {
         },
     };
 
-    let current = match await!(ctx.state.playback.current(guild_id)) {
-        Ok(current) => current,
+    let mut s = String::new();
+
+    match await!(ctx.state.playback.current(guild_id)) {
+        Ok(current) => {
+            write!(s, "{}", current)?;
+        },
         Err(why) => {
             warn!("Err getting current music for {}: {:?}", guild_id, why);
 
-            return Response::err(
-                "There was an error getting the current song in the queue",
+            s.push_str(
+                "There was an error getting the current song.",
             );
         },
-    };
+    }
 
-    let mut s = format!("{}\n\n", current);
+    s.push_str("\n\n__Queue__:\n");
 
     if queue.is_empty() {
         s.push_str("There are no songs in the queue.");
