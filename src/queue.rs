@@ -10,7 +10,7 @@ use hyper::{
 };
 use hyper_tls::HttpsConnector;
 use lavalink_queue_requester::{
-    model::{QueuedItem, Song},
+    model::{QueuedItem, Song, SongQueued},
     QueueRequester as _,
 };
 use std::sync::Arc;
@@ -29,6 +29,23 @@ impl QueueManager {
             config,
             http,
         }
+    }
+
+    #[inline]
+    pub async fn add<'a>(
+        &'a self,
+        guild_id: u64,
+        track: impl Into<String> + 'a,
+    ) -> Result<SongQueued> {
+        await!(self._add(guild_id, track.into()))
+    }
+
+    async fn _add(&self, guild_id: u64, track: String) -> Result<SongQueued> {
+        await!(self.http.add_track(
+            self.address(),
+            guild_id.to_string(),
+            track,
+        ).compat()).map_err(From::from)
     }
 
     pub async fn get(&self, guild_id: u64) -> Result<Vec<QueuedItem>> {

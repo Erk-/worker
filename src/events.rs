@@ -152,6 +152,9 @@ async fn message_create(
 
         let result = match &*alias {
             "about" => await!(commands::about::run(ctx)),
+            "dfm" | "discordfm" | "discord.fm" => {
+                await!(commands::discordfm::run(ctx))
+            },
             "invite" => await!(commands::invite::run(ctx)),
             "join" | "j" | "connect" => await!(commands::join::run(ctx)),
             "leave" | "l" | "disconnect" | "stop" => {

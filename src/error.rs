@@ -13,7 +13,7 @@ use serenity::{
 use std::{
     cell::BorrowMutError,
     error::Error as StdError,
-    fmt::{Display, Formatter, Result as FmtResult},
+    fmt::{Display, Error as FmtError, Formatter, Result as FmtResult},
     io::Error as IoError,
     net::AddrParseError,
     num::ParseIntError,
@@ -31,6 +31,7 @@ pub enum Error {
     AddrParse(AddrParseError),
     BorrowMut(BorrowMutError),
     Cache(CacheError),
+    Fmt(FmtError),
     Hyper(HyperError),
     Io(IoError),
     Lavalink(LavalinkError),
@@ -63,6 +64,12 @@ impl From<BorrowMutError> for Error {
 impl From<CacheError> for Error {
     fn from(e: CacheError) -> Self {
         Error::Cache(e)
+    }
+}
+
+impl From<FmtError> for Error {
+    fn from(e: FmtError) -> Self {
+        Error::Fmt(e)
     }
 }
 
@@ -168,6 +175,7 @@ impl StdError for Error {
             Error::AddrParse(ref e) => e.description(),
             Error::BorrowMut(ref e) => e.description(),
             Error::Cache(ref e) => e.description(),
+            Error::Fmt(ref e) => e.description(),
             Error::Hyper(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
             Error::Lavalink(ref e) => e.description(),

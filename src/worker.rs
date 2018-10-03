@@ -2,6 +2,7 @@ use byteorder::{LE, ReadBytesExt as _};
 use crate::{
     cache::Cache,
     config::Config,
+    discord_fm::DiscordFm,
     events::DiscordEventHandler,
     lavalink::PlaybackManager,
     queue::QueueManager,
@@ -26,6 +27,7 @@ use std::sync::Arc;
 pub struct WorkerState {
     pub cache: Arc<Cache>,
     pub config: Arc<Config>,
+    pub discord_fm: DiscordFm,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<PlaybackManager>,
     pub queue: Arc<QueueManager>,
@@ -41,6 +43,7 @@ pub struct Worker {
 
 impl Worker {
     pub async fn new(config: Config) -> Result<Self> {
+        let discord_fm = DiscordFm::new()?;
         debug!("Initializing redis paired connection");
         let redis_addr = config.redis.addr()?;
         debug!("Connecting to {}...", redis_addr);
@@ -78,6 +81,7 @@ impl Worker {
         let state = Arc::new(WorkerState {
             cache,
             config,
+            discord_fm,
             http: hyper,
             playback,
             queue,

@@ -5,6 +5,7 @@
     min_const_fn,
     pin,
     plugin,
+    slice_concat_ext,
     trace_macros,
     try_from,
     try_trait,
@@ -20,6 +21,7 @@
 mod cache;
 mod commands;
 mod config;
+mod discord_fm;
 mod error;
 mod events;
 mod lavalink;
