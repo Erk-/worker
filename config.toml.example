@@ -1,16 +1,21 @@
 bot_prefixes = [""]
 discord_token = "Bot <token>"
-lavalink_user_id =
 postgres_addr = ""
 owners = []
 owo_token = ""
+discord_user_id = 0
 
-[sharding]
-lower = 0
-upper = 0
-total = 1
+[dump]
+address = "127.0.0.1:0"
+authorization = "<>"
 
-[[lavalink_nodes]]
-http_host = ""
-websocket_host = ""
-password = ""
+[lavalink]
+address = "127.0.0.1:1"
+
+[queue]
+address = "127.0.0.1:2"
+
+[redis]
+host = "127.0.0.1"
+database = 0
+port = 3
