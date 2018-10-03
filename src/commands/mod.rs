@@ -6,6 +6,7 @@ pub mod dump;
 pub mod invite;
 pub mod join;
 pub mod leave;
+pub mod load;
 pub mod pause;
 pub mod ping;
 pub mod play;
