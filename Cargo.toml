@@ -29,6 +29,10 @@ tokio = "0.1"
 git = "https://github.com/dabbotorg/cache"
 package = "dabbot-cache"
 
+[dependencies.dump]
+git = "https://github.com/dabbotorg/dump"
+package = "dabbot-dump-requester"
+
 [dependencies.futures-preview]
 branch = "alpha6"
 features = ["compat", "tokio-compat"]

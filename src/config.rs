@@ -26,6 +26,7 @@ pub struct Config {
     pub bot_prefixes: Vec<String>,
     pub discord_token: String,
     pub discord_user_id: u64,
+    pub dump: DumpConfig,
     pub lavalink: LavalinkConfig,
     pub postgres_addr: String,
     pub queue: QueueConfig,
@@ -46,6 +47,12 @@ impl Config {
 
         toml::from_slice(&contents).map_err(From::from)
     }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DumpConfig {
+    pub address: String,
+    pub authorization: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

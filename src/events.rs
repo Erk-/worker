@@ -155,6 +155,7 @@ async fn message_create(
             "dfm" | "discordfm" | "discord.fm" => {
                 await!(commands::discordfm::run(ctx))
             },
+            "dump" => await!(commands::dump::run(ctx)),
             "invite" => await!(commands::invite::run(ctx)),
             "join" | "j" | "connect" => await!(commands::join::run(ctx)),
             "leave" | "l" | "disconnect" | "stop" => {

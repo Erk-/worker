@@ -2,6 +2,7 @@ mod prelude;
 
 pub mod about;
 pub mod discordfm;
+pub mod dump;
 pub mod invite;
 pub mod join;
 pub mod leave;
