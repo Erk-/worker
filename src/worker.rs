@@ -4,8 +4,10 @@ use crate::{
     config::Config,
     discord_fm::DiscordFm,
     events::DiscordEventHandler,
-    lavalink::PlaybackManager,
-    queue::QueueManager,
+    services::{
+        lavalink::PlaybackManager,
+        queue::QueueManager,
+    },
     Result,
 };
 use futures::compat::Future01CompatExt as _;

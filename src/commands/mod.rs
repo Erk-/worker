@@ -21,7 +21,7 @@ pub mod skip;
 pub mod volume;
 
 use crate::{
-    lavalink::PlayerState,
+    services::lavalink::PlayerState,
     worker::WorkerState,
     Result,
 };

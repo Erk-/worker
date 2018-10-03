@@ -24,8 +24,7 @@ mod config;
 mod discord_fm;
 mod error;
 mod events;
-mod lavalink;
-mod queue;
+mod services;
 mod utils;
 mod worker;
 
