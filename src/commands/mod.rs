@@ -21,6 +21,7 @@ pub mod seek;
 pub mod skip;
 pub mod soundcloud;
 pub mod volume;
+pub mod youtube;
 
 use crate::{
     services::lavalink::PlayerState,

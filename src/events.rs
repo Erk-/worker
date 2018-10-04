@@ -178,6 +178,7 @@ async fn message_create(
             "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
             "soundcloud" | "sc" => await!(commands::soundcloud::run(ctx)),
             "volume" | "v" => await!(commands::volume::run(ctx)),
+            "youtube" | "yt" => await!(commands::youtube::run(ctx)),
             _ => {
                 trace!("No command matched alias: {}", alias);
 
