@@ -15,8 +15,9 @@ pub async fn run(ctx: Context) -> CommandResult {
     }
 
     let query = ctx.args.join(" ");
+    let search = format!("ytsearch:{}", query);
 
-    let mut tracks = match await!(ctx.state.playback.search(query.clone())) {
+    let mut tracks = match await!(ctx.state.playback.search(search)) {
         Ok(tracks) => tracks,
         Err(why) => {
             warn!("Err searching tracks for query '{}': {:?}", query, why);
