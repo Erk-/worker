@@ -176,6 +176,7 @@ async fn message_create(
             "resume" | "unpause" => await!(commands::resume::run(ctx)),
             "seek" => await!(commands::seek::run(ctx)),
             "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
+            "soundcloud" | "sc" => await!(commands::soundcloud::run(ctx)),
             "volume" | "v" => await!(commands::volume::run(ctx)),
             _ => {
                 trace!("No command matched alias: {}", alias);

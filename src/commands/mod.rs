@@ -19,6 +19,7 @@ pub mod restart;
 pub mod resume;
 pub mod seek;
 pub mod skip;
+pub mod soundcloud;
 pub mod volume;
 
 use crate::{
