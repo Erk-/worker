@@ -29,9 +29,9 @@ pub async fn run(ctx: Context) -> CommandResult {
         .map(|item| item.song_track)
         .collect::<Vec<_>>();
 
-    debug!("Serializing dump tracks");
+    trace!("Serializing dump tracks");
     let body = serde_json::to_vec_pretty(&tracks)?;
-    debug!("Serialized dump tracks");
+    trace!("Serialized dump tracks");
 
     let dump = await!(ctx.state.http.dump(
         &ctx.state.config.dump.address,
