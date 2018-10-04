@@ -170,6 +170,7 @@ async fn message_create(
             },
             "providers" => await!(commands::providers::run(ctx)),
             "queue" | "q" | "que" => await!(commands::queue::run(ctx)),
+            "radio" => await!(commands::radio::run(ctx)),
             "remove" => await!(commands::remove::run(ctx)),
             "restart" => await!(commands::restart::run(ctx)),
             "resume" | "unpause" => await!(commands::resume::run(ctx)),

@@ -4,6 +4,7 @@ use crate::{
     config::Config,
     discord_fm::DiscordFm,
     events::DiscordEventHandler,
+    radios::RadioList,
     services::{
         lavalink::PlaybackManager,
         queue::QueueManager,
@@ -33,6 +34,7 @@ pub struct WorkerState {
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<PlaybackManager>,
     pub queue: Arc<QueueManager>,
+    pub radios: RadioList,
     pub redis: Arc<PairedConnection>,
     pub serenity: Arc<SerenityHttpClient>,
 }
@@ -46,6 +48,7 @@ pub struct Worker {
 impl Worker {
     pub async fn new(config: Config) -> Result<Self> {
         let discord_fm = DiscordFm::new()?;
+        let radios = RadioList::new()?;
         debug!("Initializing redis paired connection");
         let redis_addr = config.redis.addr()?;
         debug!("Connecting to {}...", redis_addr);
@@ -87,6 +90,7 @@ impl Worker {
             http: hyper,
             playback,
             queue,
+            radios,
             redis,
             serenity,
         });

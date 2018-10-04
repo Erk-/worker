@@ -24,6 +24,7 @@ mod config;
 mod discord_fm;
 mod error;
 mod events;
+mod radios;
 mod services;
 mod utils;
 mod worker;

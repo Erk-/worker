@@ -1,3 +1,6 @@
 [submodule "discord-fm"]
 	path = discord-fm
 	url = https://github.com/dabbotorg/discord-fm
+[submodule "radios"]
+	path = radios
+	url = https://github.com/dabbotorg/radios.git

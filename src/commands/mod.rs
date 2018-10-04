@@ -13,6 +13,7 @@ pub mod play;
 pub mod playing;
 pub mod providers;
 pub mod queue;
+pub mod radio;
 pub mod remove;
 pub mod restart;
 pub mod resume;
