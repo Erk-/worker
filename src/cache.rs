@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 pub struct Cache {
     config: Arc<Config>,
-    inner: DabbotCache,
+    pub inner: DabbotCache,
 }
 
 impl Cache {
@@ -42,9 +42,7 @@ impl Cache {
                 Ok(())
             },
             Dispatch(_, VoiceStateUpdate(e)) => {
-                self.voice_state_update(e);
-
-                Ok(())
+                await!(self.voice_state_update(e)).map_err(From::from)
             },
             _ => Ok(()),
         }
@@ -102,15 +100,17 @@ impl Cache {
         );
     }
 
-    pub fn voice_state_update<'a>(
+    pub async fn voice_state_update<'a>(
         &'a self,
         e: &'a VoiceStateUpdateEvent,
-    ) {
+    ) -> Result<()> {
         let guild_id = match e.guild_id {
             Some(id) => id.0,
-            None => return,
+            None => return Ok(()),
         };
 
-        self.inner.upsert_voice_state(guild_id, &e.voice_state);
+        await!(self.inner.upsert_voice_state(guild_id, &e.voice_state))?;
+
+        Ok(())
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    commands::{self, Context, Response},
+    commands::{self, Context, Response, leave},
     config::Config,
     error::{Error, Result},
     utils,
@@ -16,6 +16,7 @@ use serenity::model::event::{
     MessageCreateEvent,
     ReadyEvent,
     VoiceServerUpdateEvent,
+    VoiceStateUpdateEvent,
 };
 use std::{
     borrow::Cow,
@@ -63,6 +64,9 @@ impl DiscordEventHandler {
             },
             Dispatch(_, VoiceServerUpdate(e)) => {
                 await!(voice_server_update(e, state))?;
+            },
+            Dispatch(_, VoiceStateUpdate(e)) => {
+                await!(voice_state_update(e, shard_id, state))?;
             },
             other => await!(update_cache(other, state))?,
         }
@@ -195,8 +199,6 @@ fn ready(event: ReadyEvent) {
     info!("Received Ready event! User id: {:?}", event.ready.user.id);
 }
 
-
-
 async fn update_cache(
     event: GatewayEvent,
     state: Arc<WorkerState>,
@@ -218,7 +220,7 @@ async fn voice_server_update(
 ) -> Result<()> {
     state.cache.voice_server_update(&event);
 
-    debug!("Received VoiceServerUpdate event: {:?}", &event);
+    debug!("Received VoiceServerUpdate event: {:?}", event);
 
     let guild_id = event.guild_id.map(|x| x.0)?;
 
@@ -247,6 +249,58 @@ async fn voice_server_update(
                 why,
             );
         },
+    }
+
+    Ok(())
+}
+
+async fn voice_state_update(
+    e: VoiceStateUpdateEvent,
+    shard_id: u64,
+    state: Arc<WorkerState>,
+) -> Result<()> {
+    debug!("Received VoiceStateUpdate event: {:?}", e);
+
+    let guild_id = e.guild_id.map(|x| x.0)?;
+    debug!("Got guild ID");
+    let bot_id = state.config.discord_user_id;
+    let user_id = e.voice_state.user_id.0;
+
+    let mut update_cache = true;
+
+    if user_id != bot_id {
+        let old_state = await!(state.cache.voice_state(
+            guild_id,
+            user_id,
+        ))?;
+
+        if let Some(old_state) = old_state {
+            let old_channel_id = old_state.channel_id;
+
+            update_cache = false;
+            await!(state.cache.voice_state_update(&e))?;
+
+            debug!("Checking members in voice channel {}", old_channel_id);
+            let list = await!(state.cache.inner.get_channel_voice_states(
+                old_channel_id,
+            ))?;
+            debug!("Members in voice channel {}: {:?}", old_channel_id, list);
+
+            if list.contains(&bot_id) && list.len() == 1 {
+                debug!("Only member remaining in {}; leaving!", old_channel_id);
+
+                await!(leave::leave(
+                    shard_id,
+                    guild_id,
+                    &state.playback,
+                    &state.redis,
+                ))?;
+            }
+        }
+    }
+
+    if update_cache {
+        await!(state.cache.voice_state_update(&e))?;
     }
 
     Ok(())
