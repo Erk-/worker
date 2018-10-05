@@ -61,7 +61,10 @@ impl Cache {
         )).map_err(From::from)
     }
 
-    async fn guild_create<'a>(&'a self, e: &'a GuildCreateEvent) -> Result<()> {
+    pub async fn guild_create<'a>(
+        &'a self,
+        e: &'a GuildCreateEvent,
+    ) -> Result<()> {
         let now = std::time::Instant::now();
         await!(self.inner.upsert_guild(&e.guild));
         info!("Upsert for {} took: {:?}", e.guild.id.0, now.elapsed());
@@ -69,13 +72,16 @@ impl Cache {
         Ok(())
     }
 
-    async fn guild_delete<'a>(&'a self, e: &'a GuildDeleteEvent) -> Result<()> {
+    pub async fn guild_delete<'a>(
+        &'a self,
+        e: &'a GuildDeleteEvent,
+    ) -> Result<()> {
         await!(self.inner.delete_voice_states(e.guild.id.0))?;
 
         Ok(())
     }
 
-    fn voice_server_update<'a>(
+    pub fn voice_server_update<'a>(
         &'a self,
         e: &'a VoiceServerUpdateEvent,
     ) {
@@ -96,7 +102,7 @@ impl Cache {
         );
     }
 
-    fn voice_state_update<'a>(
+    pub fn voice_state_update<'a>(
         &'a self,
         e: &'a VoiceStateUpdateEvent,
     ) {

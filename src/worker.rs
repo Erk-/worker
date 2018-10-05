@@ -4,14 +4,16 @@ use crate::{
     cache::Cache,
     config::Config,
     discord_fm::DiscordFm,
+    error::Result,
     radios::RadioList,
     services::{
         lavalink::PlaybackManager,
         queue::QueueManager,
     },
-    Result,
 };
-use futures::compat::Future01CompatExt as _;
+use futures::{
+    compat::Future01CompatExt as _,
+};
 use hyper::{
     client::{Client as HyperClient, HttpConnector},
     Body,
@@ -115,19 +117,8 @@ impl Worker {
                 }
             };
 
-            trace!("Updating cache");
-
-            if let Err(why) = await!(self.state.cache.dispatch(&event)) {
-                warn!("Err updating cache: {:?}", why);
-            }
-
-            trace!("Updated cache");
             trace!("Dispatching event to discord dispatcher");
-
-            if let Err(why) = self.discord.dispatch(event, shard_id) {
-                warn!("Error dispatching event to discord handler: {:?}", why);
-            }
-
+            self.discord.dispatch(event, shard_id);
             trace!("Dispatched event to discord dispatcher");
         }
     }

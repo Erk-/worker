@@ -2,11 +2,12 @@ use crate::{
     commands::{self, Context, Response},
     config::Config,
     error::{Error, Result},
+    utils,
     worker::WorkerState,
 };
 use futures::{
-    compat::{Future01CompatExt as _, TokioDefaultSpawner},
-    future::{FutureExt as _, TryFutureExt as _},
+    compat::{Future01CompatExt as _},
+    future::TryFutureExt,
 };
 use lavalink::model::VoiceUpdate;
 use serenity::model::event::{
@@ -20,7 +21,6 @@ use std::{
     borrow::Cow,
     sync::Arc,
 };
-use tokio::prelude::Future as Future01;
 
 pub struct DiscordEventHandler {
     state: Arc<WorkerState>,
@@ -37,6 +37,16 @@ impl DiscordEventHandler {
         &self,
         event: GatewayEvent,
         shard_id: u64,
+    ) {
+        utils::spawn(Self::_dispatch(Arc::clone(&self.state), event, shard_id).map_err(|why| {
+            warn!("Err dispatching event: {:?}", why);
+        }));
+    }
+
+    async fn _dispatch(
+        state: Arc<WorkerState>,
+        event: GatewayEvent,
+        shard_id: u64,
     ) -> Result<()> {
         trace!(
             "Discord dispatcher received event on shard {}: {:?}",
@@ -47,41 +57,17 @@ impl DiscordEventHandler {
         use self::GatewayEvent::Dispatch;
 
         match event {
-            Dispatch(_, Ready(e)) => self.ready(e),
+            Dispatch(_, Ready(e)) => ready(e),
             Dispatch(_, MessageCreate(e)) => {
-                let future = message_create(e, shard_id, Arc::clone(&self.state))
-                    .boxed()
-                    .compat(TokioDefaultSpawner)
-                    .map_err(|why| {
-                        warn!(
-                            "Error dispatching message create: {:?}",
-                            why,
-                        );
-                    });
-
-                tokio::spawn(future);
+                await!(message_create(e, shard_id, state))?;
             },
             Dispatch(_, VoiceServerUpdate(e)) => {
-                let future = voice_server_update(e, Arc::clone(&self.state))
-                    .boxed()
-                    .compat(TokioDefaultSpawner)
-                    .map_err(|why| {
-                        warn!(
-                            "Error dispatching voice server update: {:?}",
-                            why,
-                        );
-                    });
-
-                tokio::spawn(future);
+                await!(voice_server_update(e, state))?;
             },
-            _ => {},
+            other => await!(update_cache(other, state))?,
         }
 
         Ok(())
-    }
-
-    fn ready(&self, event: ReadyEvent) {
-        info!("Received Ready event! User id: {:?}", event.ready.user.id);
     }
 }
 
@@ -205,10 +191,33 @@ async fn message_create(
     Ok(())
 }
 
+fn ready(event: ReadyEvent) {
+    info!("Received Ready event! User id: {:?}", event.ready.user.id);
+}
+
+
+
+async fn update_cache(
+    event: GatewayEvent,
+    state: Arc<WorkerState>,
+) -> Result<()> {
+    trace!("Updating cache");
+
+    if let Err(why) = await!(state.cache.dispatch(&event)) {
+        warn!("Err updating cache with {:?}: {:?}", event, why);
+    }
+
+    trace!("Updated cache");
+
+    Ok(())
+}
+
 async fn voice_server_update(
     event: VoiceServerUpdateEvent,
     state: Arc<WorkerState>,
 ) -> Result<()> {
+    state.cache.voice_server_update(&event);
+
     debug!("Received VoiceServerUpdate event: {:?}", &event);
 
     let guild_id = event.guild_id.map(|x| x.0)?;
