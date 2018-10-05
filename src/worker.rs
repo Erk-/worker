@@ -1,9 +1,9 @@
 use byteorder::{LE, ReadBytesExt as _};
 use crate::{
+    bridges::discord::DiscordEventHandler,
     cache::Cache,
     config::Config,
     discord_fm::DiscordFm,
-    events::DiscordEventHandler,
     radios::RadioList,
     services::{
         lavalink::PlaybackManager,

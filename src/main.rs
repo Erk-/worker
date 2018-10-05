@@ -18,12 +18,12 @@
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate serde_json;
 
+mod bridges;
 mod cache;
 mod commands;
 mod config;
 mod discord_fm;
 mod error;
-mod events;
 mod radios;
 mod services;
 mod utils;
