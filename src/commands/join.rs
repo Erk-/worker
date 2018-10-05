@@ -82,14 +82,19 @@ pub async fn join_ctx(
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.msg.guild_id?.0;
 
-    // Check if the user is in a guild.
+    trace!("Checking if G:{};U:{} is in a voice channel", guild_id, user_id);
+
+    // Check if the user is in a voice channel.
     let user = match await!(ctx.state.cache.voice_state(guild_id, user_id))? {
         Some(user) => user,
         None => return Ok(Join::UserNotInChannel),
     };
 
+    trace!("User voice state: {:?}", user);
+
     let bot_id = ctx.state.config.discord_user_id;
 
+    trace!("Checking if bot is already in voice channel");
     // Check if the bot is already in the requested channel.
     if let Some(bot) = await!(ctx.state.cache.voice_state(guild_id, bot_id))? {
         trace!(
@@ -99,9 +104,12 @@ pub async fn join_ctx(
         );
 
         if bot.channel_id == user.channel_id {
+            trace!("Bot is in user voice channel already");
             return Ok(Join::AlreadyInChannel);
         }
     }
+
+    trace!("Bot is not in user voice channel");
 
     trace!("Serializing audio player for guild {}", guild_id);
     let map = serde_json::to_vec(&json!({
