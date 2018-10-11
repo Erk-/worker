@@ -57,9 +57,9 @@ pub async fn run(ctx: Context) -> CommandResult {
         return join.into_response();
     }
 
-    let song = match await!(ctx.queue_pop())? {
-        Some(song) => song,
-        None => return join.into_response(),
+    let song = match await!(ctx.queue_pop()) {
+        Ok(Some(song)) => song,
+        Ok(None) | Err(_) => return join.into_response(),
     };
 
     match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
