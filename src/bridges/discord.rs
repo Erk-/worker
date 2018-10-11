@@ -289,12 +289,27 @@ async fn voice_state_update(
             if list.contains(&bot_id) && list.len() == 1 {
                 debug!("Only member remaining in {}; leaving!", old_channel_id);
 
-                await!(leave::leave(
-                    shard_id,
-                    guild_id,
-                    &state.playback,
-                    &state.redis,
-                ))?;
+                await!(state.playback.pause(guild_id))?;
+            }
+        } else if let Some(channel_id) = e.voice_state.channel_id {
+            let channel_id = channel_id.0;
+
+            update_cache = false;
+            await!(state.cache.voice_state_update(&e))?;
+
+            debug!("Checking members in voice channel {}", channel_id);
+            let list = await!(state.cache.inner.get_channel_voice_states(
+                channel_id,
+            ))?;
+            debug!("Members in voice channel {}: {:?}", channel_id, list);
+
+            if list.len() == 2 {
+                debug!(
+                    "No longer only member remaining in {}; resuming",
+                    channel_id,
+                );
+
+                await!(state.playback.resume(guild_id))?;
             }
         }
     }
