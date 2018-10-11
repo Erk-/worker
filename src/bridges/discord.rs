@@ -66,7 +66,7 @@ impl DiscordEventHandler {
                 await!(voice_server_update(e, state))?;
             },
             Dispatch(_, VoiceStateUpdate(e)) => {
-                await!(voice_state_update(e, shard_id, state))?;
+                await!(voice_state_update(e, state))?;
             },
             other => await!(update_cache(other, state))?,
         }
@@ -256,7 +256,6 @@ async fn voice_server_update(
 
 async fn voice_state_update(
     e: VoiceStateUpdateEvent,
-    shard_id: u64,
     state: Arc<WorkerState>,
 ) -> Result<()> {
     debug!("Received VoiceStateUpdate event: {:?}", e);
