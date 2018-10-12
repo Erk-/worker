@@ -84,13 +84,11 @@ To play a song...
             },
         }
     } else {
-        delete_selection(&ctx.state.redis, guild_id);
-
-        Response::text("Selection cancelled!")
+        super::cancel::cancel(&ctx.state.redis, guild_id)
     }
 }
 
-fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
+pub(super) fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
     redis.send_and_forget(resp_array![
         "DEL",
         format!("c:{}", guild_id)
