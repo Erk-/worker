@@ -1,5 +1,6 @@
 use crate::utils;
 use lavalink::rest::Load;
+use serenity::utils::MessageBuilder;
 use std::fmt::{Display, Formatter, Result as FmtResult, Write as _};
 use super::prelude::*;
 
@@ -51,14 +52,16 @@ pub async fn base(
     ctx: &Context,
     provider: Provider,
 ) -> CommandResult {
+    let guild_id = ctx.msg.guild_id?.0;
+
     if ctx.args.len() < 1 {
         return Response::err("You need to say the link to the song or the name of what you want to play");
     }
 
     let query = ctx.args.join(" ");
 
-    let mut tracks = match await!(search(&ctx, &query, provider)) {
-        Ok(tracks) => tracks,
+    let mut load = match await!(search(&ctx, &query, provider)) {
+        Ok(load) => load,
         Err(why) => {
             warn!(
                 "Err searching tracks for query '{}' in provider {}: {:?}",
@@ -71,25 +74,57 @@ pub async fn base(
         },
     };
 
-    let song = tracks.tracks.remove(0);
+    trace!("Tracks: {:?}", load);
 
-    await!(super::join::join_ctx(&ctx))?;
-
-    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
-        Ok(()) => {
-            Response::text(format!(
-                "Now playing **{}** by **{}** `[{}]`",
-                song.info.title,
-                song.info.author,
-                utils::track_length_readable(song.info.length as u64),
-            ))
-        },
-        Err(why) => {
-            warn!("Err playing song: {:?}", why);
-
-            Response::err("There was an error playing the song.")
-        },
+    if load.tracks.is_empty() {
+        return Response::text("It looks like there aren't any results for that!");
     }
+
+    load.tracks.truncate(5);
+
+    let mut blobs = load.tracks
+        .iter()
+        .map(|t| t.track.clone())
+        .rev()
+        .collect::<Vec<_>>();
+
+    debug!("Deleting existing choose for guild {}", guild_id);
+    ctx.state.redis.send_and_forget(resp_array![
+        "DEL",
+        format!("c:{}", guild_id)
+    ]);
+    debug!("Deleted existing choose for guild {}", guild_id);
+    debug!("Setting choose for guild {}", guild_id);
+    ctx.state.redis.send_and_forget(resp_array![
+        "LPUSH",
+        format!("c:{}", guild_id)
+    ].append(&mut blobs));
+    debug!("Set choose for guild {}", guild_id);
+
+    let mut msg = MessageBuilder::new();
+
+    for (idx, track) in load.tracks.iter().enumerate() {
+        write!(msg.0, "`{}` ", idx + 1)?;
+        msg.push_safe(&track.info.title);
+        msg.0.push_str(" by ");
+        msg.push_safe(&track.info.author);
+        write!(msg.0, " `[{}]`", utils::track_length_readable(track.info.length as u64))?;
+        msg.0.push('\n');
+    }
+
+    let prefix = ctx.state.config.bot_prefixes.first()?;
+
+    msg.0.push_str("\n**To choose**, use `");
+    msg.push_safe(&prefix);
+    msg.0.push_str("choose <number>`
+Example: `");
+    msg.push_safe(&prefix);
+    msg.0.push_str("choose 2` would pick the second option.
+**To cancel**, use `");
+    msg.push_safe(&prefix);
+    msg.0.push_str("cancel`.");
+
+    Response::text(msg.build())
 }
 
 pub async fn search<'a>(
