@@ -44,11 +44,14 @@ use futures::{
 use hyper::rt::Future as _;
 use std::env;
 
+const RUST_LOG_DEFAULT: &'static str = "debug,hyper=info,tokio_reactor=info,\
+lavalink_http_server_requester=info,lavalink_queue_requester=info";
+
 fn main() {
     trace_macros!(false);
 
     if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "debug,hyper=info,tokio_reactor=info");
+        env::set_var("RUST_LOG", RUST_LOG_DEFAULT);
     }
 
     env_logger::init();
