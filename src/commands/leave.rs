@@ -53,13 +53,12 @@ pub async fn leave<'a>(
     let cmd = resp_array!["RPUSH", key, map];
 
     redis.send_and_forget(cmd);
-
-    await!(playback.stop(guild_id))?;
-
-    await!(redis.send(resp_array![
+    redis.send_and_forget(resp_array![
         "DEL",
         format!("j:{}", guild_id)
-    ]).compat())?;
+    ]);
+
+    await!(playback.stop(guild_id))?;
 
     Ok(())
 }
