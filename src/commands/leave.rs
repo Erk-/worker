@@ -57,6 +57,10 @@ pub async fn leave<'a>(
         "DEL",
         format!("j:{}", guild_id)
     ]);
+    redis.send_and_forget(resp_array![
+        "DEL",
+        format!("c:{}", guild_id)
+    ]);
 
     await!(playback.stop(guild_id))?;
 
