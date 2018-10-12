@@ -71,7 +71,7 @@ async fn handle_song(
     let id = channel_id.parse::<u64>()?;
 
     let msg = format!(
-        "Now playing **{}** by **{}** (`{}`)",
+        "Now playing **{}** by **{}** [`{}`]",
         track.title,
         track.author,
         utils::track_length_readable(track.length),
