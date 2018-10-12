@@ -7,6 +7,7 @@
     plugin,
     slice_concat_ext,
     trace_macros,
+    try_blocks,
     try_from,
     try_trait,
     underscore_imports,
@@ -24,6 +25,7 @@ mod commands;
 mod config;
 mod discord_fm;
 mod error;
+mod lavalink_msgs;
 mod radios;
 mod services;
 mod utils;

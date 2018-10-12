@@ -5,14 +5,17 @@ use crate::{
     config::Config,
     discord_fm::DiscordFm,
     error::Result,
+    lavalink_msgs,
     radios::RadioList,
     services::{
         lavalink::PlaybackManager,
         queue::QueueManager,
     },
+    utils,
 };
 use futures::{
     compat::Future01CompatExt as _,
+    future::TryFutureExt as _,
 };
 use hyper::{
     client::{Client as HyperClient, HttpConnector},
@@ -57,7 +60,9 @@ impl Worker {
         let redis = Arc::new(await!(redis_client::paired_connect(&redis_addr).compat())?);
         debug!("Made first connection to redis, making second...");
         let redis2 = await!(redis_client::paired_connect(&redis_addr).compat())?;
-        debug!("Connected two redis connections");
+        debug!("Made second connection to redis, making third...");
+        let redis3 = await!(redis_client::paired_connect(&redis_addr).compat())?;
+        debug!("Connected three redis connections");
 
         let config = Arc::new(config);
         debug!("Initializing hyper client");
@@ -97,6 +102,9 @@ impl Worker {
             serenity,
         });
 
+        utils::spawn(lavalink_msgs::from_lavalink(redis3, Arc::clone(&state)).map_err(|why| {
+            warn!("Err with lavalink:from: {:?}", why);
+        }));
         let discord = DiscordEventHandler::new(Arc::clone(&state));
 
         Ok(Self {

@@ -56,5 +56,10 @@ pub async fn leave<'a>(
 
     await!(playback.stop(guild_id))?;
 
+    await!(redis.send(resp_array![
+        "DEL",
+        format!("j:{}", guild_id)
+    ]).compat())?;
+
     Ok(())
 }

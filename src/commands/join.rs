@@ -126,5 +126,11 @@ pub async fn join_ctx(
     await!(ctx.to_sharder(map))?;
     trace!("Sent SessionDescription payload to sharder");
 
+    await!(ctx.state.redis.send(resp_array![
+        "SET",
+        format!("j:{}", guild_id),
+        ctx.msg.channel_id.0 as usize
+    ]).compat())?;
+
     Ok(Join::Successful)
 }
