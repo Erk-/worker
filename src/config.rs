@@ -30,8 +30,6 @@ pub struct Config {
     pub lavalink: LavalinkConfig,
     pub postgres_addr: String,
     pub queue: QueueConfig,
-    pub owners: Vec<u64>,
-    pub owo_token: String,
     pub redis: RedisConfig,
 }
 

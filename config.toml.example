@@ -1,8 +1,6 @@
 bot_prefixes = [""]
 discord_token = "Bot <token>"
 postgres_addr = ""
-owners = []
-owo_token = ""
 discord_user_id = 0
 
 [dump]
