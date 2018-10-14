@@ -10,7 +10,13 @@ pub const fn names() -> &'static [&'static str] {
 
 pub async fn run(ctx: Context) -> CommandResult {
     if ctx.args.is_empty() {
-        Response::text("radios here")
+        let prefix = ctx.state.config.bot_prefixes.first()?;
+
+        Response::text(format!("View the radios here: <https://radios.dabbot.org>
+
+To play a radio, use `{prefix}radio <name here>`.
+
+For example, use `{prefix}radio Radio Here`", prefix=prefix))
     } else {
         let query = ctx.args.join(" ");
 
