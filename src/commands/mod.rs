@@ -6,6 +6,7 @@ pub mod choose;
 pub mod clear;
 pub mod discordfm;
 pub mod dump;
+pub mod help;
 pub mod invite;
 pub mod join;
 pub mod leave;
