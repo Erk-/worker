@@ -13,7 +13,10 @@ use lavalink_queue_requester::{
     model::{QueuedItem, Song, SongQueued},
     QueueRequester as _,
 };
-use std::sync::Arc;
+use std::{
+    sync::Arc,
+    u32,
+};
 
 pub struct QueueManager {
     config: Arc<Config>,
@@ -56,9 +59,14 @@ impl QueueManager {
     }
 
     pub async fn get(&self, guild_id: u64) -> Result<Vec<QueuedItem>> {
-        await!(self.http.get_queue(
+        await!(self.get_limit(guild_id, u32::MAX))
+    }
+
+    pub async fn get_limit(&self, guild_id: u64, limit: u32) -> Result<Vec<QueuedItem>> {
+        await!(self.http.get_queue_with_limit(
             self.address(),
             guild_id.to_string(),
+            limit,
         ).compat()).map_err(From::from)
     }
 
