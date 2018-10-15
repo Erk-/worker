@@ -4,8 +4,9 @@ postgres_addr = ""
 discord_user_id = 0
 
 [dump]
-address = "127.0.0.1:0"
 authorization = "<>"
+display_address = "127.0.0.1:3"
+post_address = "127.0.0.1:0"
 
 [lavalink]
 address = "127.0.0.1:1"

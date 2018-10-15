@@ -41,7 +41,7 @@ pub async fn run(ctx: Context) -> CommandResult {
     };
 
     let request = ctx.state.http.retrieve(
-        &ctx.state.config.dump.address,
+        &ctx.state.config.dump.display_address,
         &ctx.state.config.dump.authorization,
         uuid,
     );

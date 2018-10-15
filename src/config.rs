@@ -49,8 +49,9 @@ impl Config {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DumpConfig {
-    pub address: String,
     pub authorization: String,
+    pub display_address: String,
+    pub post_address: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -34,7 +34,7 @@ pub async fn run(ctx: Context) -> CommandResult {
     trace!("Serialized dump tracks");
 
     let dump = await!(ctx.state.http.dump(
-        &ctx.state.config.dump.address,
+        &ctx.state.config.dump.post_address,
         &ctx.state.config.dump.authorization,
         body,
     ).compat())?;
@@ -43,7 +43,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         "A dump of your song queue was created! Link: https://{addr}/{uuid}
 
 Load this playlist with `{prefix}load https://{addr}/{uuid}`",
-        addr=ctx.state.config.dump.address,
+        addr=ctx.state.config.dump.display_address,
         prefix=ctx.state.config.bot_prefixes.first()?,
         uuid=dump.uuid,
     ))
