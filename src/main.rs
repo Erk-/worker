@@ -44,7 +44,7 @@ use futures::{
 use hyper::rt::Future as _;
 use std::env;
 
-const RUST_LOG_DEFAULT: &'static str = "debug,hyper=info,tokio_reactor=info,\
+const RUST_LOG_DEFAULT: &'static str = "info,hyper=info,tokio_reactor=info,\
 lavalink_http_server_requester=info,lavalink_queue_requester=info";
 
 fn main() {
