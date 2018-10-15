@@ -143,6 +143,7 @@ async fn message_create(
         let result = match &*alias {
             "about" => await!(commands::about::run(ctx)),
             "cancel" => await!(commands::cancel::run(ctx)),
+            "clear" => await!(commands::clear::run(ctx)),
             "choose" | "c" => await!(commands::choose::run(ctx)),
             "dfm" | "discordfm" | "discord.fm" => {
                 await!(commands::discordfm::run(ctx))
