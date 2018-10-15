@@ -12,7 +12,7 @@ pub async fn run(ctx: Context) -> CommandResult {
     if ctx.args.is_empty() {
         let prefix = ctx.state.config.bot_prefixes.first()?;
 
-        Response::text(format!("View the radios here: <https://radios.dabbot.org>
+        Response::text(format!("View the radios here: <https://dabbot.org/radios>
 
 To play a radio, use `{prefix}radio <name here>`.
 
