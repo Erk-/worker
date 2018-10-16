@@ -34,11 +34,11 @@ Usage: `{}dfm <library>`
             },
         };
 
-        for item in list {
-            debug!("Adding to queue for guild {}: {}", guild_id, item.track);
+        let amount = list.len();
+        let tracks = list.into_iter().map(|item| item.track.clone()).collect();
 
-            await!(ctx.state.queue.add(guild_id, item.track.clone()))?;
-        }
+        debug!("Adding {} to queue for guild: {}", amount, guild_id);
+        await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
 
         Response::text("Added the library to the queue.")
     }

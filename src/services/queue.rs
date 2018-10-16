@@ -44,10 +44,43 @@ impl QueueManager {
     }
 
     async fn _add(&self, guild_id: u64, track: String) -> Result<SongQueued> {
-        await!(self.http.add_track(
+        let mut songs = await!(self.http.add_tracks(
             self.address(),
             guild_id.to_string(),
-            track,
+            vec![track],
+        ).compat())?;
+
+        if songs.is_empty() {
+            None?;
+
+            unreachable!();
+        } else {
+            Ok(songs.remove(0))
+        }
+
+        // Ok(songs.remove(0))
+    }
+
+    #[inline]
+    pub async fn add_multiple<'a>(
+        &'a self,
+        guild_id: u64,
+        tracks: Vec<impl Into<String> + 'a>,
+    ) -> Result<Vec<SongQueued>> {
+        let tracks = tracks.into_iter().map(Into::into).collect();
+
+        await!(self._add_multiple(guild_id, tracks))
+    }
+
+    async fn _add_multiple(
+        &self,
+        guild_id: u64,
+        tracks: Vec<String>,
+    ) -> Result<Vec<SongQueued>> {
+        await!(self.http.add_tracks(
+            self.address(),
+            guild_id.to_string(),
+            tracks,
         ).compat()).map_err(From::from)
     }
 
