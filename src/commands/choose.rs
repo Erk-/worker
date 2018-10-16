@@ -61,28 +61,7 @@ To play a song...
             },
         };
 
-        await!(super::join::join_ctx(&ctx))?;
-
-        let track = selection.remove(num);
-        let song = decoder::decode_track_base64(&track)?;
-
-        delete_selection(&ctx.state.redis, guild_id);
-
-        match await!(ctx.state.playback.play(guild_id, track)) {
-            Ok(()) => {
-                Response::text(format!(
-                    "Now playing **{}** by **{}** `[{}]`",
-                    song.title,
-                    song.author,
-                    utils::track_length_readable(song.length as u64),
-                ))
-            },
-            Err(why) => {
-                warn!("Err playing song: {:?}", why);
-
-                Response::err("There was an error playing the song.")
-            },
-        }
+        await!(select(&ctx, selection.remove(num)))
     } else {
         super::cancel::cancel(&ctx.state.redis, guild_id)
     }
@@ -93,4 +72,30 @@ pub(super) fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
         "DEL",
         format!("c:{}", guild_id)
     ]);
+}
+
+pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
+    let guild_id = ctx.msg.guild_id?.0;
+
+    await!(super::join::join_ctx(&ctx))?;
+
+    let song = decoder::decode_track_base64(&track)?;
+
+    delete_selection(&ctx.state.redis, guild_id);
+
+    match await!(ctx.state.playback.play(guild_id, track)) {
+        Ok(()) => {
+            Response::text(format!(
+                "Now playing **{}** by **{}** `[{}]`",
+                song.title,
+                song.author,
+                utils::track_length_readable(song.length as u64),
+            ))
+        },
+        Err(why) => {
+            warn!("Err playing song: {:?}", why);
+
+            Response::err("There was an error playing the song.")
+        },
+    }
 }

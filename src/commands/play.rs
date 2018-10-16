@@ -80,6 +80,15 @@ pub async fn base(
         return Response::text("It looks like there aren't any results for that!");
     }
 
+    if query.starts_with("https://") || query.starts_with("http://") {
+        // let mut tracks = load.tracks.into_iter().rev().collect::<Vec<_>>();
+        let track = load.tracks.remove(0).track;
+
+        debug!("Playing from HTTP(S): {}", track);
+
+        return await!(super::choose::select(&ctx, track));
+    }
+
     load.tracks.truncate(5);
 
     let mut blobs = load.tracks

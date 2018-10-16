@@ -16,7 +16,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err clearing queue for {}: {:?}", guild_id, why);
 
-            Response::err("There was an error clearing the queue.")
+            Response::text("Cleared the song queue!")
         },
     }
 }
