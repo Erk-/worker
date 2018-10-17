@@ -38,8 +38,13 @@ Usage: `{}dfm <library>`
         let tracks = library.items.iter().map(|item| item.track.clone()).collect();
 
         debug!("Adding {} to queue for guild: {}", amount, guild_id);
-        await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
+        let songs = await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
+        let song_count = songs.len();
 
-        Response::text("Added the library to the queue.")
+        Response::text(format!(
+            "Added {} ({} songs) to the song queue.",
+            library.name,
+            song_count,
+        ))
     }
 }
