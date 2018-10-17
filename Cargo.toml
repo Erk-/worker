@@ -2,10 +2,10 @@ cargo-features = ["rename-dependency"]
 
 [package]
 edition = "2018"
-name = "dabbot"
+name = "dabbot-worker"
 publish = false
 version = "0.1.0"
-authors = ["SpongyBacon <spongybacon@hotmail.co.uk>"]
+authors = ["Zeyla Hellyer <hi@zeyla.me>"]
 
 [dependencies]
 byteorder = "1"
