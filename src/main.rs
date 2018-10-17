@@ -2,7 +2,6 @@
     async_await,
     await_macro,
     futures_api,
-    min_const_fn,
     pin,
     plugin,
     slice_concat_ext,
