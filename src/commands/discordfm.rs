@@ -20,10 +20,10 @@ Usage: `{}dfm <library>`
     } else {
         let guild_id = ctx.msg.guild_id?.0;
 
-        let query = ctx.args.join(" ");
+        let query = ctx.args.join(" ").to_lowercase();
 
-        let list = match ctx.state.discord_fm.lists.get(&query) {
-            Some(list) => list,
+        let library = match ctx.state.discord_fm.libraries.get(&query) {
+            Some(library) => library,
             None => {
                 let prefix = ctx.state.config.bot_prefixes.first()?;
 
@@ -34,8 +34,8 @@ Usage: `{}dfm <library>`
             },
         };
 
-        let amount = list.len();
-        let tracks = list.into_iter().map(|item| item.track.clone()).collect();
+        let amount = library.items.len();
+        let tracks = library.items.iter().map(|item| item.track.clone()).collect();
 
         debug!("Adding {} to queue for guild: {}", amount, guild_id);
         await!(ctx.state.queue.add_multiple(guild_id, tracks))?;

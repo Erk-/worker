@@ -50,14 +50,20 @@ pub struct PlaylistItem {
 }
 
 #[derive(Clone, Debug)]
+pub struct Library {
+    pub name: String,
+    pub items: Vec<PlaylistItem>,
+}
+
+#[derive(Clone, Debug)]
 pub struct DiscordFm {
     pub list: String,
-    pub lists: HashMap<String, Vec<PlaylistItem>>,
+    pub libraries: HashMap<String, Library>,
 }
 
 impl DiscordFm {
     pub fn new() -> Result<Self> {
-        let mut lists = HashMap::new();
+        let mut libraries = HashMap::new();
 
         trace!("Walking over D.FM lists");
 
@@ -137,18 +143,23 @@ impl DiscordFm {
 
             trace!("Iterated over playlist songs");
 
-            lists.insert(legible, items);
+            libraries.insert(legible.to_lowercase(), Library {
+                name: legible,
+                items,
+            });
         }
 
         // Calculate the list of names once to keep a cache and avoid
         // re-calculating it multiple times in the future.
-        let mut names = lists.keys().map(Clone::clone).collect::<Vec<_>>();
+        let mut names = libraries.values()
+            .map(|library| library.name.clone())
+            .collect::<Vec<_>>();
         names.sort();
         let list = names.join(", ");
 
         Ok(Self {
             list,
-            lists,
+            libraries,
         })
     }
 }
