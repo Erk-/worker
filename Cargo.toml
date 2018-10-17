@@ -16,7 +16,6 @@ hyper-tls = "0.3"
 log = "0.4"
 native-tls = "0.2"
 parking_lot = "0.6"
-pin-utils = "=0.1.0-alpha.2"
 redis-async = { git = "https://github.com/zeyla/redis-async-rs" }
 serde = "1"
 serde_derive = "1"
@@ -34,9 +33,8 @@ git = "https://github.com/dabbotorg/dump"
 package = "dabbot-dump-requester"
 
 [dependencies.futures-preview]
-branch = "alpha6"
 features = ["compat", "tokio-compat"]
-git = "https://github.com/zeyla/futures-rs"
+version = "0.3.0-alpha.8"
 
 [dependencies.lavalink]
 git = "https://github.com/zeyla/lavalink.rs"

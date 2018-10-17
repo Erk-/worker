@@ -1,12 +1,9 @@
-use futures::{
-    compat::TokioDefaultSpawner,
-    future::{Future, FutureExt, TryFutureExt},
-};
+use futures::future::{Future, FutureExt, TryFutureExt};
 use humantime::FormattedDuration;
 use std::time::Duration;
 
 pub fn spawn(future: impl Future<Output = Result<(), ()>> + 'static + Send) {
-    tokio::spawn(future.boxed().compat(TokioDefaultSpawner));
+    tokio::spawn(future.boxed().compat());
 }
 
 /// Converts track time (in milliseconds) to a human-readable time.
