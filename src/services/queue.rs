@@ -11,7 +11,7 @@ use hyper::{
 use hyper_tls::HttpsConnector;
 use lavalink_queue_requester::{
     model::{QueuedItem, Song, SongQueued},
-    QueueRequester as _,
+    QueueRequester,
 };
 use std::{
     sync::Arc,
@@ -20,7 +20,7 @@ use std::{
 
 pub struct QueueManager {
     config: Arc<Config>,
-    http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
+    http: QueueRequester<HttpsConnector<HttpConnector>>,
 }
 
 impl QueueManager {
@@ -29,8 +29,10 @@ impl QueueManager {
         http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
     ) -> Self {
         Self {
+            http: QueueRequester {
+                client: http,
+            },
             config,
-            http,
         }
     }
 
@@ -48,7 +50,7 @@ impl QueueManager {
             self.address(),
             guild_id.to_string(),
             vec![track],
-        ).compat())?;
+        ))?;
 
         if songs.is_empty() {
             None?;
@@ -81,14 +83,14 @@ impl QueueManager {
             self.address(),
             guild_id.to_string(),
             tracks,
-        ).compat()).map_err(From::from)
+        )).map_err(From::from)
     }
 
     pub async fn clear(&self, guild_id: u64) -> Result<()> {
         await!(self.http.delete_queue(
             self.address(),
             guild_id.to_string(),
-        ).compat()).map_err(From::from)
+        )).map_err(From::from)
     }
 
     pub async fn get(&self, guild_id: u64) -> Result<Vec<QueuedItem>> {
@@ -100,14 +102,14 @@ impl QueueManager {
             self.address(),
             guild_id.to_string(),
             limit,
-        ).compat()).map_err(From::from)
+        )).map_err(From::from)
     }
 
     pub async fn pop(&self, guild_id: u64) -> Result<Option<Song>> {
         await!(self.http.pop_queue(
             self.address(),
             guild_id.to_string(),
-        ).compat()).map_err(From::from)
+        )).map_err(From::from)
     }
 
     #[inline]
