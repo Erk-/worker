@@ -2,7 +2,6 @@ use crate::{
     config::Config,
     error::Result,
 };
-use futures::compat::Future01CompatExt as _;
 use hyper::{
     client::HttpConnector,
     Body,
