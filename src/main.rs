@@ -3,9 +3,6 @@
     await_macro,
     futures_api,
     pin,
-    plugin,
-    slice_concat_ext,
-    trace_macros,
     try_blocks,
     try_from,
     try_trait,
@@ -44,8 +41,6 @@ const RUST_LOG_DEFAULT: &'static str = "info,hyper=info,tokio_reactor=info,\
 lavalink_http_server_requester=info,lavalink_queue_requester=info";
 
 fn main() {
-    trace_macros!(false);
-
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", RUST_LOG_DEFAULT);
     }
