@@ -34,7 +34,7 @@ package = "dabbot-dump-requester"
 
 [dependencies.futures-preview]
 features = ["compat", "tokio-compat"]
-version = "0.3.0-alpha.8"
+version = "0.3.0-alpha.9"
 
 [dependencies.lavalink]
 git = "https://github.com/zeyla/lavalink.rs"
