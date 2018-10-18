@@ -61,7 +61,7 @@ impl Display for PlayerState {
                 };
 
                 write!(f,
-                    "{}: **{}** by **{}** (`{}/{}`)\n{}",
+                    "{}: **{}** by **{}** `[{}/{}]`\n{}",
                     status,
                     track.title,
                     track.author,
