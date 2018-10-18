@@ -74,7 +74,11 @@ impl Cache {
         &'a self,
         e: &'a GuildDeleteEvent,
     ) -> Result<()> {
-        await!(self.inner.delete_voice_states(e.guild.id.0))?;
+        let id = e.guild.id.0;
+
+        debug!("Deleting voice states for {}", id);
+        await!(self.inner.delete_voice_states(id))?;
+        debug!("Deleted voice states for {}", id);
 
         Ok(())
     }
