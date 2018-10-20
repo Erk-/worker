@@ -9,7 +9,7 @@ pub const fn description() -> &'static str {
     "Chooses a song from a selection."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["choose", "c", "chose"]
 }
 

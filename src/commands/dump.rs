@@ -5,7 +5,7 @@ pub const fn description() -> &'static str {
     "Dumps the current queue to be played with the load command."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["dump"]
 }
 

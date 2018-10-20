@@ -8,7 +8,7 @@ pub const fn description() -> &'static str {
     "leaves the voice channel"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &[
         "disconnect",
         "l",

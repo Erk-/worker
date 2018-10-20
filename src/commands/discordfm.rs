@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Discord.FM playlists"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["dfm", "discordfm"]
 }
 

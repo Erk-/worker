@@ -31,7 +31,7 @@ pub const fn description() -> &'static str {
     "joins the voice channel"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &[
         "connect",
         "j",

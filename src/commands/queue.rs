@@ -7,7 +7,7 @@ pub const fn description() -> &'static str {
     "Shows the song queue"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["queue", "q"]
 }
 

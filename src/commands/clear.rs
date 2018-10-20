@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Clears the song queue"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["clear"]
 }
 

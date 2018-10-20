@@ -9,7 +9,7 @@ pub const fn description() -> &'static str {
     "Cancels the current song selection"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["cancel"]
 }
 

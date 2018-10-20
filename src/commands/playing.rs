@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Get the currently playing song"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["currently", "nowplaying", "np", "playing"]
 }
 

@@ -40,7 +40,7 @@ pub const fn description() -> &'static str {
     "plays a song"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["play", "p", "search"]
 }
 

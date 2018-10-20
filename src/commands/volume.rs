@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Change the track volume"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["volume", "vol", "v"]
 }
 

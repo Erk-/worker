@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Skip the current song"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["skip", "s", "next"]
 }
 
