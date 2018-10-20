@@ -1,5 +1,8 @@
 use dump::DumpRequester;
-use super::prelude::*;
+use super::{
+    join::Join,
+    prelude::*,
+};
 
 pub const fn description() -> &'static str {
     "Loads a queue of songs from the dump command."
@@ -62,5 +65,38 @@ pub async fn run(ctx: Context) -> CommandResult {
         await!(ctx.state.queue.add(guild_id, track))?;
     }
 
-    Response::text(format!("Loaded {} songs from the playlist!", track_count))
+    let join = await!(super::join::join_ctx(&ctx))?;
+
+    let mut content = format!("Loaded {} songs from the playlist!", track_count);
+
+    match join {
+        Join::UserNotInChannel => {
+            return Response::text(content);
+        },
+        Join::AlreadyInChannel | Join::Successful => {},
+    }
+
+    let current = await!(ctx.current())?;
+
+    if current.is_playing() {
+        return Response::text(content);
+    }
+
+    let song = match await!(ctx.queue_pop()) {
+        Ok(Some(song)) => song,
+        Ok(None) | Err(_) => return Response::text(content),
+    };
+
+    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
+        Ok(()) => {
+            content.push_str("\n\nJoined the voice channel and started playing the next song!");
+
+            Response::text(content)
+        },
+        Err(why) => {
+            warn!("Err playing next song: {:?}", why);
+
+            Response::text(content)
+        },
+    }
 }

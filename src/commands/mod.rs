@@ -32,6 +32,7 @@ use crate::{
     worker::WorkerState,
     Result,
 };
+use futures::compat::Future01CompatExt;
 use lavalink_queue_requester::model::{QueuedItem, Song};
 use serenity::model::channel::Message;
 use std::sync::Arc;
@@ -65,6 +66,21 @@ impl Context {
 
     pub async fn queue_pop(&self) -> Result<Option<Song>> {
         await!(self.state.queue.pop(self.msg.guild_id?.0))
+    }
+
+    pub async fn send_message<'a>(
+        &'a self,
+        content: impl AsRef<str> + 'a,
+    ) -> Result<Message> {
+        await!(self._send_message(content.as_ref()))
+    }
+
+    async fn _send_message<'a>(&'a self, content: &'a str) -> Result<Message> {
+        await!(self.state.serenity.send_message(self.msg.channel_id.0, |mut m| {
+            m.content(content);
+
+            m
+        }).compat()).map_err(From::from)
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
