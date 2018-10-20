@@ -240,7 +240,7 @@ async fn voice_server_update(
         session_id,
         guild_id.to_string(),
         event.token,
-        event.endpoint.unwrap(),
+        event.endpoint?,
     );
 
     match await!(state.playback.voice_update(update)) {
