@@ -60,6 +60,10 @@ pub async fn base(
 
     let query = ctx.args.join(" ");
 
+    if query.starts_with("https://") || query.starts_with("http://") {
+        return await!(play_url(&ctx, query))
+    }
+
     let mut load = match await!(search(&ctx, &query, provider)) {
         Ok(load) => load,
         Err(why) => {
@@ -78,15 +82,6 @@ pub async fn base(
 
     if load.tracks.is_empty() {
         return Response::text("It looks like there aren't any results for that!");
-    }
-
-    if query.starts_with("https://") || query.starts_with("http://") {
-        // let mut tracks = load.tracks.into_iter().rev().collect::<Vec<_>>();
-        let track = load.tracks.remove(0).track;
-
-        debug!("Playing from HTTP(S): {}", track);
-
-        return await!(super::choose::select(&ctx, track));
     }
 
     load.tracks.truncate(5);
@@ -152,4 +147,18 @@ async fn _search<'a>(
     let term = format!("{}{}", provider, query);
 
     await!(ctx.state.playback.search(term))
+}
+
+pub(super) async fn play_url(ctx: &Context, url: String) -> CommandResult {
+    let mut load = await!(ctx.state.playback.search(url))?;
+
+    if load.tracks.is_empty() {
+        return Response::text("There aren't any results for that URL!");
+    }
+
+    let track = load.tracks.remove(0).track;
+
+    debug!("Playing from HTTP(S): {}", track);
+
+    await!(super::choose::select(&ctx, track))
 }
