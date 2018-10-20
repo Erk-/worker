@@ -141,21 +141,21 @@ async fn message_create(
         };
 
         let result = match &*alias {
-            "about" => await!(commands::about::run(ctx)),
+            "about" | "info" => await!(commands::about::run(ctx)),
             "cancel" => await!(commands::cancel::run(ctx)),
             "clear" => await!(commands::clear::run(ctx)),
             "choose" | "c" => await!(commands::choose::run(ctx)),
             "dfm" | "discordfm" | "discord.fm" => {
                 await!(commands::discordfm::run(ctx))
             },
-            "dump" => await!(commands::dump::run(ctx)),
-            "help" => await!(commands::help::run(ctx)),
+            "d" | "dump" => await!(commands::dump::run(ctx)),
+            "h" | "help" => await!(commands::help::run(ctx)),
             "invite" => await!(commands::invite::run(ctx)),
             "join" | "j" | "connect" => await!(commands::join::run(ctx)),
             "leave" | "l" | "disconnect" | "stop" => {
                 await!(commands::leave::run(ctx))
             },
-            "load" => await!(commands::load::run(ctx)),
+            "load" | "l" => await!(commands::load::run(ctx)),
             "pause" | "hold" => await!(commands::pause::run(ctx)),
             "ping" => await!(commands::ping::run(ctx)),
             "play" | "p" => await!(commands::play::run(ctx)),
@@ -164,9 +164,8 @@ async fn message_create(
             },
             "providers" => await!(commands::providers::run(ctx)),
             "queue" | "q" | "que" => await!(commands::queue::run(ctx)),
-            "radio" => await!(commands::radio::run(ctx)),
-            "remove" => await!(commands::remove::run(ctx)),
-            "restart" => await!(commands::restart::run(ctx)),
+            "radio" | "r" => await!(commands::radio::run(ctx)),
+            "restart" | "rs" => await!(commands::restart::run(ctx)),
             "resume" | "unpause" => await!(commands::resume::run(ctx)),
             "seek" => await!(commands::seek::run(ctx)),
             "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
