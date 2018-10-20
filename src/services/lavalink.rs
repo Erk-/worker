@@ -104,12 +104,12 @@ impl TryFrom<AudioPlayerState> for PlayerState {
     }
 }
 
-pub struct PlaybackManager {
+pub struct LavalinkManager {
     config: Arc<Config>,
     http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
 }
 
-impl PlaybackManager {
+impl LavalinkManager {
     pub fn new(
         config: Arc<Config>,
         http: Arc<Client<HttpsConnector<HttpConnector>, Body>>,

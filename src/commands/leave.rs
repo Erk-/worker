@@ -1,4 +1,4 @@
-use crate::services::lavalink::PlaybackManager;
+use crate::services::lavalink::LavalinkManager;
 use redis_async::client::PairedConnection;
 use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
@@ -37,7 +37,7 @@ pub async fn run(ctx: Context) -> CommandResult {
 pub async fn leave<'a>(
     shard_id: u64,
     guild_id: u64,
-    playback: &'a Arc<PlaybackManager>,
+    playback: &'a Arc<LavalinkManager>,
     redis: &'a Arc<PairedConnection>,
 ) -> Result<()> {
     let map = serde_json::to_vec(&json!({
