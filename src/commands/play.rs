@@ -110,6 +110,10 @@ async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
         return Response::text("It looks like there aren't any results for that!");
     }
 
+    if load.tracks.len() == 1 {
+        return await!(super::choose::select(&ctx, load.tracks.remove(0).track));
+    }
+
     load.tracks.truncate(5);
 
     let mut blobs = load.tracks
