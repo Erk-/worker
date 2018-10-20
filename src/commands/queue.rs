@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Shows the song queue"
+    "Shows the song queue."
 }
 
 pub const fn names() -> &'static [&'static str] {

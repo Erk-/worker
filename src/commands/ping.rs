@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Ping pong"
+    "Ping pong!"
 }
 
 pub const fn names() -> &'static [&'static str] {

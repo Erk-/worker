@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Information about audio providers"
+    "Information about audio providers."
 }
 
 pub const fn names() -> &'static [&'static str] {

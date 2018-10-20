@@ -4,7 +4,7 @@ use super::{
 };
 
 pub const fn description() -> &'static str {
-    "Search SoundCloud for a song."
+    "Searches SoundCloud for a song."
 }
 
 pub const fn names() -> &'static [&'static str] {

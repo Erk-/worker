@@ -28,7 +28,7 @@ impl Join {
 }
 
 pub const fn description() -> &'static str {
-    "joins the voice channel"
+    "Joins the voice channel."
 }
 
 pub const fn names() -> &'static [&'static str] {

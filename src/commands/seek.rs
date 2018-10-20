@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Skips to a time in the current song"
+    "Skips to a certain timestamp in the current song."
 }
 
 pub const fn names() -> &'static [&'static str] {

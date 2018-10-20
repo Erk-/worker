@@ -37,7 +37,7 @@ impl From<Provider> for String {
 }
 
 pub const fn description() -> &'static str {
-    "plays a song"
+    "Plays a song."
 }
 
 pub const fn names() -> &'static [&'static str] {

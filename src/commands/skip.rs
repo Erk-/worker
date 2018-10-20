@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Skip the current song"
+    "Skips the current song."
 }
 
 pub const fn names() -> &'static [&'static str] {

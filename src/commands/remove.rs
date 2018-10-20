@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "A link to invite the bot"
+    "A link to invite the bot."
 }
 
 pub const fn names() -> &'static [&'static str] {
