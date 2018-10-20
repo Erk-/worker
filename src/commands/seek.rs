@@ -11,7 +11,7 @@ pub fn names() -> &'static [&'static str] {
 const ERROR_SEEKING: &'static str = "There was an error seeking the song.";
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     match await!(ctx.is_playing()) {
         Ok(true) => {},

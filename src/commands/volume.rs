@@ -20,7 +20,7 @@ pub async fn run(ctx: Context) -> CommandResult {
     let arg_len = ctx.args.len();
 
     if arg_len == 0 {
-        let guild_id = ctx.msg.guild_id?.0;
+        let guild_id = ctx.guild_id()?;
 
         let player = match await!(ctx.state.playback.current(guild_id)) {
             Ok(player) => player,
@@ -40,7 +40,7 @@ pub async fn run(ctx: Context) -> CommandResult {
             },
         };
 
-        let guild_id = ctx.msg.guild_id?.0;
+        let guild_id = ctx.guild_id()?;
 
         match await!(ctx.state.playback.volume(guild_id, volume)) {
             Ok(()) => Response::text("Updated the volume."),

@@ -62,7 +62,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Ok(None) | Err(_) => return join.into_response(),
     };
 
-    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
+    match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
         Ok(()) => {
             Response::text("Joined the voice channel!
 
@@ -80,7 +80,7 @@ pub async fn join_ctx(
     ctx: &Context,
 ) -> Result<Join> {
     let user_id = ctx.msg.author.id.0;
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     trace!("Checking if G:{};U:{} is in a voice channel", guild_id, user_id);
 

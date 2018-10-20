@@ -54,6 +54,10 @@ impl Context {
         await!(self.state.playback.current(id)).map_err(From::from)
     }
 
+    pub fn guild_id(&self) -> Option<u64> {
+        self.msg.guild_id.map(|id| id.0)
+    }
+
     pub async fn is_playing(&self) -> Result<bool> {
         await!(self.current())?;
 
@@ -61,11 +65,11 @@ impl Context {
     }
 
     pub async fn queue(&self, limit: u32) -> Result<Vec<QueuedItem>> {
-        await!(self.state.queue.get_limit(self.msg.guild_id?.0, limit))
+        await!(self.state.queue.get_limit(self.guild_id()?, limit))
     }
 
     pub async fn queue_pop(&self) -> Result<Option<Song>> {
-        await!(self.state.queue.pop(self.msg.guild_id?.0))
+        await!(self.state.queue.pop(self.guild_id()?))
     }
 
     pub async fn send_message<'a>(

@@ -52,7 +52,7 @@ pub async fn base(
     ctx: &Context,
     provider: Provider,
 ) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     if ctx.args.len() < 1 {
         return Response::err("You need to say the link to the song or the name of what you want to play");

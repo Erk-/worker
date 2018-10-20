@@ -13,7 +13,7 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     let query = match ctx.args.first() {
         Some(query) => query,
@@ -87,7 +87,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Ok(None) | Err(_) => return Response::text(content),
     };
 
-    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
+    match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
         Ok(()) => {
             content.push_str("\n\nJoined the voice channel and started playing the next song!");
 

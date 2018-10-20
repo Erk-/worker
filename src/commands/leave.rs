@@ -17,7 +17,7 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let gid = ctx.msg.guild_id?.0;
+    let gid = ctx.guild_id()?;
     let sid = ctx.shard_id;
 
     match await!(leave(sid, gid, &ctx.state.playback, &ctx.state.redis)) {

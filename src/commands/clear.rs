@@ -9,7 +9,7 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     match await!(ctx.state.queue.clear(guild_id)) {
         Ok(()) | Err(Error::LavalinkQueueRequester(QueueError::NotFound)) => {

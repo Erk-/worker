@@ -14,7 +14,7 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    cancel(&ctx.state.redis, ctx.msg.guild_id?.0)
+    cancel(&ctx.state.redis, ctx.guild_id()?)
 }
 
 
