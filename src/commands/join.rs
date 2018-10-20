@@ -63,10 +63,13 @@ pub async fn run(ctx: Context) -> CommandResult {
     };
 
     match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
-        Ok(()) => {
+        Ok(true) => {
             Response::text("Joined the voice channel!
 
 Leaving off from your last queue.")
+        },
+        Ok(false) => {
+            Response::text("Joined the voice channel!")
         },
         Err(why) => {
             warn!("Err playing next song: {:?}", why);

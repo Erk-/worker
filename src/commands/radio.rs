@@ -44,13 +44,20 @@ For example, use `{prefix}radio Radio Here`", prefix=prefix))
         await!(super::join::join_ctx(&ctx))?;
 
         match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
-            Ok(()) => {
+            Ok(true) => {
                 Response::text(format!(
-                    "Now playing **{}** by **{}**",
+                    "Now playing **{}** by **{}**.",
                     radio.info.title,
                     radio.info.author,
                 ))
             },
+            Ok(false) => {
+                Response::text(format!(
+                    "Added **{}** by **{}** to the queue.",
+                    radio.info.title,
+                    radio.info.author,
+                ))
+            }
             Err(why) => {
                 warn!("Err playing radio: {:?}", why);
 

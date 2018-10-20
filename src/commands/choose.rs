@@ -84,9 +84,17 @@ pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
     delete_selection(&ctx.state.redis, guild_id);
 
     match await!(ctx.state.playback.play(guild_id, track)) {
-        Ok(()) => {
+        Ok(true) => {
             Response::text(format!(
                 "Now playing **{}** by **{}** `[{}]`",
+                song.title,
+                song.author,
+                utils::track_length_readable(song.length as u64),
+            ))
+        },
+        Ok(false) => {
+            Response::text(format!(
+                "Added **{}** by **{}** `[{}]` to the queue.",
                 song.title,
                 song.author,
                 utils::track_length_readable(song.length as u64),

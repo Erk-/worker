@@ -134,12 +134,14 @@ impl PlaybackManager {
         &self,
         guild_id: u64,
         track: String,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         debug!("trying to play {} in {}", track, guild_id);
 
-        await!(self.http.audio_play(self.address(), guild_id, track).compat())?;
-
-        Ok(())
+        await!(self.http.audio_play(
+            self.address(),
+            guild_id,
+            track,
+        ).compat()).map_err(From::from)
     }
 
     pub async fn pause(&self, guild_id: u64) -> Result<()> {
