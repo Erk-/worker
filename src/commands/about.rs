@@ -1,11 +1,11 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Information about the bot"
+    "Displays information about the bot."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["about"]
+    &["about", "info"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {

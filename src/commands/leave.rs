@@ -13,6 +13,7 @@ pub fn names() -> &'static [&'static str] {
         "disconnect",
         "l",
         "leave",
+        "stop",
     ]
 }
 

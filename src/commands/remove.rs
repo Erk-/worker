@@ -1,13 +1,14 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "A link to invite the bot."
+    "Removes a song from the queue."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["invite", "inv"]
+    &["remove", "rm"]
 }
 
 pub async fn run(_: Context) -> CommandResult {
-    Response::text("Invite dabBot: https://dabbot.org/invite")
+    // TODO(Proximyst): Implement remove command
+    Response::text("TBA")
 }

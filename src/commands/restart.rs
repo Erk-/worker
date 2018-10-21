@@ -5,7 +5,7 @@ pub const fn description() -> &'static str {
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["restart"]
+    &["restart", "rs"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
