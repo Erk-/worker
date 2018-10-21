@@ -4,7 +4,9 @@ use lavalink::rest::{Load, LoadType};
 use serenity::utils::MessageBuilder;
 use std::fmt::{Display, Formatter, Result as FmtResult, Write as _};
 
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub static COMMAND_INSTANCE: PlayCommand = PlayCommand;
+
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Provider {
     SoundCloud,
     URL,
@@ -42,201 +44,214 @@ impl From<Provider> for String {
     }
 }
 
-pub const fn description() -> &'static str {
-    "Plays a song."
-}
+pub struct PlayCommand;
 
-pub fn names() -> &'static [&'static str] {
-    &["play", "p", "search"]
-}
-
-pub async fn run(ctx: Context) -> CommandResult {
-    await!(base(&ctx, Provider::YouTube))
-}
-
-pub async fn base(ctx: &Context, mut provider: Provider) -> CommandResult {
-    if ctx.args.len() < 1 {
-        return Response::err(
-            "You need to say the link to the song or the name of what you want to play",
-        );
+impl PlayCommand {
+    #[inline]
+    async fn _run(ctx: Context) -> CommandResult {
+        await!(Self::base(&ctx, Provider::YouTube))
     }
 
-    let query = ctx.args.join(" ");
-
-    if query.starts_with("https://") || query.starts_with("http://") {
-        provider = Provider::URL;
-    }
-
-    let load = match await!(search(&ctx, &query, provider)) {
-        Ok(load) => load,
-        Err(why) => {
-            warn!(
-                "Err searching tracks for query '{}' in provider {}: {:?}",
-                query,
-                provider.to_string(),
-                why,
+    pub async fn base(ctx: &Context, mut provider: Provider) -> CommandResult {
+        if ctx.args.len() < 1 {
+            return Response::err(
+                "You need to say the link to the song or the name of what you want to play",
             );
+        }
 
-            return Response::err("There was an error searching for that.");
-        },
-    };
+        let query = ctx.args.join(" ");
 
-    info!("load: {:?}", load.load_type);
+        if query.starts_with("https://") || query.starts_with("http://") {
+            provider = Provider::URL;
+        }
 
-    match load.load_type {
-        LoadType::LoadFailed => {
-            return Response::err("There was an error searching for that!");
-        },
-        LoadType::NoMatches => {
-            return Response::err("It looks like there aren't any results for that!");
-        },
-        LoadType::PlaylistLoaded => await!(handle_playlist(&ctx, load)),
-        LoadType::SearchResult | LoadType::TrackLoaded => await!(handle_search(&ctx, load)),
-    }
-}
+        let load = match await!(Self::search(&ctx, &query, provider)) {
+            Ok(load) => load,
+            Err(why) => {
+                warn!(
+                    "Err searching tracks for query '{}' in provider {}: {:?}",
+                    query,
+                    provider.to_string(),
+                    why,
+                );
 
-async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
-    let guild_id = ctx.guild_id()?;
+                return Response::err("There was an error searching for that.");
+            },
+        };
 
-    if load.tracks.is_empty() {
-        return Response::text("It looks like there aren't any results for that!");
-    }
+        info!("load: {:?}", load.load_type);
 
-    if load.tracks.len() == 1 {
-        return await!(super::choose::ChooseCommand::select(
-            &ctx,
-            load.tracks.remove(0).track
-        ));
-    }
-
-    load.tracks.truncate(5);
-
-    let mut blobs = load
-        .tracks
-        .iter()
-        .map(|t| t.track.clone())
-        .rev()
-        .collect::<Vec<_>>();
-
-    debug!("Deleting existing choose for guild {}", guild_id);
-    ctx.state
-        .redis
-        .send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
-    debug!("Deleted existing choose for guild {}", guild_id);
-    debug!("Setting choose for guild {}", guild_id);
-    ctx.state
-        .redis
-        .send_and_forget(resp_array!["LPUSH", format!("c:{}", guild_id)].append(&mut blobs));
-    debug!("Set choose for guild {}", guild_id);
-
-    let mut msg = MessageBuilder::new();
-
-    for (idx, track) in load.tracks.iter().enumerate() {
-        write!(msg.0, "`{}` ", idx + 1)?;
-        msg.push_safe(&track.info.title);
-        msg.0.push_str(" by ");
-        msg.push_safe(&track.info.author);
-        write!(
-            msg.0,
-            " `[{}]`",
-            utils::track_length_readable(track.info.length as u64)
-        )?;
-        msg.0.push('\n');
+        match load.load_type {
+            LoadType::LoadFailed => {
+                return Response::err("There was an error searching for that!");
+            },
+            LoadType::NoMatches => {
+                return Response::err("It looks like there aren't any results for that!");
+            },
+            LoadType::PlaylistLoaded => await!(Self::handle_playlist(&ctx, load)),
+            LoadType::SearchResult | LoadType::TrackLoaded => {
+                await!(Self::handle_search(&ctx, load))
+            },
+        }
     }
 
-    let prefix = ctx.state.config.bot_prefixes.first()?;
+    async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
+        let guild_id = ctx.guild_id()?;
 
-    msg.0.push_str("\n**To choose**, use `");
-    msg.push_safe(&prefix);
-    msg.0.push_str(
-        "choose <number>`
+        if load.tracks.is_empty() {
+            return Response::text("It looks like there aren't any results for that!");
+        }
+
+        if load.tracks.len() == 1 {
+            return await!(super::choose::ChooseCommand::select(
+                &ctx,
+                load.tracks.remove(0).track
+            ));
+        }
+
+        load.tracks.truncate(5);
+
+        let mut blobs = load
+            .tracks
+            .iter()
+            .map(|t| t.track.clone())
+            .rev()
+            .collect::<Vec<_>>();
+
+        debug!("Deleting existing choose for guild {}", guild_id);
+        ctx.state
+            .redis
+            .send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
+        debug!("Deleted existing choose for guild {}", guild_id);
+        debug!("Setting choose for guild {}", guild_id);
+        ctx.state
+            .redis
+            .send_and_forget(resp_array!["LPUSH", format!("c:{}", guild_id)].append(&mut blobs));
+        debug!("Set choose for guild {}", guild_id);
+
+        let mut msg = MessageBuilder::new();
+
+        for (idx, track) in load.tracks.iter().enumerate() {
+            write!(msg.0, "`{}` ", idx + 1)?;
+            msg.push_safe(&track.info.title);
+            msg.0.push_str(" by ");
+            msg.push_safe(&track.info.author);
+            write!(
+                msg.0,
+                " `[{}]`",
+                utils::track_length_readable(track.info.length as u64)
+            )?;
+            msg.0.push('\n');
+        }
+
+        let prefix = ctx.state.config.bot_prefixes.first()?;
+
+        msg.0.push_str("\n**To choose**, use `");
+        msg.push_safe(&prefix);
+        msg.0.push_str(
+            "choose <number>`
 Example: `",
-    );
-    msg.push_safe(&prefix);
-    msg.0.push_str(
-        "choose 2` would pick the second option.
+        );
+        msg.push_safe(&prefix);
+        msg.0.push_str(
+            "choose 2` would pick the second option.
 **To cancel**, use `",
-    );
-    msg.push_safe(&prefix);
-    msg.0.push_str("cancel`.");
+        );
+        msg.push_safe(&prefix);
+        msg.0.push_str("cancel`.");
 
-    Response::text(msg.build())
-}
-
-async fn handle_playlist(ctx: &Context, load: Load) -> CommandResult {
-    let guild_id = ctx.guild_id()?;
-
-    if load.tracks.is_empty() {
-        return Response::text("It looks like that playlist is empty!");
+        Response::text(msg.build())
     }
 
-    let tracks = load
-        .tracks
-        .iter()
-        .map(|t| t.track.clone())
-        .collect::<Vec<_>>();
+    async fn handle_playlist(ctx: &Context, load: Load) -> CommandResult {
+        let guild_id = ctx.guild_id()?;
 
-    let track_count = tracks.len();
+        if load.tracks.is_empty() {
+            return Response::text("It looks like that playlist is empty!");
+        }
 
-    await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
+        let tracks = load
+            .tracks
+            .iter()
+            .map(|t| t.track.clone())
+            .collect::<Vec<_>>();
 
-    let join = await!(super::join::join_ctx(&ctx))?;
+        let track_count = tracks.len();
 
-    let mut content = format!("Loaded {} songs from the playlist", track_count);
+        await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
 
-    if let Some(name) = load.playlist_info.name {
-        write!(content, " **{}**", name)?;
-    }
+        let join = await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
-    content.push('!');
+        let mut content = format!("Loaded {} songs from the playlist", track_count);
 
-    match join {
-        Join::UserNotInChannel => {
+        if let Some(name) = load.playlist_info.name {
+            write!(content, " **{}**", name)?;
+        }
+
+        content.push('!');
+
+        match join {
+            Join::UserNotInChannel => {
+                return Response::text(content);
+            },
+            Join::AlreadyInChannel | Join::Successful => {},
+        }
+
+        let current = await!(ctx.current())?;
+
+        if current.is_playing() {
             return Response::text(content);
-        },
-        Join::AlreadyInChannel | Join::Successful => {},
+        }
+
+        let song = match await!(ctx.queue_pop()) {
+            Ok(Some(song)) => song,
+            Ok(None) | Err(_) => return Response::text(content),
+        };
+
+        match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
+            Ok(true) => {
+                content.push_str("\n\nJoined the voice channel and started playing the next song!");
+
+                Response::text(content)
+            },
+            Ok(false) => {
+                content.push_str("\n\nJoined the voice channel and added the songs to the queue.");
+
+                Response::text(content)
+            },
+            Err(why) => {
+                warn!("Err playing next song: {:?}", why);
+
+                Response::text(content)
+            },
+        }
     }
 
-    let current = await!(ctx.current())?;
-
-    if current.is_playing() {
-        return Response::text(content);
+    pub async fn search<'a>(
+        ctx: &'a Context,
+        query: impl AsRef<str> + 'a,
+        provider: Provider,
+    ) -> Result<Load> {
+        await!(Self::_search(ctx, query.as_ref(), provider))
     }
 
-    let song = match await!(ctx.queue_pop()) {
-        Ok(Some(song)) => song,
-        Ok(None) | Err(_) => return Response::text(content),
-    };
+    async fn _search<'a>(ctx: &'a Context, query: &'a str, provider: Provider) -> Result<Load> {
+        let term = format!("{}{}", provider, query);
 
-    match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
-        Ok(true) => {
-            content.push_str("\n\nJoined the voice channel and started playing the next song!");
-
-            Response::text(content)
-        },
-        Ok(false) => {
-            content.push_str("\n\nJoined the voice channel and added the songs to the queue.");
-
-            Response::text(content)
-        },
-        Err(why) => {
-            warn!("Err playing next song: {:?}", why);
-
-            Response::text(content)
-        },
+        await!(ctx.state.playback.search(term))
     }
 }
 
-pub async fn search<'a>(
-    ctx: &'a Context,
-    query: impl AsRef<str> + 'a,
-    provider: Provider,
-) -> Result<Load> {
-    await!(_search(ctx, query.as_ref(), provider))
-}
+impl<'a> Command<'a> for PlayCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["play", "p", "search"]
+    }
 
-async fn _search<'a>(ctx: &'a Context, query: &'a str, provider: Provider) -> Result<Load> {
-    let term = format!("{}{}", provider, query);
+    fn description(&self) -> &'static str {
+        "Plays a song."
+    }
 
-    await!(ctx.state.playback.search(term))
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
+    }
 }

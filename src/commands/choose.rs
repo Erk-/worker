@@ -63,7 +63,7 @@ To play a song...
     pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
         let guild_id = ctx.guild_id()?;
 
-        await!(super::join::join_ctx(&ctx))?;
+        await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
         let song = decoder::decode_track_base64(&track)?;
 

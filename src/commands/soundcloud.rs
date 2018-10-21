@@ -6,7 +6,7 @@ pub struct SoundCloudCommand;
 
 impl SoundCloudCommand {
     async fn _run(ctx: Context) -> CommandResult {
-        await!(super::play::base(&ctx, Provider::SoundCloud))
+        await!(super::play::PlayCommand::base(&ctx, Provider::SoundCloud))
     }
 }
 

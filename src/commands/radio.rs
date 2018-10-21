@@ -42,7 +42,7 @@ For example, use `{prefix}radio Radio Here`",
 
         let radio = results.tracks.first()?;
 
-        await!(super::join::join_ctx(&ctx))?;
+        await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
         match await!(
             ctx.state

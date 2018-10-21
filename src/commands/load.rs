@@ -59,7 +59,7 @@ impl LoadCommand {
             await!(ctx.state.queue.add(guild_id, track))?;
         }
 
-        let join = await!(super::join::join_ctx(&ctx))?;
+        let join = await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
         let mut content = format!("Loaded {} songs from the playlist!", track_count);
 

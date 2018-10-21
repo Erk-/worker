@@ -67,11 +67,39 @@ impl Worker {
         )?);
         debug!("Initialized serenity http client");
 
-        let commands: Vec<Arc<&'static (dyn Command + Send + Sync)>> = vec![
-            Arc::new(&commands::about::COMMAND_INSTANCE),
-            Arc::new(&commands::cancel::COMMAND_INSTANCE),
-            Arc::new(&commands::choose::COMMAND_INSTANCE),
-        ];
+        let commands: Vec<Arc<&'static (dyn Command + Send + Sync)>>;
+        {
+            use self::commands::*;
+
+            commands = vec![
+                Arc::new(&about::COMMAND_INSTANCE),
+                Arc::new(&cancel::COMMAND_INSTANCE),
+                Arc::new(&choose::COMMAND_INSTANCE),
+                Arc::new(&clear::COMMAND_INSTANCE),
+                Arc::new(&discordfm::COMMAND_INSTANCE),
+                Arc::new(&dump::COMMAND_INSTANCE),
+                Arc::new(&help::COMMAND_INSTANCE),
+                Arc::new(&invite::COMMAND_INSTANCE),
+                Arc::new(&join::COMMAND_INSTANCE),
+                Arc::new(&leave::COMMAND_INSTANCE),
+                Arc::new(&load::COMMAND_INSTANCE),
+                Arc::new(&pause::COMMAND_INSTANCE),
+                Arc::new(&ping::COMMAND_INSTANCE),
+                Arc::new(&play::COMMAND_INSTANCE),
+                Arc::new(&playing::COMMAND_INSTANCE),
+                Arc::new(&providers::COMMAND_INSTANCE),
+                Arc::new(&queue::COMMAND_INSTANCE),
+                Arc::new(&radio::COMMAND_INSTANCE),
+                Arc::new(&remove::COMMAND_INSTANCE),
+                Arc::new(&restart::COMMAND_INSTANCE),
+                Arc::new(&resume::COMMAND_INSTANCE),
+                Arc::new(&seek::COMMAND_INSTANCE),
+                Arc::new(&skip::COMMAND_INSTANCE),
+                Arc::new(&soundcloud::COMMAND_INSTANCE),
+                Arc::new(&volume::COMMAND_INSTANCE),
+                Arc::new(&youtube::COMMAND_INSTANCE),
+            ];
+        }
         let commands = Arc::new(commands);
         debug!("Initialized commands");
 
