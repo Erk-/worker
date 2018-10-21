@@ -1,11 +1,11 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "A list of commands."
+    "Links to our list of commands."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["help"]
+    &["help", "h"]
 }
 
 pub async fn run(_: Context) -> CommandResult {

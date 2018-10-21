@@ -1,11 +1,11 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Discord.FM playlists"
+    "Plays a Discord.FM playlist."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["dfm", "discordfm"]
+    &["dfm", "discordfm", "discord.fm"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {

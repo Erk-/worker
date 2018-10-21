@@ -8,7 +8,7 @@ pub const fn description() -> &'static str {
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["queue", "q"]
+    &["queue", "q", "que"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {

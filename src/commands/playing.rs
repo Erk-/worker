@@ -1,11 +1,11 @@
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "Get the currently playing song."
+    "Gets the currently playing song."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &["currently", "nowplaying", "np", "playing"]
+    &["current", "currently", "nowplaying", "np", "playing"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {

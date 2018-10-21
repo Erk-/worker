@@ -6,7 +6,7 @@ use super::{
 };
 
 pub const fn description() -> &'static str {
-    "Cancels the current song selection"
+    "Cancels the current song selection."
 }
 
 pub fn names() -> &'static [&'static str] {
