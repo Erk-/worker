@@ -5,7 +5,7 @@ use std::sync::Arc;
 use super::prelude::*;
 
 pub const fn description() -> &'static str {
-    "leaves the voice channel"
+    "Leaves the voice channel."
 }
 
 pub fn names() -> &'static [&'static str] {

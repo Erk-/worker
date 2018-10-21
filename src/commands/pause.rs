@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[allow(dead_code)]
 pub fn description() -> &'static str {
-    "Pause the current song"
+    "Pauses the current song."
 }
 
 #[allow(dead_code)]
