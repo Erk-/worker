@@ -8,7 +8,7 @@ use crate::{
     lavalink_msgs,
     radios::RadioList,
     services::{
-        lavalink::PlaybackManager,
+        lavalink::LavalinkManager,
         queue::QueueManager,
     },
     utils,
@@ -37,7 +37,7 @@ pub struct WorkerState {
     pub config: Arc<Config>,
     pub discord_fm: DiscordFm,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
-    pub playback: Arc<PlaybackManager>,
+    pub playback: Arc<LavalinkManager>,
     pub queue: Arc<QueueManager>,
     pub radios: RadioList,
     pub redis: Arc<PairedConnection>,
@@ -85,7 +85,7 @@ impl Worker {
             Arc::clone(&hyper),
         ));
 
-        let playback = Arc::new(PlaybackManager::new(
+        let playback = Arc::new(LavalinkManager::new(
             Arc::clone(&config),
             Arc::clone(&hyper),
         ));

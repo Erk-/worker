@@ -5,12 +5,12 @@ pub const fn description() -> &'static str {
     "Dumps the current queue to be played with the load command."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["dump"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     let queue = match await!(ctx.state.queue.get(guild_id)) {
         Ok(queue) => queue,

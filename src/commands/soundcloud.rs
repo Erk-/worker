@@ -7,7 +7,7 @@ pub const fn description() -> &'static str {
     "Searches SoundCloud for a song."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["soundcloud", "sc"]
 }
 

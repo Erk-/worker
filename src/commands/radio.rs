@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Streams a radio or displays a list of them all."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["radio"]
 }
 
@@ -43,14 +43,21 @@ For example, use `{prefix}radio Radio Here`", prefix=prefix))
 
         await!(super::join::join_ctx(&ctx))?;
 
-        match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, radio.track.clone())) {
-            Ok(()) => {
+        match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
+            Ok(true) => {
                 Response::text(format!(
-                    "Now playing **{}** by **{}**",
+                    "Now playing **{}** by **{}**.",
                     radio.info.title,
                     radio.info.author,
                 ))
             },
+            Ok(false) => {
+                Response::text(format!(
+                    "Added **{}** by **{}** to the queue.",
+                    radio.info.title,
+                    radio.info.author,
+                ))
+            }
             Err(why) => {
                 warn!("Err playing radio: {:?}", why);
 

@@ -1,4 +1,4 @@
-use crate::services::lavalink::PlaybackManager;
+use crate::services::lavalink::LavalinkManager;
 use redis_async::client::PairedConnection;
 use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
@@ -8,7 +8,7 @@ pub const fn description() -> &'static str {
     "Leaves the voice channel."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &[
         "disconnect",
         "l",
@@ -17,7 +17,7 @@ pub const fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let gid = ctx.msg.guild_id?.0;
+    let gid = ctx.guild_id()?;
     let sid = ctx.shard_id;
 
     match await!(leave(sid, gid, &ctx.state.playback, &ctx.state.redis)) {
@@ -37,7 +37,7 @@ pub async fn run(ctx: Context) -> CommandResult {
 pub async fn leave<'a>(
     shard_id: u64,
     guild_id: u64,
-    playback: &'a Arc<PlaybackManager>,
+    playback: &'a Arc<LavalinkManager>,
     redis: &'a Arc<PairedConnection>,
 ) -> Result<()> {
     let map = serde_json::to_vec(&json!({

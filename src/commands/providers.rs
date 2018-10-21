@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Information about audio providers."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["providers"]
 }
 

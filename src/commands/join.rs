@@ -31,7 +31,7 @@ pub const fn description() -> &'static str {
     "Joins the voice channel."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &[
         "connect",
         "j",
@@ -62,11 +62,14 @@ pub async fn run(ctx: Context) -> CommandResult {
         Ok(None) | Err(_) => return join.into_response(),
     };
 
-    match await!(ctx.state.playback.play(ctx.msg.guild_id?.0, song.track)) {
-        Ok(()) => {
+    match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
+        Ok(true) => {
             Response::text("Joined the voice channel!
 
 Leaving off from your last queue.")
+        },
+        Ok(false) => {
+            Response::text("Joined the voice channel!")
         },
         Err(why) => {
             warn!("Err playing next song: {:?}", why);
@@ -80,7 +83,7 @@ pub async fn join_ctx(
     ctx: &Context,
 ) -> Result<Join> {
     let user_id = ctx.msg.author.id.0;
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     trace!("Checking if G:{};U:{} is in a voice channel", guild_id, user_id);
 

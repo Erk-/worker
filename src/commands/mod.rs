@@ -32,6 +32,7 @@ use crate::{
     worker::WorkerState,
     Result,
 };
+use futures::compat::Future01CompatExt;
 use lavalink_queue_requester::model::{QueuedItem, Song};
 use serenity::model::channel::Message;
 use std::sync::Arc;
@@ -53,6 +54,10 @@ impl Context {
         await!(self.state.playback.current(id)).map_err(From::from)
     }
 
+    pub fn guild_id(&self) -> Option<u64> {
+        self.msg.guild_id.map(|id| id.0)
+    }
+
     pub async fn is_playing(&self) -> Result<bool> {
         await!(self.current())?;
 
@@ -60,11 +65,26 @@ impl Context {
     }
 
     pub async fn queue(&self, limit: u32) -> Result<Vec<QueuedItem>> {
-        await!(self.state.queue.get_limit(self.msg.guild_id?.0, limit))
+        await!(self.state.queue.get_limit(self.guild_id()?, limit))
     }
 
     pub async fn queue_pop(&self) -> Result<Option<Song>> {
-        await!(self.state.queue.pop(self.msg.guild_id?.0))
+        await!(self.state.queue.pop(self.guild_id()?))
+    }
+
+    pub async fn send_message<'a>(
+        &'a self,
+        content: impl AsRef<str> + 'a,
+    ) -> Result<Message> {
+        await!(self._send_message(content.as_ref()))
+    }
+
+    async fn _send_message<'a>(&'a self, content: &'a str) -> Result<Message> {
+        await!(self.state.serenity.send_message(self.msg.channel_id.0, |mut m| {
+            m.content(content);
+
+            m
+        }).compat()).map_err(From::from)
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {

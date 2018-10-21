@@ -4,12 +4,12 @@ pub const fn description() -> &'static str {
     "Get the currently playing song."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["currently", "nowplaying", "np", "playing"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
     let state = match await!(ctx.state.playback.current(guild_id)) {
         Ok(state) => state,
         Err(why) => {

@@ -9,12 +9,12 @@ pub const fn description() -> &'static str {
     "Chooses a song from a selection."
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["choose", "c", "chose"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     let cmd = resp_array![
         "LRANGE",
@@ -75,7 +75,7 @@ pub(super) fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
 }
 
 pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
-    let guild_id = ctx.msg.guild_id?.0;
+    let guild_id = ctx.guild_id()?;
 
     await!(super::join::join_ctx(&ctx))?;
 
@@ -84,9 +84,17 @@ pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
     delete_selection(&ctx.state.redis, guild_id);
 
     match await!(ctx.state.playback.play(guild_id, track)) {
-        Ok(()) => {
+        Ok(true) => {
             Response::text(format!(
                 "Now playing **{}** by **{}** `[{}]`",
+                song.title,
+                song.author,
+                utils::track_length_readable(song.length as u64),
+            ))
+        },
+        Ok(false) => {
+            Response::text(format!(
+                "Added **{}** by **{}** `[{}]` to the queue.",
                 song.title,
                 song.author,
                 utils::track_length_readable(song.length as u64),

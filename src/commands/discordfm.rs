@@ -4,7 +4,7 @@ pub const fn description() -> &'static str {
     "Discord.FM playlists"
 }
 
-pub const fn names() -> &'static [&'static str] {
+pub fn names() -> &'static [&'static str] {
     &["dfm", "discordfm"]
 }
 
@@ -18,7 +18,7 @@ Usage: `{}dfm <library>`
 **Available libraries:**
 {}", prefix, ctx.state.discord_fm.list))
     } else {
-        let guild_id = ctx.msg.guild_id?.0;
+        let guild_id = ctx.guild_id()?;
 
         let query = ctx.args.join(" ").to_lowercase();
 
