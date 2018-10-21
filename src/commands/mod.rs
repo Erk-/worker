@@ -40,7 +40,7 @@ use std::sync::Arc;
 
 pub type CommandResult = Result<Response>;
 
-pub trait Command<'a> {
+pub trait Command<'a>: Send + Sync {
     fn names(&self) -> &'static [&'static str];
     fn description(&self) -> &'static str;
     fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult>;

@@ -36,7 +36,7 @@ use std::sync::Arc;
 pub struct WorkerState {
     pub cache: Arc<Cache>,
     pub config: Arc<Config>,
-    pub commands: Arc<Vec<Arc<Box<Command<'static>>>>>,
+    pub commands: Arc<Vec<Arc<&'static (dyn Command<'static> + Send + Sync)>>>,
     pub discord_fm: DiscordFm,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<LavalinkManager>,
@@ -78,10 +78,10 @@ impl Worker {
         )?);
         debug!("Initialized serenity http client");
 
-        let commands: Vec<Arc<Box<Command>>> = vec![
-            Arc::new(Box::new(commands::about::COMMAND_INSTANCE)),
-            Arc::new(Box::new(commands::cancel::COMMAND_INSTANCE)),
-            Arc::new(Box::new(commands::choose::COMMAND_INSTANCE)),
+        let commands: Vec<Arc<&'static (dyn Command + Send + Sync)>> = vec![
+            Arc::new(&commands::about::COMMAND_INSTANCE),
+            Arc::new(&commands::cancel::COMMAND_INSTANCE),
+            Arc::new(&commands::choose::COMMAND_INSTANCE),
         ];
         let commands = Arc::new(commands);
         debug!("Initialized commands");
