@@ -79,7 +79,7 @@ impl PlayCommand {
             },
         };
 
-        info!("load: {:?}", load.load_type);
+        debug!("load: {:?}", load.load_type);
 
         match load.load_type {
             LoadType::LoadFailed => {
