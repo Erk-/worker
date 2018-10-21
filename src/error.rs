@@ -7,10 +7,7 @@ use lavalink_queue_requester::Error as LavalinkQueueRequesterError;
 use native_tls::Error as NativeTlsError;
 use redis_async::error::Error as RedisError;
 use serde_json::Error as SerdeJsonError;
-use serenity::{
-    prelude::HttpError as SerenityHttpError,
-    Error as SerenityError,
-};
+use serenity::{prelude::HttpError as SerenityHttpError, Error as SerenityError};
 use std::{
     cell::BorrowMutError,
     error::Error as StdError,

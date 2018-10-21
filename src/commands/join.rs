@@ -1,5 +1,5 @@
-use serenity::constants::VoiceOpCode;
 use super::prelude::*;
+use serenity::constants::VoiceOpCode;
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Join {
@@ -20,9 +20,7 @@ impl Join {
 
                 Response::text("Joined the voice channel.")
             },
-            Join::UserNotInChannel => {
-                Response::err("You aren't in a voice channel.")
-            },
+            Join::UserNotInChannel => Response::err("You aren't in a voice channel."),
         }
     }
 }
@@ -32,11 +30,7 @@ pub const fn description() -> &'static str {
 }
 
 pub fn names() -> &'static [&'static str] {
-    &[
-        "connect",
-        "j",
-        "join",
-    ]
+    &["connect", "j", "join"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
@@ -45,9 +39,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err joining user voice state: {:?}", why);
 
-            return Response::err(
-                "There was an error joining the voice channel.",
-            );
+            return Response::err("There was an error joining the voice channel.");
         },
     };
 
@@ -64,13 +56,13 @@ pub async fn run(ctx: Context) -> CommandResult {
 
     match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
         Ok(true) => {
-            Response::text("Joined the voice channel!
+            Response::text(
+                "Joined the voice channel!
 
-Leaving off from your last queue.")
+Leaving off from your last queue.",
+            )
         },
-        Ok(false) => {
-            Response::text("Joined the voice channel!")
-        },
+        Ok(false) => Response::text("Joined the voice channel!"),
         Err(why) => {
             warn!("Err playing next song: {:?}", why);
 
@@ -79,13 +71,15 @@ Leaving off from your last queue.")
     }
 }
 
-pub async fn join_ctx(
-    ctx: &Context,
-) -> Result<Join> {
+pub async fn join_ctx(ctx: &Context) -> Result<Join> {
     let user_id = ctx.msg.author.id.0;
     let guild_id = ctx.guild_id()?;
 
-    trace!("Checking if G:{};U:{} is in a voice channel", guild_id, user_id);
+    trace!(
+        "Checking if G:{};U:{} is in a voice channel",
+        guild_id,
+        user_id
+    );
 
     // Check if the user is in a voice channel.
     let user = match await!(ctx.state.cache.voice_state(guild_id, user_id))? {
@@ -129,11 +123,16 @@ pub async fn join_ctx(
     await!(ctx.to_sharder(map))?;
     trace!("Sent SessionDescription payload to sharder");
 
-    await!(ctx.state.redis.send(resp_array![
-        "SET",
-        format!("j:{}", guild_id),
-        ctx.msg.channel_id.0 as usize
-    ]).compat())?;
+    await!(
+        ctx.state
+            .redis
+            .send(resp_array![
+                "SET",
+                format!("j:{}", guild_id),
+                ctx.msg.channel_id.0 as usize
+            ])
+            .compat()
+    )?;
 
     Ok(Join::Successful)
 }

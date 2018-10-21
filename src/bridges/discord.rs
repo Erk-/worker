@@ -1,14 +1,11 @@
 use crate::{
-    commands::{Context, Response, Command},
+    commands::{Command, Context, Response},
     config::Config,
     error::{Error, Result},
     utils,
     worker::WorkerState,
 };
-use futures::{
-    compat::{Future01CompatExt as _},
-    future::TryFutureExt,
-};
+use futures::{compat::Future01CompatExt as _, future::TryFutureExt};
 use lavalink::model::VoiceUpdate;
 use serenity::model::event::{
     Event,
@@ -18,10 +15,7 @@ use serenity::model::event::{
     VoiceServerUpdateEvent,
     VoiceStateUpdateEvent,
 };
-use std::{
-    borrow::Cow,
-    sync::Arc,
-};
+use std::{borrow::Cow, sync::Arc};
 
 pub struct DiscordEventHandler {
     state: Arc<WorkerState>,
@@ -34,28 +28,21 @@ impl DiscordEventHandler {
         }
     }
 
-    pub fn dispatch(
-        &self,
-        event: GatewayEvent,
-        shard_id: u64,
-    ) {
-        utils::spawn(Self::_dispatch(Arc::clone(&self.state), event, shard_id).map_err(|why| {
-            warn!("Err dispatching event: {:?}", why);
-        }));
+    pub fn dispatch(&self, event: GatewayEvent, shard_id: u64) {
+        utils::spawn(
+            Self::_dispatch(Arc::clone(&self.state), event, shard_id).map_err(|why| {
+                warn!("Err dispatching event: {:?}", why);
+            }),
+        );
     }
 
-    async fn _dispatch(
-        state: Arc<WorkerState>,
-        event: GatewayEvent,
-        shard_id: u64,
-    ) -> Result<()> {
+    async fn _dispatch(state: Arc<WorkerState>, event: GatewayEvent, shard_id: u64) -> Result<()> {
         trace!(
             "Discord dispatcher received event on shard {}: {:?}",
             shard_id,
             event,
         );
-        use self::Event::*;
-        use self::GatewayEvent::Dispatch;
+        use self::{Event::*, GatewayEvent::Dispatch};
 
         match event {
             Dispatch(_, Ready(e)) => ready(e),
@@ -75,10 +62,7 @@ impl DiscordEventHandler {
     }
 }
 
-async fn get_prefixes<'a>(
-    config: &'a Arc<Config>,
-    _guild_id: u64,
-) -> Result<Vec<Cow<'a, str>>> {
+async fn get_prefixes<'a>(config: &'a Arc<Config>, _guild_id: u64) -> Result<Vec<Cow<'a, str>>> {
     // todo
     let mut prefixes = Vec::with_capacity(config.bot_prefixes.len());
 
@@ -110,7 +94,10 @@ async fn message_create(
     let prefixes = await!(get_prefixes(&state.config, guild_id))?;
 
     let prefix = {
-        match prefixes.iter().find(|prefix| content.starts_with(prefix.as_ref())) {
+        match prefixes
+            .iter()
+            .find(|prefix| content.starts_with(prefix.as_ref()))
+        {
             Some(prefix) => prefix,
             None => {
                 trace!("Message doesn't start with prefix");
@@ -141,28 +128,33 @@ async fn message_create(
         };
 
         let alias = &*alias;
-        let result = state.commands.iter()
-            .find(|c| c.names().iter()
-                    .find(|a| (*a).eq_ignore_ascii_case(alias)).is_some());
+        let result = state.commands.iter().find(|c| {
+            c.names()
+                .iter()
+                .find(|a| (*a).eq_ignore_ascii_case(alias))
+                .is_some()
+        });
         let result = match result {
             Some(cmd) => await!(cmd.run(ctx)),
             None => {
                 trace!("No command matched alias: {}", alias);
 
                 return Ok(());
-            }
+            },
         };
 
         match result {
             Ok(Response::Text(content)) => {
-                await!(state.serenity.send_message(
-                    channel_id,
-                    |mut m| {
-                        m.content(content);
+                await!(
+                    state
+                        .serenity
+                        .send_message(channel_id, |mut m| {
+                            m.content(content);
 
-                        m
-                    },
-                ).compat())?;
+                            m
+                        },)
+                        .compat()
+                )?;
             },
             Err(Error::None(_)) => debug!("None error running command"),
             Err(other) => error!("Error running command: {:?}", other),
@@ -176,10 +168,7 @@ fn ready(event: ReadyEvent) {
     info!("Received Ready event! User id: {:?}", event.ready.user.id);
 }
 
-async fn update_cache(
-    event: GatewayEvent,
-    state: Arc<WorkerState>,
-) -> Result<()> {
+async fn update_cache(event: GatewayEvent, state: Arc<WorkerState>) -> Result<()> {
     trace!("Updating cache");
 
     if let Err(why) = await!(state.cache.dispatch(&event)) {
@@ -191,10 +180,7 @@ async fn update_cache(
     Ok(())
 }
 
-async fn voice_server_update(
-    event: VoiceServerUpdateEvent,
-    state: Arc<WorkerState>,
-) -> Result<()> {
+async fn voice_server_update(event: VoiceServerUpdateEvent, state: Arc<WorkerState>) -> Result<()> {
     state.cache.voice_server_update(&event);
 
     debug!("Received VoiceServerUpdate event: {:?}", event);
@@ -204,7 +190,12 @@ async fn voice_server_update(
     debug!("Got guild id");
 
     let session_id = {
-        await!(state.cache.voice_state(guild_id, state.config.discord_user_id))??.session_id
+        await!(
+            state
+                .cache
+                .voice_state(guild_id, state.config.discord_user_id)
+        )??
+        .session_id
     };
 
     debug!("Got session id for current user");
@@ -221,20 +212,14 @@ async fn voice_server_update(
             debug!("Sent voice server update to lavalink server");
         },
         Err(why) => {
-            warn!(
-                "Error sending voice update to lavalink server: {:?}",
-                why,
-            );
+            warn!("Error sending voice update to lavalink server: {:?}", why,);
         },
     }
 
     Ok(())
 }
 
-async fn voice_state_update(
-    e: VoiceStateUpdateEvent,
-    state: Arc<WorkerState>,
-) -> Result<()> {
+async fn voice_state_update(e: VoiceStateUpdateEvent, state: Arc<WorkerState>) -> Result<()> {
     debug!("Received VoiceStateUpdate event: {:?}", e);
 
     let guild_id = e.guild_id.map(|x| x.0)?;
@@ -245,10 +230,7 @@ async fn voice_state_update(
     let mut update_cache = true;
 
     if user_id != bot_id {
-        let old_state = await!(state.cache.voice_state(
-            guild_id,
-            user_id,
-        ))?;
+        let old_state = await!(state.cache.voice_state(guild_id, user_id,))?;
 
         if let Some(old_state) = old_state {
             let old_channel_id = old_state.channel_id;
@@ -257,9 +239,7 @@ async fn voice_state_update(
             await!(state.cache.voice_state_update(&e))?;
 
             debug!("Checking members in voice channel {}", old_channel_id);
-            let list = await!(state.cache.inner.get_channel_voice_states(
-                old_channel_id,
-            ))?;
+            let list = await!(state.cache.inner.get_channel_voice_states(old_channel_id,))?;
             debug!("Members in voice channel {}: {:?}", old_channel_id, list);
 
             if list.contains(&bot_id) && list.len() == 1 {
@@ -274,9 +254,7 @@ async fn voice_state_update(
             await!(state.cache.voice_state_update(&e))?;
 
             debug!("Checking members in voice channel {}", channel_id);
-            let list = await!(state.cache.inner.get_channel_voice_states(
-                channel_id,
-            ))?;
+            let list = await!(state.cache.inner.get_channel_voice_states(channel_id,))?;
             debug!("Members in voice channel {}: {:?}", channel_id, list);
 
             if list.len() == 2 {

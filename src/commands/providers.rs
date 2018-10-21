@@ -9,5 +9,7 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(_: Context) -> CommandResult {
-    Response::text("Available music providers: youtube, soundcloud, bandcamp, vimeo, twitch, beam.pro, http")
+    Response::text(
+        "Available music providers: youtube, soundcloud, bandcamp, vimeo, twitch, beam.pro, http",
+    )
 }

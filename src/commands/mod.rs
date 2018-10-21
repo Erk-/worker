@@ -27,13 +27,8 @@ pub mod soundcloud;
 pub mod volume;
 pub mod youtube;
 
-use crate::{
-    services::lavalink::PlayerState,
-    worker::WorkerState,
-    Result,
-};
-use futures::compat::Future01CompatExt;
-use futures::future::FutureObj;
+use crate::{services::lavalink::PlayerState, worker::WorkerState, Result};
+use futures::{compat::Future01CompatExt, future::FutureObj};
 use lavalink_queue_requester::model::{QueuedItem, Song};
 use serenity::model::channel::Message;
 use std::sync::Arc;
@@ -79,19 +74,22 @@ impl Context {
         await!(self.state.queue.pop(self.guild_id()?))
     }
 
-    pub async fn send_message<'a>(
-        &'a self,
-        content: impl AsRef<str> + 'a,
-    ) -> Result<Message> {
+    pub async fn send_message<'a>(&'a self, content: impl AsRef<str> + 'a) -> Result<Message> {
         await!(self._send_message(content.as_ref()))
     }
 
     async fn _send_message<'a>(&'a self, content: &'a str) -> Result<Message> {
-        await!(self.state.serenity.send_message(self.msg.channel_id.0, |mut m| {
-            m.content(content);
+        await!(
+            self.state
+                .serenity
+                .send_message(self.msg.channel_id.0, |mut m| {
+                    m.content(content);
 
-            m
-        }).compat()).map_err(From::from)
+                    m
+                })
+                .compat()
+        )
+        .map_err(From::from)
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
@@ -132,7 +130,9 @@ impl Response {
 }
 
 fn no_song() -> Result<Response> {
-    Response::text("No music is queued or playing on this guild! Add some using `!!!play <song name/link>`")
+    Response::text(
+        "No music is queued or playing on this guild! Add some using `!!!play <song name/link>`",
+    )
 }
 
 #[cfg(test)]
@@ -153,9 +153,6 @@ mod tests {
             Response::text("hello").unwrap(),
             Response::Text("hello".to_owned()),
         );
-        assert_eq!(
-            Response::text("").unwrap(),
-            Response::Text("".to_owned()),
-        );
+        assert_eq!(Response::text("").unwrap(), Response::Text("".to_owned()),);
     }
 }

@@ -1,21 +1,11 @@
-use crate::{
-    config::Config,
-    error::Result,
-};
-use hyper::{
-    client::HttpConnector,
-    Body,
-    Client,
-};
+use crate::{config::Config, error::Result};
+use hyper::{client::HttpConnector, Body, Client};
 use hyper_tls::HttpsConnector;
 use lavalink_queue_requester::{
     model::{QueuedItem, Song, SongQueued},
     QueueRequester,
 };
-use std::{
-    sync::Arc,
-    u32,
-};
+use std::{sync::Arc, u32};
 
 pub struct QueueManager {
     config: Arc<Config>,
@@ -73,23 +63,20 @@ impl QueueManager {
         await!(self._add_multiple(guild_id, tracks))
     }
 
-    async fn _add_multiple(
-        &self,
-        guild_id: u64,
-        tracks: Vec<String>,
-    ) -> Result<Vec<SongQueued>> {
-        await!(self.http.add_tracks(
-            self.address(),
-            guild_id.to_string(),
-            tracks,
-        )).map_err(From::from)
+    async fn _add_multiple(&self, guild_id: u64, tracks: Vec<String>) -> Result<Vec<SongQueued>> {
+        await!(
+            self.http
+                .add_tracks(self.address(), guild_id.to_string(), tracks,)
+        )
+        .map_err(From::from)
     }
 
     pub async fn clear(&self, guild_id: u64) -> Result<()> {
-        await!(self.http.delete_queue(
-            self.address(),
-            guild_id.to_string(),
-        )).map_err(From::from)
+        await!(
+            self.http
+                .delete_queue(self.address(), guild_id.to_string(),)
+        )
+        .map_err(From::from)
     }
 
     pub async fn get(&self, guild_id: u64) -> Result<Vec<QueuedItem>> {
@@ -97,18 +84,15 @@ impl QueueManager {
     }
 
     pub async fn get_limit(&self, guild_id: u64, limit: u32) -> Result<Vec<QueuedItem>> {
-        await!(self.http.get_queue_with_limit(
-            self.address(),
-            guild_id.to_string(),
-            limit,
-        )).map_err(From::from)
+        await!(
+            self.http
+                .get_queue_with_limit(self.address(), guild_id.to_string(), limit,)
+        )
+        .map_err(From::from)
     }
 
     pub async fn pop(&self, guild_id: u64) -> Result<Option<Song>> {
-        await!(self.http.pop_queue(
-            self.address(),
-            guild_id.to_string(),
-        )).map_err(From::from)
+        await!(self.http.pop_queue(self.address(), guild_id.to_string(),)).map_err(From::from)
     }
 
     #[inline]

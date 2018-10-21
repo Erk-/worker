@@ -1,8 +1,5 @@
+use super::{join::Join, prelude::*};
 use dump::DumpRequester;
-use super::{
-    join::Join,
-    prelude::*,
-};
 
 pub const fn description() -> &'static str {
     "Loads a queue of songs from the dump command."
@@ -97,7 +94,7 @@ pub async fn run(ctx: Context) -> CommandResult {
             content.push_str("\n\nJoined the voice channel and added the songs to the queue.");
 
             Response::text(content)
-        }
+        },
         Err(why) => {
             warn!("Err playing next song: {:?}", why);
 

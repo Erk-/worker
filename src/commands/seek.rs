@@ -25,8 +25,11 @@ pub async fn run(ctx: Context) -> CommandResult {
 
     match await!(ctx.state.playback.seek(guild_id, 0)) {
         Ok(()) => {
-            Response::text("Jumped to the specified position. Use `!!!playing` to see the current song & position.")
-        }
+            Response::text(
+                "Jumped to the specified position. Use `!!!playing` to see the current song & \
+                 position.",
+            )
+        },
         Err(why) => {
             warn!("Err seeking song for {} to {}: {:?}", guild_id, 0, why);
 

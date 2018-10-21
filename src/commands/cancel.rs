@@ -1,9 +1,6 @@
+use super::{choose, prelude::*};
 use redis_async::client::PairedConnection;
 use std::sync::Arc;
-use super::{
-    choose,
-    prelude::*,
-};
 
 pub static COMMAND_INSTANCE: CancelCommand = CancelCommand;
 
@@ -27,10 +24,7 @@ async fn _run(ctx: Context) -> CommandResult {
     cancel(&ctx.state.redis, ctx.guild_id()?)
 }
 
-pub(super) fn cancel(
-    redis: &Arc<PairedConnection>,
-    guild_id: u64,
-) -> Result<Response> {
+pub(super) fn cancel(redis: &Arc<PairedConnection>, guild_id: u64) -> Result<Response> {
     choose::ChooseCommand::delete_selection(&redis, guild_id);
 
     Response::text("Selection cancelled!")

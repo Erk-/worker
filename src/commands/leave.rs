@@ -1,20 +1,15 @@
+use super::prelude::*;
 use crate::services::lavalink::LavalinkManager;
 use redis_async::client::PairedConnection;
 use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
-use super::prelude::*;
 
 pub const fn description() -> &'static str {
     "Leaves the voice channel."
 }
 
 pub fn names() -> &'static [&'static str] {
-    &[
-        "disconnect",
-        "l",
-        "leave",
-        "stop",
-    ]
+    &["disconnect", "l", "leave", "stop"]
 }
 
 pub async fn run(ctx: Context) -> CommandResult {
@@ -24,14 +19,10 @@ pub async fn run(ctx: Context) -> CommandResult {
     match await!(leave(sid, gid, &ctx.state.playback, &ctx.state.redis)) {
         Ok(()) => Response::text("Stopped playing music & left the voice channel."),
         Err(why) => {
-            error!(
-                "Error stopping in guild {}: {:?}",
-                gid,
-                why,
-            );
+            error!("Error stopping in guild {}: {:?}", gid, why,);
 
             Response::err("There was an error leaving the voice channel.")
-        }
+        },
     }
 }
 
@@ -54,14 +45,8 @@ pub async fn leave<'a>(
     let cmd = resp_array!["RPUSH", key, map];
 
     redis.send_and_forget(cmd);
-    redis.send_and_forget(resp_array![
-        "DEL",
-        format!("j:{}", guild_id)
-    ]);
-    redis.send_and_forget(resp_array![
-        "DEL",
-        format!("c:{}", guild_id)
-    ]);
+    redis.send_and_forget(resp_array!["DEL", format!("j:{}", guild_id)]);
+    redis.send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
 
     await!(playback.stop(guild_id))?;
 

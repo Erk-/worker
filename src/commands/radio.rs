@@ -12,11 +12,15 @@ pub async fn run(ctx: Context) -> CommandResult {
     if ctx.args.is_empty() {
         let prefix = ctx.state.config.bot_prefixes.first()?;
 
-        Response::text(format!("View the radios here: <https://dabbot.org/radios>
+        Response::text(format!(
+            "View the radios here: <https://dabbot.org/radios>
 
-To play a radio, use `{prefix}radio <name here>`.
+To play a radio, use \
+             `{prefix}radio <name here>`.
 
-For example, use `{prefix}radio Radio Here`", prefix=prefix))
+For example, use `{prefix}radio Radio Here`",
+            prefix = prefix
+        ))
     } else {
         let query = ctx.args.join(" ");
 
@@ -43,21 +47,23 @@ For example, use `{prefix}radio Radio Here`", prefix=prefix))
 
         await!(super::join::join_ctx(&ctx))?;
 
-        match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
+        match await!(
+            ctx.state
+                .playback
+                .play(ctx.guild_id()?, radio.track.clone())
+        ) {
             Ok(true) => {
                 Response::text(format!(
                     "Now playing **{}** by **{}**.",
-                    radio.info.title,
-                    radio.info.author,
+                    radio.info.title, radio.info.author,
                 ))
             },
             Ok(false) => {
                 Response::text(format!(
                     "Added **{}** by **{}** to the queue.",
-                    radio.info.title,
-                    radio.info.author,
+                    radio.info.title, radio.info.author,
                 ))
-            }
+            },
             Err(why) => {
                 warn!("Err playing radio: {:?}", why);
 

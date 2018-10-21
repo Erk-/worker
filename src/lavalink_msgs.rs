@@ -1,12 +1,5 @@
-use crate::{
-    error::Result,
-    utils,
-    worker::WorkerState,
-};
-use futures::{
-    compat::Future01CompatExt as _,
-    future::TryFutureExt,
-};
+use crate::{error::Result, utils, worker::WorkerState};
+use futures::{compat::Future01CompatExt as _, future::TryFutureExt};
 use lavalink::decoder::{self, DecodedTrack};
 use redis_async::{
     client::PairedConnection,
@@ -21,10 +14,7 @@ struct SongPlayed {
     track: String,
 }
 
-pub async fn from_lavalink(
-    redis: PairedConnection,
-    state: Arc<WorkerState>,
-) -> Result<()> {
+pub async fn from_lavalink(redis: PairedConnection, state: Arc<WorkerState>) -> Result<()> {
     loop {
         let res: Result<()> = try {
             let cmd = resp_array!["BLPOP", "lavalink:from", 0];
@@ -48,9 +38,11 @@ pub async fn from_lavalink(
             let track = decoder::decode_track_base64(&played.track)?;
             debug!("Deserialized new song track info: {:?}", track);
 
-            utils::spawn(handle_song(played, track, Arc::clone(&state)).map_err(|why| {
-                warn!("Err with song handler: {:?}", why);
-            }));
+            utils::spawn(
+                handle_song(played, track, Arc::clone(&state)).map_err(|why| {
+                    warn!("Err with song handler: {:?}", why);
+                }),
+            );
         };
 
         if let Err(why) = res {
@@ -64,10 +56,12 @@ async fn handle_song(
     track: DecodedTrack,
     state: Arc<WorkerState>,
 ) -> Result<()> {
-    let channel_id: String = await!(state.redis.send(resp_array![
-        "GET",
-        format!("j:{}", played.guild_id)
-    ]).compat())?;
+    let channel_id: String = await!(
+        state
+            .redis
+            .send(resp_array!["GET", format!("j:{}", played.guild_id)])
+            .compat()
+    )?;
     let id = channel_id.parse::<u64>()?;
 
     let msg = format!(
@@ -77,11 +71,16 @@ async fn handle_song(
         utils::track_length_readable(track.length),
     );
 
-    await!(state.serenity.send_message(id, |mut m| {
-        m.content(msg);
+    await!(
+        state
+            .serenity
+            .send_message(id, |mut m| {
+                m.content(msg);
 
-        m
-    }).compat())?;
+                m
+            })
+            .compat()
+    )?;
 
     Ok(())
 }

@@ -1,11 +1,8 @@
+use super::{join::Join, prelude::*};
 use crate::utils;
 use lavalink::rest::{Load, LoadType};
 use serenity::utils::MessageBuilder;
 use std::fmt::{Display, Formatter, Result as FmtResult, Write as _};
-use super::{
-    join::Join,
-    prelude::*,
-};
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Provider {
@@ -21,7 +18,7 @@ impl Provider {
         match self {
             SoundCloud => "scsearch",
             URL => "",
-            YouTube => "ytsearch"
+            YouTube => "ytsearch",
         }
     }
 }
@@ -57,12 +54,11 @@ pub async fn run(ctx: Context) -> CommandResult {
     await!(base(&ctx, Provider::YouTube))
 }
 
-pub async fn base(
-    ctx: &Context,
-    mut provider: Provider,
-) -> CommandResult {
+pub async fn base(ctx: &Context, mut provider: Provider) -> CommandResult {
     if ctx.args.len() < 1 {
-        return Response::err("You need to say the link to the song or the name of what you want to play");
+        return Response::err(
+            "You need to say the link to the song or the name of what you want to play",
+        );
     }
 
     let query = ctx.args.join(" ");
@@ -94,12 +90,8 @@ pub async fn base(
         LoadType::NoMatches => {
             return Response::err("It looks like there aren't any results for that!");
         },
-        LoadType::PlaylistLoaded => {
-            await!(handle_playlist(&ctx, load))
-        },
-        LoadType::SearchResult | LoadType::TrackLoaded => {
-            await!(handle_search(&ctx, load))
-        },
+        LoadType::PlaylistLoaded => await!(handle_playlist(&ctx, load)),
+        LoadType::SearchResult | LoadType::TrackLoaded => await!(handle_search(&ctx, load)),
     }
 }
 
@@ -111,28 +103,30 @@ async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
     }
 
     if load.tracks.len() == 1 {
-        return await!(super::choose::ChooseCommand::select(&ctx, load.tracks.remove(0).track));
+        return await!(super::choose::ChooseCommand::select(
+            &ctx,
+            load.tracks.remove(0).track
+        ));
     }
 
     load.tracks.truncate(5);
 
-    let mut blobs = load.tracks
+    let mut blobs = load
+        .tracks
         .iter()
         .map(|t| t.track.clone())
         .rev()
         .collect::<Vec<_>>();
 
     debug!("Deleting existing choose for guild {}", guild_id);
-    ctx.state.redis.send_and_forget(resp_array![
-        "DEL",
-        format!("c:{}", guild_id)
-    ]);
+    ctx.state
+        .redis
+        .send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
     debug!("Deleted existing choose for guild {}", guild_id);
     debug!("Setting choose for guild {}", guild_id);
-    ctx.state.redis.send_and_forget(resp_array![
-        "LPUSH",
-        format!("c:{}", guild_id)
-    ].append(&mut blobs));
+    ctx.state
+        .redis
+        .send_and_forget(resp_array!["LPUSH", format!("c:{}", guild_id)].append(&mut blobs));
     debug!("Set choose for guild {}", guild_id);
 
     let mut msg = MessageBuilder::new();
@@ -142,7 +136,11 @@ async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
         msg.push_safe(&track.info.title);
         msg.0.push_str(" by ");
         msg.push_safe(&track.info.author);
-        write!(msg.0, " `[{}]`", utils::track_length_readable(track.info.length as u64))?;
+        write!(
+            msg.0,
+            " `[{}]`",
+            utils::track_length_readable(track.info.length as u64)
+        )?;
         msg.0.push('\n');
     }
 
@@ -150,11 +148,15 @@ async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
 
     msg.0.push_str("\n**To choose**, use `");
     msg.push_safe(&prefix);
-    msg.0.push_str("choose <number>`
-Example: `");
+    msg.0.push_str(
+        "choose <number>`
+Example: `",
+    );
     msg.push_safe(&prefix);
-    msg.0.push_str("choose 2` would pick the second option.
-**To cancel**, use `");
+    msg.0.push_str(
+        "choose 2` would pick the second option.
+**To cancel**, use `",
+    );
     msg.push_safe(&prefix);
     msg.0.push_str("cancel`.");
 
@@ -168,7 +170,8 @@ async fn handle_playlist(ctx: &Context, load: Load) -> CommandResult {
         return Response::text("It looks like that playlist is empty!");
     }
 
-    let tracks = load.tracks
+    let tracks = load
+        .tracks
         .iter()
         .map(|t| t.track.clone())
         .collect::<Vec<_>>();
@@ -215,7 +218,7 @@ async fn handle_playlist(ctx: &Context, load: Load) -> CommandResult {
             content.push_str("\n\nJoined the voice channel and added the songs to the queue.");
 
             Response::text(content)
-        }
+        },
         Err(why) => {
             warn!("Err playing next song: {:?}", why);
 
@@ -232,11 +235,7 @@ pub async fn search<'a>(
     await!(_search(ctx, query.as_ref(), provider))
 }
 
-async fn _search<'a>(
-    ctx: &'a Context,
-    query: &'a str,
-    provider: Provider,
-) -> Result<Load> {
+async fn _search<'a>(ctx: &'a Context, query: &'a str, provider: Provider) -> Result<Load> {
     let term = format!("{}{}", provider, query);
 
     await!(ctx.state.playback.search(term))

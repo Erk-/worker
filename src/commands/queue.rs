@@ -1,7 +1,7 @@
+use super::prelude::*;
 use crate::utils;
 use lavalink_queue_requester::model::QueuedItem;
 use std::fmt::Write as _;
-use super::prelude::*;
 
 pub const fn description() -> &'static str {
     "Shows the song queue."
@@ -32,9 +32,7 @@ pub async fn run(ctx: Context) -> CommandResult {
         Err(why) => {
             warn!("Err getting current music for {}: {:?}", guild_id, why);
 
-            s.push_str(
-                "There was an error getting the current song.",
-            );
+            s.push_str("There was an error getting the current song.");
         },
     }
 

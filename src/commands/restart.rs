@@ -12,9 +12,7 @@ pub async fn run(ctx: Context) -> CommandResult {
     let guild_id = ctx.guild_id()?;
 
     match await!(ctx.state.playback.seek(guild_id, 0)) {
-        Ok(()) => {
-            Response::text("Restarted the song!")
-        }
+        Ok(()) => Response::text("Restarted the song!"),
         Err(why) => {
             warn!("Err restarting song for {}: {:?}", guild_id, why);
 

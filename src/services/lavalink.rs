@@ -4,21 +4,14 @@ use crate::{
     utils,
 };
 use futures::compat::Future01CompatExt as _;
-use hyper::{
-    client::HttpConnector,
-    Body,
-    Client,
-};
+use hyper::{client::HttpConnector, Body, Client};
 use hyper_tls::HttpsConnector;
 use lavalink::{
     decoder::{self, DecodedTrack},
     model::VoiceUpdate,
     rest::Load,
 };
-use lavalink_http_server_requester::{
-    model::AudioPlayerState,
-    AudioManagerRequester as _,
-};
+use lavalink_http_server_requester::{model::AudioPlayerState, AudioManagerRequester as _};
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -60,7 +53,8 @@ impl Display for PlayerState {
                     "Currently Playing"
                 };
 
-                write!(f,
+                write!(
+                    f,
                     "{}: **{}** by **{}** `[{}/{}]`\n{}",
                     status,
                     track.title,
@@ -70,7 +64,7 @@ impl Display for PlayerState {
                     track.url.as_ref().unwrap_or(&"(no url)".to_owned()),
                 )
             },
-            None => write!(f, "No song is currently playing.")
+            None => write!(f, "No song is currently playing."),
         }
     }
 }
@@ -120,55 +114,54 @@ impl LavalinkManager {
         }
     }
 
-    pub async fn play_next_guild(
-        &self,
-        guild_id: u64,
-        _force: bool,
-    ) -> Result<()> {
+    pub async fn play_next_guild(&self, guild_id: u64, _force: bool) -> Result<()> {
         await!(self.http.audio_skip(self.address(), guild_id).compat())?;
 
         Ok(())
     }
 
-    pub async fn play(
-        &self,
-        guild_id: u64,
-        track: String,
-    ) -> Result<bool> {
+    pub async fn play(&self, guild_id: u64, track: String) -> Result<bool> {
         debug!("trying to play {} in {}", track, guild_id);
 
-        await!(self.http.audio_play(
-            self.address(),
-            guild_id,
-            track,
-        ).compat()).map_err(From::from)
+        await!(
+            self.http
+                .audio_play(self.address(), guild_id, track,)
+                .compat()
+        )
+        .map_err(From::from)
     }
 
     pub async fn pause(&self, guild_id: u64) -> Result<()> {
-        await!(self.http.audio_pause(self.address(), guild_id, true).compat())?;
+        await!(
+            self.http
+                .audio_pause(self.address(), guild_id, true)
+                .compat()
+        )?;
 
         Ok(())
     }
 
     pub async fn resume(&self, guild_id: u64) -> Result<()> {
-        await!(self.http.audio_pause(self.address(), guild_id, false).compat())?;
+        await!(
+            self.http
+                .audio_pause(self.address(), guild_id, false)
+                .compat()
+        )?;
 
         Ok(())
     }
 
     pub async fn search(&self, text: String) -> Result<Load> {
-        await!(self.http.audio_search(
-            self.address(),
-            text,
-        ).compat()).map_err(From::from)
+        await!(self.http.audio_search(self.address(), text,).compat()).map_err(From::from)
     }
 
     pub async fn seek(&self, guild_id: u64, position: i64) -> Result<()> {
-        await!(self.http.audio_seek(
-            self.address(),
-            guild_id,
-            position,
-        ).compat()).map_err(From::from)
+        await!(
+            self.http
+                .audio_seek(self.address(), guild_id, position,)
+                .compat()
+        )
+        .map_err(From::from)
     }
 
     pub async fn skip(&self, guild_id: u64) -> Result<()> {
@@ -186,10 +179,7 @@ impl LavalinkManager {
     pub async fn current(&self, guild_id: u64) -> Result<PlayerState> {
         trace!("Getting player for guild {}", guild_id);
 
-        let state = await!(self.http.audio_player(
-            self.address(),
-            guild_id,
-        ).compat())?;
+        let state = await!(self.http.audio_player(self.address(), guild_id,).compat())?;
 
         trace!("Current player state: {:?}", state);
 
@@ -222,8 +212,8 @@ impl LavalinkManager {
 
 #[cfg(test)]
 mod tests {
-    use lavalink::decoder::DecodedTrack;
     use super::PlayerState;
+    use lavalink::decoder::DecodedTrack;
 
     fn state_empty() -> PlayerState {
         PlayerState {
@@ -246,7 +236,9 @@ mod tests {
             source: "youtube".to_owned(),
             stream: false,
             title: "she - Prismatic".to_owned(),
-            url: "https://www.youtube.com/watch?v=zcn4-taGvlg".to_owned().into(),
+            url: "https://www.youtube.com/watch?v=zcn4-taGvlg"
+                .to_owned()
+                .into(),
             version: 1,
         });
 
@@ -269,6 +261,7 @@ mod tests {
         assert_eq!(
             format!("{}", state_track()),
             "Paused: **she - Prismatic** by **xKito Music** (`6s/3m 4s`)
-https://www.youtube.com/watch?v=zcn4-taGvlg");
+https://www.youtube.com/watch?v=zcn4-taGvlg"
+        );
     }
 }

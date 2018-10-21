@@ -1,7 +1,4 @@
-use super::{
-    play::Provider,
-    prelude::*,
-};
+use super::{play::Provider, prelude::*};
 
 pub const fn description() -> &'static str {
     "Searches SoundCloud for a song."

@@ -9,7 +9,5 @@ pub fn names() -> &'static [&'static str] {
 }
 
 pub async fn run(_: Context) -> CommandResult {
-    Response::text(
-        "A list of our commands is available here: <https://dabbot.org/commands>",
-    )
+    Response::text("A list of our commands is available here: <https://dabbot.org/commands>")
 }
