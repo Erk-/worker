@@ -30,7 +30,7 @@ impl<'a> Command<'a> for ClearCommand {
         "Clears the song queue."
     }
 
-    fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult> {
-        FutureObj::new(Self::_run(ctx).boxed())
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }

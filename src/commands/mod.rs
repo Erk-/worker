@@ -34,11 +34,12 @@ use serenity::model::channel::Message;
 use std::sync::Arc;
 
 pub type CommandResult = Result<Response>;
+pub type RunFuture<'a> = FutureObj<'a, CommandResult>;
 
 pub trait Command<'a>: Send + Sync {
     fn names(&self) -> &'static [&'static str];
     fn description(&self) -> &'static str;
-    fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult>;
+    fn run(&self, ctx: Context) -> RunFuture<'a>;
 }
 
 pub struct Context {

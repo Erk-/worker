@@ -1,4 +1,4 @@
-pub use super::{Command, CommandResult, Context, Response};
+pub use super::{Command, CommandResult, Context, Response, RunFuture};
 pub use crate::error::{Error, Result};
 pub use futures::{
     compat::{Future01CompatExt, TokioDefaultSpawner},

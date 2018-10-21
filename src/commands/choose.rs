@@ -52,7 +52,7 @@ To play a song...
 
             await!(Self::select(&ctx, selection.remove(num)))
         } else {
-            super::cancel::cancel(&ctx.state.redis, guild_id)
+            super::cancel::CancelCommand::cancel(&ctx.state.redis, guild_id)
         }
     }
 
@@ -104,7 +104,7 @@ impl<'a> Command<'a> for ChooseCommand {
         "Chooses a song from a selection screen."
     }
 
-    fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult> {
-        FutureObj::new(Self::_run(ctx).boxed())
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }

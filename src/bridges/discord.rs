@@ -1,5 +1,5 @@
 use crate::{
-    commands::{Command, Context, Response},
+    commands::{Context, Response},
     config::Config,
     error::{Error, Result},
     utils,

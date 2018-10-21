@@ -1,13 +1,25 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Links to our list of commands."
+pub static COMMAND_INSTANCE: HelpCommand = HelpCommand;
+
+pub struct HelpCommand;
+
+impl HelpCommand {
+    async fn _run() -> CommandResult {
+        Response::text("A list of our commands is available here: <https://dabbot.org/commands>")
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["help", "h"]
-}
+impl<'a> Command<'a> for HelpCommand {
+    fn description(&self) -> &'static str {
+        "Links to our list of commands."
+    }
 
-pub async fn run(_: Context) -> CommandResult {
-    Response::text("A list of our commands is available here: <https://dabbot.org/commands>")
+    fn names(&self) -> &'static [&'static str] {
+        &["help", "h"]
+    }
+
+    fn run(&self, _: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run().boxed())
+    }
 }
