@@ -7,15 +7,15 @@ pub static COMMAND_INSTANCE: CancelCommand = CancelCommand;
 pub struct CancelCommand;
 
 impl CancelCommand {
-async fn _run(ctx: Context) -> CommandResult {
-    cancel(&ctx.state.redis, ctx.guild_id()?)
-}
+    async fn _run(ctx: Context) -> CommandResult {
+        Self::cancel(&ctx.state.redis, ctx.guild_id()?)
+    }
 
-pub(super) fn cancel(redis: &Arc<PairedConnection>, guild_id: u64) -> Result<Response> {
-    choose::ChooseCommand::delete_selection(&redis, guild_id);
+    pub(super) fn cancel(redis: &Arc<PairedConnection>, guild_id: u64) -> Result<Response> {
+        choose::ChooseCommand::delete_selection(&redis, guild_id);
 
-    Response::text("Selection cancelled!")
-}
+        Response::text("Selection cancelled!")
+    }
 }
 
 impl<'a> Command<'a> for CancelCommand {

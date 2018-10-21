@@ -1,27 +1,24 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Streams a radio or displays a list of them all."
-}
+pub static COMMAND_INSTANCE: RadioCommand = RadioCommand;
 
-pub fn names() -> &'static [&'static str] {
-    &["radio", "r"]
-}
+pub struct RadioCommand;
 
-pub async fn run(ctx: Context) -> CommandResult {
-    if ctx.args.is_empty() {
-        let prefix = ctx.state.config.bot_prefixes.first()?;
+impl RadioCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        if ctx.args.is_empty() {
+            let prefix = ctx.state.config.bot_prefixes.first()?;
 
-        Response::text(format!(
-            "View the radios here: <https://dabbot.org/radios>
+            return Response::text(format!(
+                "View the radios here: <https://dabbot.org/radios>
 
 To play a radio, use \
-             `{prefix}radio <name here>`.
+                 `{prefix}radio <name here>`.
 
 For example, use `{prefix}radio Radio Here`",
-            prefix = prefix
-        ))
-    } else {
+                prefix = prefix
+            ));
+        }
         let query = ctx.args.join(" ");
 
         let radio = match ctx.state.radios.get(&query) {
@@ -71,4 +68,26 @@ For example, use `{prefix}radio Radio Here`",
             },
         }
     }
+}
+
+impl<'a> Command<'a> for RadioCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["radios", "r"]
+    }
+
+    fn description(&self) -> &'static str {
+        "Streams a radio or displays a list of them all."
+    }
+
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
+    }
+}
+
+pub const fn description() -> &'static str {
+    "Streams a radio or displays a list of them all."
+}
+
+pub fn names() -> &'static [&'static str] {
+    &["radio", "r"]
 }

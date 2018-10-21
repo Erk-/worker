@@ -1,22 +1,34 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Resumes the current song."
+pub static COMMAND_INSTANCE: ResumeCommand = ResumeCommand;
+
+pub struct ResumeCommand;
+
+impl ResumeCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        let guild_id = ctx.guild_id()?;
+
+        match await!(ctx.state.playback.resume(guild_id)) {
+            Ok(()) => Response::text("Resumed music playback!"),
+            Err(why) => {
+                warn!("Error resuming guild {}: {:?}", guild_id, why);
+
+                Response::err("There was an error resuming the music.")
+            },
+        }
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["unpause", "resume"]
-}
+impl<'a> Command<'a> for ResumeCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["unpause", "resume"]
+    }
 
-pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.guild_id()?;
+    fn description(&self) -> &'static str {
+        "Resumes the current song."
+    }
 
-    match await!(ctx.state.playback.resume(guild_id)) {
-        Ok(()) => Response::text("Resumed music playback!"),
-        Err(why) => {
-            warn!("Error resuming guild {}: {:?}", guild_id, why);
-
-            Response::err("There was an error resuming the music.")
-        },
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }

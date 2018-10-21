@@ -1,13 +1,25 @@
 use super::{play::Provider, prelude::*};
 
-pub const fn description() -> &'static str {
-    "Searches YouTube for a song."
+pub static COMMAND_INSTANCE: YouTubeCommand = YouTubeCommand;
+
+pub struct YouTubeCommand;
+
+impl YouTubeCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        await!(super::play::base(&ctx, Provider::YouTube))
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["youtube", "yt"]
-}
+impl<'a> Command<'a> for YouTubeCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["youtube", "yt"]
+    }
 
-pub async fn run(ctx: Context) -> CommandResult {
-    await!(super::play::base(&ctx, Provider::YouTube))
+    fn description(&self) -> &'static str {
+        "Searches YouTube for a song."
+    }
+
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
+    }
 }

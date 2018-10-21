@@ -1,14 +1,26 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Removes a song from the queue."
+pub static COMMAND_INSTANCE: RemoveCommand = RemoveCommand;
+
+pub struct RemoveCommand;
+
+impl RemoveCommand {
+    async fn _run() -> CommandResult {
+        // TODO(Proximyst): Implement remove command
+        Response::err("This command has not been implemented yet!")
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["remove", "rm"]
-}
+impl<'a> Command<'a> for RemoveCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["remove", "rm"]
+    }
 
-pub async fn run(_: Context) -> CommandResult {
-    // TODO(Proximyst): Implement remove command
-    Response::text("TBA")
+    fn description(&self) -> &'static str {
+        "Removes a song from the queue."
+    }
+
+    fn run(&self, _: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run().boxed())
+    }
 }

@@ -3,60 +3,72 @@ use crate::utils;
 use lavalink_queue_requester::model::QueuedItem;
 use std::fmt::Write as _;
 
-pub const fn description() -> &'static str {
-    "Shows the song queue."
-}
+pub static COMMAND_INSTANCE: QueueCommand = QueueCommand;
 
-pub fn names() -> &'static [&'static str] {
-    &["queue", "q", "que"]
-}
+pub struct QueueCommand;
 
-pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.guild_id()?;
+impl QueueCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        let guild_id = ctx.guild_id()?;
 
-    let queue = match await!(ctx.queue(20)) {
-        Ok(queue) => queue,
-        Err(why) => {
-            warn!("Err getting queue for {}: {:?}", guild_id, why);
+        let queue = match await!(ctx.queue(20)) {
+            Ok(queue) => queue,
+            Err(why) => {
+                warn!("Err getting queue for {}: {:?}", guild_id, why);
 
-            return Response::err("There was an error getting the queue.");
-        },
-    };
+                return Response::err("There was an error getting the queue.");
+            },
+        };
 
-    let mut s = String::new();
+        let mut s = String::new();
 
-    match await!(ctx.state.playback.current(guild_id)) {
-        Ok(current) => {
-            write!(s, "{}", current)?;
-        },
-        Err(why) => {
-            warn!("Err getting current music for {}: {:?}", guild_id, why);
+        match await!(ctx.state.playback.current(guild_id)) {
+            Ok(current) => {
+                write!(s, "{}", current)?;
+            },
+            Err(why) => {
+                warn!("Err getting current music for {}: {:?}", guild_id, why);
 
-            s.push_str("There was an error getting the current song.");
-        },
+                s.push_str("There was an error getting the current song.");
+            },
+        }
+
+        s.push_str("\n\n__Queue__:\n");
+
+        if queue.is_empty() {
+            s.push_str("There are no songs in the queue.");
+        } else {
+            Self::format_queue(queue, &mut s);
+        }
+
+        Response::text(s)
     }
 
-    s.push_str("\n\n__Queue__:\n");
-
-    if queue.is_empty() {
-        s.push_str("There are no songs in the queue.");
-    } else {
-        format_queue(queue, &mut s);
+    fn format_queue(queue: impl IntoIterator<Item = QueuedItem>, buf: &mut String) {
+        for (idx, item) in queue.into_iter().enumerate() {
+            write!(
+                buf,
+                "`{:02}` **{}** by **{}** `[{}]`\n",
+                idx + 1,
+                item.song_title,
+                item.song_author,
+                utils::track_length_readable(item.song_length as u64),
+            );
+        }
     }
-
-    Response::text(s)
 }
 
-fn format_queue(queue: impl IntoIterator<Item = QueuedItem>, buf: &mut String) {
-    for (idx, item) in queue.into_iter().enumerate() {
-        write!(
-            buf,
-            "`{:02}` **{}** by **{}** `[{}]`\n",
-            idx + 1,
-            item.song_title,
-            item.song_author,
-            utils::track_length_readable(item.song_length as u64),
-        );
+impl<'a> Command<'a> for QueueCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["queue", "q", "que"]
+    }
+
+    fn description(&self) -> &'static str {
+        "Shows the song queue."
+    }
+
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }
 
@@ -82,7 +94,7 @@ LOwAALemNuNC10YUd2bGcAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj16Y240LXRhR\
 
         let mut buf = String::new();
 
-        super::format_queue(item, &mut buf);
+        super::QueueCommand::format_queue(item, &mut buf);
 
         assert_eq!(
             buf,
