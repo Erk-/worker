@@ -3,6 +3,7 @@ use crate::{
     bridges::discord::DiscordEventHandler,
     cache::Cache,
     config::Config,
+    commands::{self, Command},
     discord_fm::DiscordFm,
     error::Result,
     lavalink_msgs,
@@ -35,6 +36,7 @@ use std::sync::Arc;
 pub struct WorkerState {
     pub cache: Arc<Cache>,
     pub config: Arc<Config>,
+    pub commands: Arc<Vec<Arc<Box<Command<'static>>>>>,
     pub discord_fm: DiscordFm,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<LavalinkManager>,
@@ -76,6 +78,14 @@ impl Worker {
         )?);
         debug!("Initialized serenity http client");
 
+        let commands: Vec<Arc<Box<Command>>> = vec![
+            Arc::new(Box::new(commands::about::COMMAND_INSTANCE)),
+            Arc::new(Box::new(commands::cancel::COMMAND_INSTANCE)),
+            Arc::new(Box::new(commands::choose::COMMAND_INSTANCE)),
+        ];
+        let commands = Arc::new(commands);
+        debug!("Initialized commands");
+
         let cache = Arc::new(Cache::new(
             Arc::clone(&config),
             Arc::clone(&redis),
@@ -93,6 +103,7 @@ impl Worker {
         let state = Arc::new(WorkerState {
             cache,
             config,
+            commands,
             discord_fm,
             http: hyper,
             playback,

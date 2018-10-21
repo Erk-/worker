@@ -1,5 +1,5 @@
 use crate::{
-    commands::{self, Context, Response},
+    commands::{Context, Response, Command},
     config::Config,
     error::{Error, Result},
     utils,
@@ -140,43 +140,17 @@ async fn message_create(
             shard_id,
         };
 
-        let result = match &*alias {
-            "about" | "info" => await!(commands::about::run(ctx)),
-            "cancel" => await!(commands::cancel::run(ctx)),
-            "clear" => await!(commands::clear::run(ctx)),
-            "choose" | "c" => await!(commands::choose::run(ctx)),
-            "dfm" | "discordfm" | "discord.fm" => {
-                await!(commands::discordfm::run(ctx))
-            },
-            "d" | "dump" => await!(commands::dump::run(ctx)),
-            "h" | "help" => await!(commands::help::run(ctx)),
-            "invite" => await!(commands::invite::run(ctx)),
-            "join" | "j" | "connect" => await!(commands::join::run(ctx)),
-            "leave" | "l" | "disconnect" | "stop" => {
-                await!(commands::leave::run(ctx))
-            },
-            "load" => await!(commands::load::run(ctx)),
-            "pause" | "hold" => await!(commands::pause::run(ctx)),
-            "ping" => await!(commands::ping::run(ctx)),
-            "play" | "p" => await!(commands::play::run(ctx)),
-            "playing" | "np" | "nowplaying" | "current" => {
-                await!(commands::playing::run(ctx))
-            },
-            "providers" => await!(commands::providers::run(ctx)),
-            "queue" | "q" | "que" => await!(commands::queue::run(ctx)),
-            "radio" | "r" => await!(commands::radio::run(ctx)),
-            "restart" | "rs" => await!(commands::restart::run(ctx)),
-            "resume" | "unpause" => await!(commands::resume::run(ctx)),
-            "seek" => await!(commands::seek::run(ctx)),
-            "skip" | "s" | "next" => await!(commands::skip::run(ctx)),
-            "soundcloud" | "sc" => await!(commands::soundcloud::run(ctx)),
-            "volume" | "v" => await!(commands::volume::run(ctx)),
-            "youtube" | "yt" => await!(commands::youtube::run(ctx)),
-            _ => {
+        let alias = &*alias;
+        let result = state.commands.iter()
+            .find(|c| c.names().iter()
+                    .find(|a| (*a).eq_ignore_ascii_case(alias)).is_some());
+        let result = match result {
+            Some(cmd) => await!(cmd.run(ctx)),
+            None => {
                 trace!("No command matched alias: {}", alias);
 
                 return Ok(());
-            },
+            }
         };
 
         match result {

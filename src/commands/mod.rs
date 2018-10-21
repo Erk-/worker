@@ -33,11 +33,18 @@ use crate::{
     Result,
 };
 use futures::compat::Future01CompatExt;
+use futures::future::FutureObj;
 use lavalink_queue_requester::model::{QueuedItem, Song};
 use serenity::model::channel::Message;
 use std::sync::Arc;
 
 pub type CommandResult = Result<Response>;
+
+pub trait Command<'a> {
+    fn names(&self) -> &'static [&'static str];
+    fn description(&self) -> &'static str;
+    fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult>;
+}
 
 pub struct Context {
     pub alias: String,

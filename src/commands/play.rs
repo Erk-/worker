@@ -111,7 +111,7 @@ async fn handle_search(ctx: &Context, mut load: Load) -> CommandResult {
     }
 
     if load.tracks.len() == 1 {
-        return await!(super::choose::select(&ctx, load.tracks.remove(0).track));
+        return await!(super::choose::ChooseCommand::select(&ctx, load.tracks.remove(0).track));
     }
 
     load.tracks.truncate(5);

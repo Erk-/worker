@@ -1,14 +1,24 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Displays information about the bot."
+pub static COMMAND_INSTANCE: AboutCommand = AboutCommand;
+
+pub struct AboutCommand;
+
+impl<'a> Command<'a> for AboutCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["about", "info"]
+    }
+
+    fn description(&self) -> &'static str {
+        "Displays information about the bot."
+    }
+
+    fn run(&self, ctx: Context) -> FutureObj<'a, CommandResult> {
+        FutureObj::new(_run(ctx).boxed())
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["about", "info"]
-}
-
-pub async fn run(ctx: Context) -> CommandResult {
+async fn _run(ctx: Context) -> CommandResult {
     let prefix = ctx.state.config.bot_prefixes.first()?;
 
     Response::text(format!("
