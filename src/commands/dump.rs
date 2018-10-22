@@ -1,5 +1,5 @@
-use super::prelude::*;
 use dump::DumpRequester;
+use super::prelude::*;
 
 pub static COMMAND_INSTANCE: DumpCommand = DumpCommand;
 

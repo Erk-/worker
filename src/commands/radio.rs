@@ -44,23 +44,21 @@ For example, use `{prefix}radio Radio Here`",
 
         await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
-        match await!(
-            ctx.state
-                .playback
-                .play(ctx.guild_id()?, radio.track.clone())
-        ) {
+        match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
             Ok(true) => {
                 Response::text(format!(
                     "Now playing **{}** by **{}**.",
-                    radio.info.title, radio.info.author,
+                    radio.info.title,
+                    radio.info.author,
                 ))
             },
             Ok(false) => {
                 Response::text(format!(
                     "Added **{}** by **{}** to the queue.",
-                    radio.info.title, radio.info.author,
+                    radio.info.title,
+                    radio.info.author,
                 ))
-            },
+            }
             Err(why) => {
                 warn!("Err playing radio: {:?}", why);
 
@@ -82,12 +80,4 @@ impl<'a> Command<'a> for RadioCommand {
     fn run(&self, ctx: Context) -> RunFuture<'a> {
         RunFuture::new(Self::_run(ctx).boxed())
     }
-}
-
-pub const fn description() -> &'static str {
-    "Streams a radio or displays a list of them all."
-}
-
-pub fn names() -> &'static [&'static str] {
-    &["radio", "r"]
 }

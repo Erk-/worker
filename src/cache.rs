@@ -1,5 +1,11 @@
-use cache::{model::VoiceState, Cache as DabbotCache};
-use crate::{config::Config, error::Result};
+use cache::{
+    model::VoiceState,
+    Cache as DabbotCache,
+};
+use crate::{
+    config::Config,
+    error::Result,
+};
 use redis_async::client::PairedConnection;
 use serenity::model::event::*;
 use std::sync::Arc;
@@ -18,11 +24,18 @@ impl Cache {
     }
 
     pub async fn dispatch<'a>(&'a self, event: &'a GatewayEvent) -> Result<()> {
-        use self::{Event::*, GatewayEvent::Dispatch};
+        use self::{
+            Event::*,
+            GatewayEvent::Dispatch,
+        };
 
         match event {
-            Dispatch(_, GuildCreate(e)) => await!(self.guild_create(e)).map_err(From::from),
-            Dispatch(_, GuildDelete(e)) => await!(self.guild_delete(e)).map_err(From::from),
+            Dispatch(_, GuildCreate(e)) => {
+                await!(self.guild_create(e)).map_err(From::from)
+            },
+            Dispatch(_, GuildDelete(e)) => {
+                await!(self.guild_delete(e)).map_err(From::from)
+            },
             Dispatch(_, VoiceServerUpdate(e)) => {
                 self.voice_server_update(e);
 
@@ -35,11 +48,21 @@ impl Cache {
         }
     }
 
-    pub async fn voice_state(&self, guild_id: u64, user_id: u64) -> Result<Option<VoiceState>> {
-        await!(self.inner.get_voice_state(guild_id, user_id,)).map_err(From::from)
+    pub async fn voice_state(
+        &self,
+        guild_id: u64,
+        user_id: u64,
+    ) -> Result<Option<VoiceState>> {
+        await!(self.inner.get_voice_state(
+            guild_id,
+            user_id,
+        )).map_err(From::from)
     }
 
-    pub async fn guild_create<'a>(&'a self, e: &'a GuildCreateEvent) -> Result<()> {
+    pub async fn guild_create<'a>(
+        &'a self,
+        e: &'a GuildCreateEvent,
+    ) -> Result<()> {
         let now = std::time::Instant::now();
         await!(self.inner.upsert_guild(&e.guild));
         info!("Upsert for {} took: {:?}", e.guild.id.0, now.elapsed());
@@ -47,7 +70,10 @@ impl Cache {
         Ok(())
     }
 
-    pub async fn guild_delete<'a>(&'a self, e: &'a GuildDeleteEvent) -> Result<()> {
+    pub async fn guild_delete<'a>(
+        &'a self,
+        e: &'a GuildDeleteEvent,
+    ) -> Result<()> {
         let id = e.guild.id.0;
 
         debug!("Deleting voice states for {}", id);
@@ -57,7 +83,10 @@ impl Cache {
         Ok(())
     }
 
-    pub fn voice_server_update<'a>(&'a self, e: &'a VoiceServerUpdateEvent) {
+    pub fn voice_server_update<'a>(
+        &'a self,
+        e: &'a VoiceServerUpdateEvent,
+    ) {
         let (guild_id, endpoint) = match (e.guild_id, e.endpoint.as_ref()) {
             (Some(id), Some(endpoint)) => (id.0, endpoint.clone()),
             _ => {
@@ -75,7 +104,10 @@ impl Cache {
         );
     }
 
-    pub async fn voice_state_update<'a>(&'a self, e: &'a VoiceStateUpdateEvent) -> Result<()> {
+    pub async fn voice_state_update<'a>(
+        &'a self,
+        e: &'a VoiceStateUpdateEvent,
+    ) -> Result<()> {
         let guild_id = match e.guild_id {
             Some(id) => id.0,
             None => return Ok(()),

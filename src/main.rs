@@ -6,18 +6,14 @@
     try_blocks,
     try_from,
     try_trait,
-    underscore_imports
+    underscore_imports,
 )]
 #![allow(dead_code)] // todo: before release, undo this
 
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate redis_async as redis;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate log;
+#[macro_use] extern crate redis_async as redis;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
 
 mod bridges;
 mod cache;
@@ -33,14 +29,16 @@ mod worker;
 
 pub use crate::error::{Error, Result};
 
-use crate::{config::Config, worker::Worker};
+use crate::{
+    config::Config,
+    worker::Worker,
+};
 use futures::future::{FutureExt as _, TryFutureExt as _};
 use hyper::rt::Future as _;
 use std::env;
 
 const RUST_LOG_DEFAULT: &'static str = "info,hyper=info,tokio_reactor=info,\
-                                        lavalink_http_server_requester=info,\
-                                        lavalink_queue_requester=info";
+lavalink_http_server_requester=info,lavalink_queue_requester=info";
 
 fn main() {
     if env::var("RUST_LOG").is_err() {

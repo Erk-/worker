@@ -1,8 +1,8 @@
-use super::prelude::*;
 use crate::services::lavalink::LavalinkManager;
 use redis_async::client::PairedConnection;
 use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
+use super::prelude::*;
 
 pub static COMMAND_INSTANCE: LeaveCommand = LeaveCommand;
 
@@ -30,14 +30,14 @@ impl LeaveCommand {
         redis: &'a Arc<PairedConnection>,
     ) -> Result<()> {
         let map = serde_json::to_vec(&json!({
-        "op": VoiceOpCode::SessionDescription.num(),
-        "d": {
-            "channel_id": None::<Option<u64>>,
-            "guild_id": guild_id,
-            "self_deaf": true,
-            "self_mute": false,
-        },
-    }))?;
+            "op": VoiceOpCode::SessionDescription.num(),
+            "d": {
+                "channel_id": None::<Option<u64>>,
+                "guild_id": guild_id,
+                "self_deaf": true,
+                "self_mute": false,
+            },
+        }))?;
         let key = format!("sharder:to:{}", shard_id);
         let cmd = resp_array!["RPUSH", key, map];
 

@@ -1,8 +1,11 @@
-use super::{join::Join, prelude::*};
 use crate::utils;
 use lavalink::rest::{Load, LoadType};
 use serenity::utils::MessageBuilder;
 use std::fmt::{Display, Formatter, Result as FmtResult, Write as _};
+use super::{
+    join::Join,
+    prelude::*,
+};
 
 pub static COMMAND_INSTANCE: PlayCommand = PlayCommand;
 
@@ -20,7 +23,7 @@ impl Provider {
         match self {
             SoundCloud => "scsearch",
             URL => "",
-            YouTube => "ytsearch",
+            YouTube => "ytsearch"
         }
     }
 }
@@ -175,7 +178,6 @@ Example: `",
             .iter()
             .map(|t| t.track.clone())
             .collect::<Vec<_>>();
-
         let track_count = tracks.len();
 
         await!(ctx.state.queue.add_multiple(guild_id, tracks))?;

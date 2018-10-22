@@ -1,7 +1,33 @@
-use super::prelude::*;
 use serenity::constants::VoiceOpCode;
+use super::prelude::*;
 
 pub static COMMAND_INSTANCE: JoinCommand = JoinCommand;
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub enum Join {
+    AlreadyInChannel,
+    Successful,
+    UserNotInChannel,
+}
+
+impl Join {
+    pub fn into_response(self) -> CommandResult {
+        match self {
+            Join::AlreadyInChannel | Join::Successful => {
+                if self == Join::AlreadyInChannel {
+                    trace!("Already in the user's voice channel");
+                } else if self == Join::Successful {
+                    trace!("Succesfully joined the user's voice channel");
+                }
+
+                Response::text("Joined the voice channel.")
+            },
+            Join::UserNotInChannel => {
+                Response::err("You aren't in a voice channel.")
+            },
+        }
+    }
+}
 
 pub struct JoinCommand;
 
@@ -83,14 +109,14 @@ Leaving off from your last queue.",
 
         trace!("Serializing audio player for guild {}", guild_id);
         let map = serde_json::to_vec(&json!({
-        "op": VoiceOpCode::SessionDescription.num(),
-        "d": {
-            "channel_id": user.channel_id,
-            "guild_id": guild_id,
-            "self_deaf": true,
-            "self_mute": false,
-        },
-    }))?;
+            "op": VoiceOpCode::SessionDescription.num(),
+            "d": {
+                "channel_id": user.channel_id,
+                "guild_id": guild_id,
+                "self_deaf": true,
+                "self_mute": false,
+            },
+        }))?;
         trace!("Serialized audio player");
         trace!("Sending SessionDescription payload to sharder: {:?}", map);
         await!(ctx.to_sharder(map))?;
@@ -122,29 +148,5 @@ impl<'a> Command<'a> for JoinCommand {
 
     fn run(&self, ctx: Context) -> RunFuture<'a> {
         RunFuture::new(Self::_run(ctx).boxed())
-    }
-}
-
-#[derive(Eq, PartialEq)]
-pub enum Join {
-    AlreadyInChannel,
-    Successful,
-    UserNotInChannel,
-}
-
-impl Join {
-    pub fn into_response(self) -> CommandResult {
-        match self {
-            Join::AlreadyInChannel | Join::Successful => {
-                if self == Join::AlreadyInChannel {
-                    trace!("Already in the user's voice channel");
-                } else if self == Join::Successful {
-                    trace!("Succesfully joined the user's voice channel");
-                }
-
-                Response::text("Joined the voice channel.")
-            },
-            Join::UserNotInChannel => Response::err("You aren't in a voice channel."),
-        }
     }
 }

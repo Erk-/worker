@@ -1,17 +1,23 @@
-use byteorder::{ReadBytesExt as _, LE};
+use byteorder::{LE, ReadBytesExt as _};
 use crate::{
     bridges::discord::DiscordEventHandler,
     cache::Cache,
-    commands::{self, Command},
     config::Config,
+    commands::{self, Command},
     discord_fm::DiscordFm,
     error::Result,
     lavalink_msgs,
     radios::RadioList,
-    services::{lavalink::LavalinkManager, queue::QueueManager},
+    services::{
+        lavalink::LavalinkManager,
+        queue::QueueManager,
+    },
     utils,
 };
-use futures::{compat::Future01CompatExt as _, future::TryFutureExt as _};
+use futures::{
+    compat::Future01CompatExt as _,
+    future::TryFutureExt as _,
+};
 use hyper::{
     client::{Client as HyperClient, HttpConnector},
     Body,
@@ -21,7 +27,10 @@ use redis_async::{
     client::{self as redis_client, PairedConnection},
     resp::{FromResp, RespValue},
 };
-use serenity::{http::Client as SerenityHttpClient, model::event::GatewayEvent};
+use serenity::{
+    http::Client as SerenityHttpClient,
+    model::event::GatewayEvent,
+};
 use std::sync::Arc;
 
 pub struct WorkerState {
@@ -59,7 +68,9 @@ impl Worker {
 
         let config = Arc::new(config);
         debug!("Initializing hyper client");
-        let hyper = Arc::new(HyperClient::builder().build(HttpsConnector::new(4)?));
+        let hyper = Arc::new(
+            HyperClient::builder().build(HttpsConnector::new(4)?)
+        );
         debug!("Initialized hyper client");
         let serenity = Arc::new(SerenityHttpClient::new(
             Arc::clone(&hyper),
@@ -103,8 +114,14 @@ impl Worker {
         let commands = Arc::new(commands);
         debug!("Initialized commands");
 
-        let cache = Arc::new(Cache::new(Arc::clone(&config), Arc::clone(&redis)));
-        let queue = Arc::new(QueueManager::new(Arc::clone(&config), Arc::clone(&hyper)));
+        let cache = Arc::new(Cache::new(
+            Arc::clone(&config),
+            Arc::clone(&redis),
+        ));
+        let queue = Arc::new(QueueManager::new(
+            Arc::clone(&config),
+            Arc::clone(&hyper),
+        ));
 
         let playback = Arc::new(LavalinkManager::new(
             Arc::clone(&config),
@@ -124,11 +141,9 @@ impl Worker {
             serenity,
         });
 
-        utils::spawn(
-            lavalink_msgs::from_lavalink(redis3, Arc::clone(&state)).map_err(|why| {
-                warn!("Err with lavalink:from: {:?}", why);
-            }),
-        );
+        utils::spawn(lavalink_msgs::from_lavalink(redis3, Arc::clone(&state)).map_err(|why| {
+            warn!("Err with lavalink:from: {:?}", why);
+        }));
         let discord = DiscordEventHandler::new(Arc::clone(&state));
 
         Ok(Self {
@@ -146,7 +161,7 @@ impl Worker {
                     warn!("Error receiving redis payload: {:?}", why);
 
                     continue;
-                },
+                }
             };
 
             trace!("Dispatching event to discord dispatcher");

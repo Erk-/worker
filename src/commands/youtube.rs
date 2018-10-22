@@ -1,4 +1,7 @@
-use super::{play::Provider, prelude::*};
+use super::{
+    play::Provider,
+    prelude::*,
+};
 
 pub static COMMAND_INSTANCE: YouTubeCommand = YouTubeCommand;
 

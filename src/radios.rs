@@ -1,5 +1,9 @@
 use crate::error::Result;
-use std::{collections::HashMap, fs::File, io::Read as _};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::Read as _,
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

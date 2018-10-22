@@ -125,7 +125,10 @@ impl DiscordFm {
                 let track = match tracks.next() {
                     Some(track) => track,
                     None => {
-                        warn!("Playlist '{}' has an unequal number of items", legible,);
+                        warn!(
+                            "Playlist '{}' has an unequal number of items",
+                            legible,
+                        );
 
                         break;
                     },
@@ -140,19 +143,15 @@ impl DiscordFm {
 
             trace!("Iterated over playlist songs");
 
-            libraries.insert(
-                legible.to_lowercase(),
-                Library {
-                    name: legible,
-                    items,
-                },
-            );
+            libraries.insert(legible.to_lowercase(), Library {
+                name: legible,
+                items,
+            });
         }
 
         // Calculate the list of names once to keep a cache and avoid
         // re-calculating it multiple times in the future.
-        let mut names = libraries
-            .values()
+        let mut names = libraries.values()
             .map(|library| library.name.clone())
             .collect::<Vec<_>>();
         names.sort();

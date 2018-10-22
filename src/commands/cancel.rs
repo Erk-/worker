@@ -1,6 +1,9 @@
-use super::{choose, prelude::*};
 use redis_async::client::PairedConnection;
 use std::sync::Arc;
+use super::{
+    choose,
+    prelude::*,
+};
 
 pub static COMMAND_INSTANCE: CancelCommand = CancelCommand;
 

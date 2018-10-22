@@ -1,5 +1,8 @@
-use super::{join::Join, prelude::*};
 use dump::DumpRequester;
+use super::{
+    join::Join,
+    prelude::*,
+};
 
 pub static COMMAND_INSTANCE: LoadCommand = LoadCommand;
 

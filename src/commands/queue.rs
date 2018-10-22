@@ -1,7 +1,7 @@
-use super::prelude::*;
 use crate::utils;
 use lavalink_queue_requester::model::QueuedItem;
 use std::fmt::Write as _;
+use super::prelude::*;
 
 pub static COMMAND_INSTANCE: QueueCommand = QueueCommand;
 

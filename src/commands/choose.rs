@@ -1,9 +1,9 @@
-use super::prelude::*;
 use crate::utils;
 use lavalink::decoder;
 use redis_async::client::PairedConnection;
 use serenity::utils::MessageBuilder;
 use std::sync::Arc;
+use super::prelude::*;
 
 pub static COMMAND_INSTANCE: ChooseCommand = ChooseCommand;
 
@@ -13,7 +13,12 @@ impl ChooseCommand {
     async fn _run(ctx: Context) -> CommandResult {
         let guild_id = ctx.guild_id()?;
 
-        let cmd = resp_array!["LRANGE", format!("c:{}", guild_id), 0, 5];
+        let cmd = resp_array![
+            "LRANGE",
+            format!("c:{}", guild_id),
+            0,
+            5
+        ];
         let mut selection: Vec<String> = match await!(ctx.state.redis.send(cmd).compat()) {
             Ok(selection) => selection,
             Err(why) => {
@@ -28,25 +33,23 @@ impl ChooseCommand {
 
             let mut msg = MessageBuilder::new();
             // push_safe is used to filter @everyone and other pings
-            msg.push_safe(format!(
-                "There's no selection active in this guild - are you sure you ran `{prefix}play`?
+            msg.push_safe(format!("There's no selection active in this guild - are you sure you ran `{prefix}play`?
 
 To play a song...
 * Join a voice channel
 * Use `{prefix}play <song name/link>`
-* Choose one of \
-                 the song options with `{prefix}choose <option>`",
-                prefix = prefix
-            ));
+* Choose one of the song options with `{prefix}choose <option>`", prefix=prefix));
 
             return Response::text(msg.build());
         }
 
         if let Some(arg) = ctx.args.first() {
             let num = match arg.parse::<usize>() {
-                Ok(num @ 1...5) => num - 1,
+                Ok(num @ 1 ... 5) => num - 1,
                 _ => {
-                    return Response::err("You must provide a number between 1 and 5!");
+                    return Response::err(
+                        "You must provide a number between 1 and 5!",
+                    );
                 },
             };
 
@@ -57,7 +60,10 @@ To play a song...
     }
 
     pub(super) fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
-        redis.send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
+        redis.send_and_forget(resp_array![
+            "DEL",
+            format!("c:{}", guild_id)
+        ]);
     }
 
     pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
