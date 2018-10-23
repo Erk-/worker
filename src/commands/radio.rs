@@ -70,7 +70,7 @@ For example, use `{prefix}radio Radio Here`",
 
 impl<'a> Command<'a> for RadioCommand {
     fn names(&self) -> &'static [&'static str] {
-        &["radios", "r"]
+        &["radio", "radios", "r"]
     }
 
     fn description(&self) -> &'static str {
