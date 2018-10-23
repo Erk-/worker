@@ -1,24 +1,36 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Clears the song queue."
+pub static COMMAND_INSTANCE: ClearCommand = ClearCommand;
+
+pub struct ClearCommand;
+
+impl ClearCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        let guild_id = ctx.guild_id()?;
+
+        match await!(ctx.state.queue.clear(guild_id)) {
+            Ok(()) | Err(Error::LavalinkQueueRequester(QueueError::NotFound)) => {
+                Response::text("Cleared the song queue!")
+            },
+            Err(why) => {
+                warn!("Err clearing queue for {}: {:?}", guild_id, why);
+
+                Response::err("There was an error clearing the queue.")
+            },
+        }
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["clear"]
-}
+impl<'a> Command<'a> for ClearCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["clear"]
+    }
 
-pub async fn run(ctx: Context) -> CommandResult {
-    let guild_id = ctx.guild_id()?;
+    fn description(&self) -> &'static str {
+        "Clears the song queue."
+    }
 
-    match await!(ctx.state.queue.clear(guild_id)) {
-        Ok(()) | Err(Error::LavalinkQueueRequester(QueueError::NotFound)) => {
-            Response::text("Cleared the song queue!")
-        },
-        Err(why) => {
-            warn!("Err clearing queue for {}: {:?}", guild_id, why);
-
-            Response::err("There was an error clearing the queue.")
-        },
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }

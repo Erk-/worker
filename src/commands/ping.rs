@@ -1,13 +1,25 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Ping pong!"
+pub static COMMAND_INSTANCE: PingCommand = PingCommand;
+
+pub struct PingCommand;
+
+impl PingCommand {
+    async fn _run() -> CommandResult {
+        Response::text("Pong!")
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["ping"]
-}
+impl<'a> Command<'a> for PingCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["ping"]
+    }
 
-pub async fn run(_: Context) -> CommandResult {
-    Response::text("Pong!")
+    fn description(&self) -> &'static str {
+        "Ping pong!"
+    }
+
+    fn run(&self, _: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run().boxed())
+    }
 }

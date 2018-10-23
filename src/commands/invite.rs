@@ -1,13 +1,25 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Displays a link to invite the bot."
+pub static COMMAND_INSTANCE: InviteCommand = InviteCommand;
+
+pub struct InviteCommand;
+
+impl InviteCommand {
+    async fn _run() -> CommandResult {
+        Response::text("Invite dabBot: <https://dabbot.org/invite>")
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["invite", "inv"]
-}
+impl<'a> Command<'a> for InviteCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["invite", "inv"]
+    }
 
-pub async fn run(_: Context) -> CommandResult {
-    Response::text("Invite dabBot: <https://dabbot.org/invite>")
+    fn description(&self) -> &'static str {
+        "Displays a link to invite the bot."
+    }
+
+    fn run(&self, _: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run().boxed())
+    }
 }

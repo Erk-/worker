@@ -5,24 +5,32 @@ use super::{
     prelude::*,
 };
 
-pub const fn description() -> &'static str {
-    "Cancels the current song selection."
+pub static COMMAND_INSTANCE: CancelCommand = CancelCommand;
+
+pub struct CancelCommand;
+
+impl CancelCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        Self::cancel(&ctx.state.redis, ctx.guild_id()?)
+    }
+
+    pub(super) fn cancel(redis: &Arc<PairedConnection>, guild_id: u64) -> Result<Response> {
+        choose::ChooseCommand::delete_selection(&redis, guild_id);
+
+        Response::text("Selection cancelled!")
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["cancel"]
-}
+impl<'a> Command<'a> for CancelCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["cancel"]
+    }
 
-pub async fn run(ctx: Context) -> CommandResult {
-    cancel(&ctx.state.redis, ctx.guild_id()?)
-}
+    fn description(&self) -> &'static str {
+        "Cancels the current song selection."
+    }
 
-
-pub(super) fn cancel(
-    redis: &Arc<PairedConnection>,
-    guild_id: u64,
-) -> Result<Response> {
-    choose::delete_selection(&redis, guild_id);
-
-    Response::text("Selection cancelled!")
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
+    }
 }

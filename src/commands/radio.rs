@@ -1,23 +1,24 @@
 use super::prelude::*;
 
-pub const fn description() -> &'static str {
-    "Streams a radio or displays a list of them all."
-}
+pub static COMMAND_INSTANCE: RadioCommand = RadioCommand;
 
-pub fn names() -> &'static [&'static str] {
-    &["radio", "r"]
-}
+pub struct RadioCommand;
 
-pub async fn run(ctx: Context) -> CommandResult {
-    if ctx.args.is_empty() {
-        let prefix = ctx.state.config.bot_prefixes.first()?;
+impl RadioCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        if ctx.args.is_empty() {
+            let prefix = ctx.state.config.bot_prefixes.first()?;
 
-        Response::text(format!("View the radios here: <https://dabbot.org/radios>
+            return Response::text(format!(
+                "View the radios here: <https://dabbot.org/radios>
 
-To play a radio, use `{prefix}radio <name here>`.
+To play a radio, use \
+                 `{prefix}radio <name here>`.
 
-For example, use `{prefix}radio Radio Here`", prefix=prefix))
-    } else {
+For example, use `{prefix}radio Radio Here`",
+                prefix = prefix
+            ));
+        }
         let query = ctx.args.join(" ");
 
         let radio = match ctx.state.radios.get(&query) {
@@ -41,7 +42,7 @@ For example, use `{prefix}radio Radio Here`", prefix=prefix))
 
         let radio = results.tracks.first()?;
 
-        await!(super::join::join_ctx(&ctx))?;
+        await!(super::join::JoinCommand::join_ctx(&ctx))?;
 
         match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
             Ok(true) => {
@@ -64,5 +65,19 @@ For example, use `{prefix}radio Radio Here`", prefix=prefix))
                 Response::err("There was an error playing the radio.")
             },
         }
+    }
+}
+
+impl<'a> Command<'a> for RadioCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["radios", "r"]
+    }
+
+    fn description(&self) -> &'static str {
+        "Streams a radio or displays a list of them all."
+    }
+
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
     }
 }

@@ -3,14 +3,26 @@ use super::{
     prelude::*,
 };
 
-pub const fn description() -> &'static str {
-    "Searches SoundCloud for a song."
+pub static COMMAND_INSTANCE: SoundCloudCommand = SoundCloudCommand;
+
+pub struct SoundCloudCommand;
+
+impl SoundCloudCommand {
+    async fn _run(ctx: Context) -> CommandResult {
+        await!(super::play::PlayCommand::base(&ctx, Provider::SoundCloud))
+    }
 }
 
-pub fn names() -> &'static [&'static str] {
-    &["soundcloud", "sc"]
-}
+impl<'a> Command<'a> for SoundCloudCommand {
+    fn names(&self) -> &'static [&'static str] {
+        &["soundcloud", "sc"]
+    }
 
-pub async fn run(ctx: Context) -> CommandResult {
-    await!(super::play::base(&ctx, Provider::SoundCloud))
+    fn description(&self) -> &'static str {
+        "Searches SoundCloud for a song."
+    }
+
+    fn run(&self, ctx: Context) -> RunFuture<'a> {
+        RunFuture::new(Self::_run(ctx).boxed())
+    }
 }
