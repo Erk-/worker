@@ -46,7 +46,7 @@ Usage: `{}dfm <library>`
         let song_count = songs.len();
 
         Response::text(format!(
-            "Added {} ({} songs) to the song queue.",
+            "Added {} ({} songs) to the song queue.\n\nUse `!!!join` to join the channel.",
             library.name, song_count,
         ))
     }
