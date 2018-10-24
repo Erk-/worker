@@ -58,8 +58,6 @@ impl QueueManager {
         } else {
             Ok(songs.remove(0))
         }
-
-        // Ok(songs.remove(0))
     }
 
     #[inline]
