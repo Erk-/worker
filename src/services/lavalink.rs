@@ -268,7 +268,7 @@ mod tests {
 
         assert_eq!(
             format!("{}", state_track()),
-            "Paused: **she - Prismatic** by **xKito Music** (`6s/3m 4s`)
+            "Paused: **she - Prismatic** by **xKito Music** `[6s/3m 4s]`
 https://www.youtube.com/watch?v=zcn4-taGvlg");
     }
 }
