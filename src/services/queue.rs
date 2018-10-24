@@ -111,6 +111,13 @@ impl QueueManager {
         )).map_err(From::from)
     }
 
+    pub async fn shuffle(&self, guild_id: u64) -> Result<()> {
+        await!(self.http.shuffle_queue(
+            self.address(),
+            guild_id.to_string(),
+        )).map_err(From::from)
+    }
+
     #[inline]
     fn address(&self) -> &str {
         &self.config.queue.address

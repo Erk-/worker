@@ -22,6 +22,7 @@ pub mod remove;
 pub mod restart;
 pub mod resume;
 pub mod seek;
+pub mod shuffle;
 pub mod skip;
 pub mod soundcloud;
 pub mod volume;

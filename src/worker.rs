@@ -105,6 +105,7 @@ impl Worker {
                 Arc::new(&restart::COMMAND_INSTANCE),
                 Arc::new(&resume::COMMAND_INSTANCE),
                 Arc::new(&seek::COMMAND_INSTANCE),
+                Arc::new(&shuffle::COMMAND_INSTANCE),
                 Arc::new(&skip::COMMAND_INSTANCE),
                 Arc::new(&soundcloud::COMMAND_INSTANCE),
                 Arc::new(&volume::COMMAND_INSTANCE),
