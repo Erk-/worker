@@ -102,6 +102,20 @@ impl QueueManager {
         )).map_err(From::from)
     }
 
+    pub async fn get_offset(
+        &self,
+        guild_id: u64,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<QueuedItem>> {
+        await!(self.http.get_queue_with_offset(
+            self.address(),
+            guild_id.to_string(),
+            limit,
+            offset,
+        )).map_err(From::from)
+    }
+
     pub async fn pop(&self, guild_id: u64) -> Result<Option<Song>> {
         await!(self.http.pop_queue(
             self.address(),

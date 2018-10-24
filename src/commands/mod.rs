@@ -73,8 +73,12 @@ impl Context {
         Ok(true)
     }
 
-    pub async fn queue(&self, limit: u32) -> Result<Vec<QueuedItem>> {
-        await!(self.state.queue.get_limit(self.guild_id()?, limit))
+    pub async fn queue(
+        &self,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<QueuedItem>> {
+        await!(self.state.queue.get_offset(self.guild_id()?, limit, offset))
     }
 
     pub async fn queue_pop(&self) -> Result<Option<Song>> {
