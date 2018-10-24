@@ -11,7 +11,7 @@ impl QueueCommand {
     async fn _run(ctx: Context) -> CommandResult {
         let guild_id = ctx.guild_id()?;
 
-        let queue = match await!(ctx.queue(20)) {
+        let queue = match await!(ctx.queue(10)) {
             Ok(queue) => queue,
             Err(why) => {
                 warn!("Err getting queue for {}: {:?}", guild_id, why);
@@ -39,6 +39,11 @@ impl QueueCommand {
             s.push_str("There are no songs in the queue.");
         } else {
             Self::format_queue(queue, &mut s);
+        }
+
+        if s.len() > 2000 {
+            s.truncate(1997);
+            s.push_str("...");
         }
 
         Response::text(s)
