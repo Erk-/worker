@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: InviteCommand = InviteCommand;
-
 pub struct InviteCommand;
 
 impl InviteCommand {

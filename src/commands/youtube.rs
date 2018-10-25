@@ -3,8 +3,6 @@ use super::{
     prelude::*,
 };
 
-pub static COMMAND_INSTANCE: YouTubeCommand = YouTubeCommand;
-
 pub struct YouTubeCommand;
 
 impl YouTubeCommand {

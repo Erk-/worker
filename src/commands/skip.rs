@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: SkipCommand = SkipCommand;
-
 pub struct SkipCommand;
 
 impl SkipCommand {

@@ -36,8 +36,40 @@ use crate::{
 use futures::compat::Future01CompatExt;
 use futures::future::FutureObj;
 use lavalink_queue_requester::model::{QueuedItem, Song};
+use self::{
+    about::AboutCommand,
+    cancel::CancelCommand,
+    choose::ChooseCommand,
+    clear::ClearCommand,
+    discordfm::DfmCommand,
+    dump::DumpCommand,
+    help::HelpCommand,
+    invite::InviteCommand,
+    join::JoinCommand,
+    leave::LeaveCommand,
+    load::LoadCommand,
+    pause::PauseCommand,
+    ping::PingCommand,
+    play::PlayCommand,
+    playing::PlayingCommand,
+    providers::ProvidersCommand,
+    queue::QueueCommand,
+    radio::RadioCommand,
+    remove::RemoveCommand,
+    restart::RestartCommand,
+    resume::ResumeCommand,
+    seek::SeekCommand,
+    shuffle::ShuffleCommand,
+    skip::SkipCommand,
+    soundcloud::SoundCloudCommand,
+    volume::VolumeCommand,
+    youtube::YouTubeCommand,
+};
 use serenity::model::channel::Message;
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    sync::Arc,
+};
 
 pub type CommandResult = Result<Response>;
 pub type RunFuture<'a> = FutureObj<'a, CommandResult>;
@@ -135,6 +167,54 @@ impl Response {
     fn _text(content: String) -> CommandResult {
         Ok(Response::Text(content.into()))
     }
+}
+
+pub fn map() -> HashMap<String, Arc<Box<dyn Command<'static> + Send + Sync>>> {
+    let mut map: HashMap<String, Arc<Box<dyn Command<'static> + Send + Sync>>> = HashMap::new();
+
+    let commands: Vec<Arc<Box<dyn Command<'static> + Send + Sync>>> = vec![
+        Arc::new(Box::new(AboutCommand)),
+        Arc::new(Box::new(CancelCommand)),
+        Arc::new(Box::new(ChooseCommand)),
+        Arc::new(Box::new(ClearCommand)),
+        Arc::new(Box::new(DfmCommand)),
+        Arc::new(Box::new(DumpCommand)),
+        Arc::new(Box::new(HelpCommand)),
+        Arc::new(Box::new(InviteCommand)),
+        Arc::new(Box::new(JoinCommand)),
+        Arc::new(Box::new(LeaveCommand)),
+        Arc::new(Box::new(LoadCommand)),
+        Arc::new(Box::new(PauseCommand)),
+        Arc::new(Box::new(PingCommand)),
+        Arc::new(Box::new(PlayCommand)),
+        Arc::new(Box::new(PlayingCommand)),
+        Arc::new(Box::new(ProvidersCommand)),
+        Arc::new(Box::new(QueueCommand)),
+        Arc::new(Box::new(RadioCommand)),
+        Arc::new(Box::new(RemoveCommand)),
+        Arc::new(Box::new(RestartCommand)),
+        Arc::new(Box::new(ResumeCommand)),
+        Arc::new(Box::new(SeekCommand)),
+        Arc::new(Box::new(ShuffleCommand)),
+        Arc::new(Box::new(SkipCommand)),
+        Arc::new(Box::new(SoundCloudCommand)),
+        Arc::new(Box::new(VolumeCommand)),
+        Arc::new(Box::new(YouTubeCommand)),
+    ];
+
+    for command in commands.into_iter() {
+        let cmd = Arc::new(command);
+
+        for name in cmd.names() {
+            if map.contains_key(name.to_owned()) {
+                error!("Duplicate entry in commands map: {}", name);
+            }
+
+            map.insert((*name).to_owned(), Arc::clone(&cmd));
+        }
+    }
+
+    map
 }
 
 fn no_song() -> Result<Response> {

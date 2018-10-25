@@ -1,6 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: SeekCommand = SeekCommand;
 const ERROR_SEEKING: &'static str = "There was an error seeking the song.";
 
 pub struct SeekCommand;

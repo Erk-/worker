@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: ClearCommand = ClearCommand;
-
 pub struct ClearCommand;
 
 impl ClearCommand {

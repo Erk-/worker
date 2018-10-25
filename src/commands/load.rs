@@ -4,8 +4,6 @@ use super::{
     prelude::*,
 };
 
-pub static COMMAND_INSTANCE: LoadCommand = LoadCommand;
-
 pub struct LoadCommand;
 
 impl LoadCommand {

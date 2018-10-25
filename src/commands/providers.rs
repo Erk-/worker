@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: ProvidersCommand = ProvidersCommand;
-
 pub struct ProvidersCommand;
 
 impl ProvidersCommand {

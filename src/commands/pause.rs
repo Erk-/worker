@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: PauseCommand = PauseCommand;
-
 pub struct PauseCommand;
 
 impl PauseCommand {

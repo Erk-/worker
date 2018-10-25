@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: PlayingCommand = PlayingCommand;
-
 pub struct PlayingCommand;
 
 impl PlayingCommand {

@@ -5,8 +5,6 @@ use serenity::utils::MessageBuilder;
 use std::sync::Arc;
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: ChooseCommand = ChooseCommand;
-
 pub struct ChooseCommand;
 
 impl ChooseCommand {

@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: ShuffleCommand = ShuffleCommand;
-
 pub struct ShuffleCommand;
 
 impl ShuffleCommand {

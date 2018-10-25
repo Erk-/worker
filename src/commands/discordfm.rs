@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: DfmCommand = DfmCommand;
-
 pub struct DfmCommand;
 
 impl DfmCommand {

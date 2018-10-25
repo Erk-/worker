@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: VolumeCommand = VolumeCommand;
-
 pub struct VolumeCommand;
 
 impl VolumeCommand {

@@ -31,12 +31,15 @@ use serenity::{
     http::Client as SerenityHttpClient,
     model::event::GatewayEvent,
 };
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    sync::Arc,
+};
 
 pub struct WorkerState {
     pub cache: Arc<Cache>,
     pub config: Arc<Config>,
-    pub commands: Arc<Vec<Arc<&'static (dyn Command<'static> + Send + Sync)>>>,
+    pub commands: HashMap<String, Arc<Box<dyn Command<'static> + Send + Sync>>>,
     pub discord_fm: DiscordFm,
     pub http: Arc<HyperClient<HttpsConnector<HttpConnector>, Body>>,
     pub playback: Arc<LavalinkManager>,
@@ -78,43 +81,6 @@ impl Worker {
         )?);
         debug!("Initialized serenity http client");
 
-        let commands: Vec<Arc<&'static (dyn Command + Send + Sync)>>;
-        {
-            use self::commands::*;
-
-            commands = vec![
-                Arc::new(&about::COMMAND_INSTANCE),
-                Arc::new(&cancel::COMMAND_INSTANCE),
-                Arc::new(&choose::COMMAND_INSTANCE),
-                Arc::new(&clear::COMMAND_INSTANCE),
-                Arc::new(&discordfm::COMMAND_INSTANCE),
-                Arc::new(&dump::COMMAND_INSTANCE),
-                Arc::new(&help::COMMAND_INSTANCE),
-                Arc::new(&invite::COMMAND_INSTANCE),
-                Arc::new(&join::COMMAND_INSTANCE),
-                Arc::new(&leave::COMMAND_INSTANCE),
-                Arc::new(&load::COMMAND_INSTANCE),
-                Arc::new(&pause::COMMAND_INSTANCE),
-                Arc::new(&ping::COMMAND_INSTANCE),
-                Arc::new(&play::COMMAND_INSTANCE),
-                Arc::new(&playing::COMMAND_INSTANCE),
-                Arc::new(&providers::COMMAND_INSTANCE),
-                Arc::new(&queue::COMMAND_INSTANCE),
-                Arc::new(&radio::COMMAND_INSTANCE),
-                Arc::new(&remove::COMMAND_INSTANCE),
-                Arc::new(&restart::COMMAND_INSTANCE),
-                Arc::new(&resume::COMMAND_INSTANCE),
-                Arc::new(&seek::COMMAND_INSTANCE),
-                Arc::new(&shuffle::COMMAND_INSTANCE),
-                Arc::new(&skip::COMMAND_INSTANCE),
-                Arc::new(&soundcloud::COMMAND_INSTANCE),
-                Arc::new(&volume::COMMAND_INSTANCE),
-                Arc::new(&youtube::COMMAND_INSTANCE),
-            ];
-        }
-        let commands = Arc::new(commands);
-        debug!("Initialized commands");
-
         let cache = Arc::new(Cache::new(
             Arc::clone(&config),
             Arc::clone(&redis),
@@ -132,7 +98,7 @@ impl Worker {
         let state = Arc::new(WorkerState {
             cache,
             config,
-            commands,
+            commands: commands::map(),
             discord_fm,
             http: hyper,
             playback,

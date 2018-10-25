@@ -7,8 +7,6 @@ use super::{
     prelude::*,
 };
 
-pub static COMMAND_INSTANCE: PlayCommand = PlayCommand;
-
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Provider {
     SoundCloud,

@@ -140,11 +140,7 @@ async fn message_create(
             shard_id,
         };
 
-        let alias = &*alias;
-        let result = state.commands.iter()
-            .find(|c| c.names().iter()
-                    .find(|a| (*a).eq_ignore_ascii_case(alias)).is_some());
-        let result = match result {
+        let result = match state.commands.get(&alias) {
             Some(cmd) => await!(cmd.run(ctx)),
             None => {
                 trace!("No command matched alias: {}", alias);

@@ -5,8 +5,6 @@ use super::{
     prelude::*,
 };
 
-pub static COMMAND_INSTANCE: CancelCommand = CancelCommand;
-
 pub struct CancelCommand;
 
 impl CancelCommand {

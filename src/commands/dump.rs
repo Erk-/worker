@@ -1,8 +1,6 @@
 use dump::DumpRequester;
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: DumpCommand = DumpCommand;
-
 pub struct DumpCommand;
 
 impl DumpCommand {

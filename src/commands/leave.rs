@@ -4,8 +4,6 @@ use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: LeaveCommand = LeaveCommand;
-
 pub struct LeaveCommand;
 
 impl LeaveCommand {

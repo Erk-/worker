@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: HelpCommand = HelpCommand;
-
 pub struct HelpCommand;
 
 impl HelpCommand {

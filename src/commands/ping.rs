@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: PingCommand = PingCommand;
-
 pub struct PingCommand;
 
 impl PingCommand {

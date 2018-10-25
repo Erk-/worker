@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: ResumeCommand = ResumeCommand;
-
 pub struct ResumeCommand;
 
 impl ResumeCommand {

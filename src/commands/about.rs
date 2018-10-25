@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: AboutCommand = AboutCommand;
-
 pub struct AboutCommand;
 
 impl AboutCommand {

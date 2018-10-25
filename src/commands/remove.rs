@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: RemoveCommand = RemoveCommand;
-
 pub struct RemoveCommand;
 
 impl RemoveCommand {

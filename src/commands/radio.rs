@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: RadioCommand = RadioCommand;
-
 pub struct RadioCommand;
 
 impl RadioCommand {

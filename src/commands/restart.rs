@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: RestartCommand = RestartCommand;
-
 pub struct RestartCommand;
 
 impl RestartCommand {

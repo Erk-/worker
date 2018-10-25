@@ -3,8 +3,6 @@ use super::{
     prelude::*,
 };
 
-pub static COMMAND_INSTANCE: SoundCloudCommand = SoundCloudCommand;
-
 pub struct SoundCloudCommand;
 
 impl SoundCloudCommand {

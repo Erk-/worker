@@ -1,8 +1,6 @@
 use serenity::constants::VoiceOpCode;
 use super::prelude::*;
 
-pub static COMMAND_INSTANCE: JoinCommand = JoinCommand;
-
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Join {
     AlreadyInChannel,
