@@ -29,7 +29,7 @@ impl<'a> Command<'a> for ShuffleCommand {
     }
 
     fn run(&self, ctx: Context) -> RunFuture<'a> {
-        info!("running shuffle");
+        trace!("running shuffle");
         RunFuture::new(Self::_run(ctx).boxed())
     }
 }
