@@ -57,9 +57,7 @@ impl LoadCommand {
         let tracks = serde_json::from_slice::<Vec<String>>(&body)?;
         let track_count = tracks.len();
 
-        for track in tracks.into_iter() {
-            await!(ctx.state.queue.add(guild_id, track))?;
-        }
+        await!(ctx.state.queue.add_multiple(guild_id, tracks))?;
 
         let mut content = format!("Loaded {} songs from the playlist!", track_count);
 
