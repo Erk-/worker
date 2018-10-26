@@ -1,4 +1,7 @@
-use super::prelude::*;
+use super::{
+    join::{JoinCommand, JoinRequest},
+    prelude::*,
+};
 
 pub struct RadioCommand;
 
@@ -40,7 +43,7 @@ For example, use `{prefix}radio Radio Here`",
 
         let radio = results.tracks.first()?;
 
-        await!(super::join::JoinCommand::join_ctx(&ctx))?;
+        await!(JoinCommand::join(JoinRequest::no_pop(&ctx)))?;
 
         match await!(ctx.state.playback.play(ctx.guild_id()?, radio.track.clone())) {
             Ok(true) => {

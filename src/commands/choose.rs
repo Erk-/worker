@@ -3,7 +3,10 @@ use lavalink::decoder;
 use redis_async::client::PairedConnection;
 use serenity::utils::MessageBuilder;
 use std::sync::Arc;
-use super::prelude::*;
+use super::{
+    join::{JoinCommand, JoinRequest},
+    prelude::*,
+};
 
 pub struct ChooseCommand;
 
@@ -67,7 +70,7 @@ To play a song...
     pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
         let guild_id = ctx.guild_id()?;
 
-        await!(super::join::JoinCommand::join_ctx(&ctx))?;
+        await!(JoinCommand::join(JoinRequest::no_pop(&ctx)))?;
 
         let song = decoder::decode_track_base64(&track)?;
 

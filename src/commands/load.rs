@@ -1,6 +1,7 @@
 use dump::DumpRequester;
+use std::fmt::Write as _;
 use super::{
-    join::Join,
+    join::{JoinCommand, JoinRequest},
     prelude::*,
 };
 
@@ -60,41 +61,16 @@ impl LoadCommand {
             await!(ctx.state.queue.add(guild_id, track))?;
         }
 
-        let join = await!(super::join::JoinCommand::join_ctx(&ctx))?;
-
         let mut content = format!("Loaded {} songs from the playlist!", track_count);
 
-        match join {
-            Join::UserNotInChannel => {
-                return Response::text(content);
-            },
-            Join::AlreadyInChannel | Join::Successful => {},
-        }
-
-        let current = await!(ctx.current())?;
-
-        if current.is_playing() {
-            return Response::text(content);
-        }
-
-        let song = match await!(ctx.queue_pop()) {
-            Ok(Some(song)) => song,
-            Ok(None) | Err(_) => return Response::text(content),
-        };
-
-        match await!(ctx.state.playback.play(ctx.guild_id()?, song.track)) {
-            Ok(true) => {
-                content.push_str("\n\nJoined the voice channel and started playing the next song!");
-
-                Response::text(content)
-            },
-            Ok(false) => {
-                content.push_str("\n\nJoined the voice channel and added the songs to the queue.");
+        match await!(JoinCommand::join(JoinRequest::pop(&ctx))) {
+            Ok(resp) => {
+                write!(content, "\n\n{}", resp);
 
                 Response::text(content)
             },
             Err(why) => {
-                warn!("Err playing next song: {:?}", why);
+                warn!("Err joining voice channel: {:?}", why);
 
                 Response::text(content)
             },
