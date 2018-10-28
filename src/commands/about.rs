@@ -7,15 +7,11 @@ impl AboutCommand {
         let prefix = ctx.state.config.bot_prefixes.first()?;
 
         Response::text(format!(
-            "
-**dabBot**
+            "**dabBot**
 Command prefix: `{prefix}`
-Invite me to your server: \
-             <https://dabbot.org/invite>
+Invite me to your server: <https://dabbot.org/invite>
 Support server: <https://dabbot.org/support>
-Github: \
-             <https://github.com/dabbotorg>
-",
+Github: <https://github.com/dabbotorg>",
             prefix = prefix
         ))
     }
