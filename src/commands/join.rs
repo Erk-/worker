@@ -58,26 +58,6 @@ impl JoinCommand {
 
         trace!("User voice state: {:?}", user);
 
-        let bot_id = req.ctx.state.config.discord_user_id;
-
-        trace!("Checking if bot is already in voice channel");
-        // Check if the bot is already in the requested channel.
-        if let Some(bot) = await!(req.ctx.state.cache.voice_state(guild_id, bot_id))? {
-            trace!(
-                "Bot's channel ID: {}; user's channel ID: {}",
-                bot.channel_id,
-                user.channel_id,
-            );
-
-            if bot.channel_id == user.channel_id {
-                trace!("Bot is in user voice channel already");
-
-                return Ok(JoinResponse::already_in_channel(req));
-            }
-        }
-
-        trace!("Bot is not in user voice channel");
-
         trace!("Serializing audio player for guild {}", guild_id);
         let map = serde_json::to_vec(&json!({
             "op": VoiceOpCode::SessionDescription.num(),
