@@ -18,8 +18,8 @@ impl LoadCommand {
             },
         };
 
-        let uuid = {
-            if query.starts_with("http") {
+        let (host, https, uuid) = {
+            let uuid = if query.starts_with("http") {
                 let slash = match query.rfind('/') {
                     Some(slash) => slash,
                     None => {
@@ -36,11 +36,21 @@ impl LoadCommand {
                 slice
             } else {
                 &query
-            }
+            };
+
+            // Temporary paste.dabbot.org support.
+            let (host, https) = if query.starts_with("https://paste.dabbot.org/") {
+                ("paste.dabbot.org".to_owned(), true)
+            } else {
+                (ctx.state.config.dump.display_address.clone(), false)
+            };
+
+            (host, https, uuid)
         };
 
         let request = ctx.state.http.retrieve(
-            &ctx.state.config.dump.display_address,
+            &host,
+            https,
             &ctx.state.config.dump.authorization,
             uuid,
         );
