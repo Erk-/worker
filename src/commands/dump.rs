@@ -42,8 +42,7 @@ impl DumpCommand {
         Response::text(format!(
             "A dump of your song queue was created! Link: https://{addr}/{uuid}
 
-Load this \
-             playlist with `{prefix}load https://{addr}/{uuid}`",
+Load this playlist with `{prefix}load https://{addr}/{uuid}`",
             addr = ctx.state.config.dump.display_address,
             prefix = ctx.prefix()?,
             uuid = dump.uuid,
