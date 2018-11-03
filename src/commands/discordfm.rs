@@ -5,7 +5,7 @@ pub struct DfmCommand;
 impl DfmCommand {
     async fn _run(ctx: Context) -> CommandResult {
         if ctx.args.is_empty() {
-            let prefix = ctx.state.config.bot_prefixes.first()?;
+            let prefix = ctx.prefix()?;
 
             return Response::text(format!(
                 "Uses a song playlist from the now defunct Discord.FM
@@ -23,7 +23,7 @@ Usage: `{}dfm <library>`
         let library = match ctx.state.discord_fm.libraries.get(&query) {
             Some(library) => library,
             None => {
-                let prefix = ctx.state.config.bot_prefixes.first()?;
+                let prefix = ctx.prefix()?;
 
                 return Response::text(format!(
                     "Invalid library! Use `{}dfm` to see usage & libraries.",

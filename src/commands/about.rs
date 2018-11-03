@@ -4,15 +4,13 @@ pub struct AboutCommand;
 
 impl AboutCommand {
     async fn _run(ctx: Context) -> CommandResult {
-        let prefix = ctx.state.config.bot_prefixes.first()?;
-
         Response::text(format!(
             "**dabBot**
 Command prefix: `{prefix}`
 Invite me to your server: <https://dabbot.org/invite>
 Support server: <https://dabbot.org/support>
 Github: <https://github.com/dabbotorg>",
-            prefix = prefix
+            prefix = ctx.prefix()?
         ))
     }
 }

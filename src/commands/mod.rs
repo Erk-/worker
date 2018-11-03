@@ -105,6 +105,10 @@ impl Context {
         Ok(true)
     }
 
+    pub fn prefix(&self) -> Option<&str> {
+        self.state.config.bot_prefixes.first().map(|x| &**x)
+    }
+
     pub async fn queue(
         &self,
         limit: u32,
