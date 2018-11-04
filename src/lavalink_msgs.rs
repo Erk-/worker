@@ -4,8 +4,9 @@ use crate::{
     worker::WorkerState,
 };
 use futures::{
+    channel::oneshot::Receiver as OneshotReceiver,
     compat::Future01CompatExt as _,
-    future::TryFutureExt,
+    future::{FutureExt, TryFutureExt},
 };
 use lavalink::decoder::{self, DecodedTrack};
 use redis_async::{
@@ -22,6 +23,28 @@ struct SongPlayed {
 }
 
 pub async fn from_lavalink(
+    redis: PairedConnection,
+    state: Arc<WorkerState>,
+    shutdown_channel: OneshotReceiver<()>,
+) -> Result<()> {
+    let mut listener_future = lavalink_listener(redis, state).boxed();
+    let mut shutdown_future = shutdown_channel.boxed();
+
+    futures::select! {
+        listener_future => {},
+        shutdown_future => {
+            if let Err(why) = shutdown_future {
+                warn!("Err with lavalink msgs future: {:?}", why);
+            }
+        },
+    }
+
+    info!("Exiting from_lavalink");
+
+    Ok(())
+}
+
+async fn lavalink_listener(
     redis: PairedConnection,
     state: Arc<WorkerState>,
 ) -> Result<()> {

@@ -4,6 +4,8 @@ use std::time::Duration;
 
 pub fn spawn(future: impl Future<Output = Result<(), ()>> + 'static + Send) {
     tokio::spawn(future.boxed().compat());
+
+    trace!("Put future on reactor");
 }
 
 /// Converts track time (in milliseconds) to a human-readable time.

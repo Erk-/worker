@@ -15,6 +15,7 @@ use crate::{
     utils,
 };
 use futures::{
+    channel::oneshot::{self, Sender as OneshotSender},
     compat::Future01CompatExt as _,
     future::TryFutureExt as _,
 };
@@ -51,6 +52,7 @@ pub struct WorkerState {
 
 pub struct Worker {
     discord: DiscordEventHandler,
+    lavalink_msgs_shutdown_tx: Option<OneshotSender<()>>,
     redis_popper: PairedConnection,
     state: Arc<WorkerState>,
 }
@@ -108,12 +110,15 @@ impl Worker {
             serenity,
         });
 
-        utils::spawn(lavalink_msgs::from_lavalink(redis3, Arc::clone(&state)).map_err(|why| {
+        let (tx, rx) = oneshot::channel();
+
+        utils::spawn(lavalink_msgs::from_lavalink(redis3, Arc::clone(&state), rx).map_err(|why| {
             warn!("Err with lavalink:from: {:?}", why);
         }));
         let discord = DiscordEventHandler::new(Arc::clone(&state));
 
         Ok(Self {
+            lavalink_msgs_shutdown_tx: Some(tx),
             redis_popper: redis2,
             discord,
             state,
@@ -178,5 +183,15 @@ impl Worker {
         trace!("Got event: {:?}", event);
 
         Ok((event, shard_id))
+    }
+}
+
+impl Drop for Worker {
+    fn drop(&mut self) {
+        if let Some(tx) = self.lavalink_msgs_shutdown_tx.take() {
+            if let Err(why) = tx.send(()) {
+                warn!("Err sending shutdown to lavalink msgs: {:?}", why);
+            }
+        }
     }
 }
