@@ -19,6 +19,7 @@ pub mod providers;
 pub mod queue;
 pub mod radio;
 pub mod remove;
+pub mod repeat;
 pub mod restart;
 pub mod resume;
 pub mod seek;
@@ -56,6 +57,7 @@ use self::{
     queue::QueueCommand,
     radio::RadioCommand,
     remove::RemoveCommand,
+    repeat::RepeatCommand,
     restart::RestartCommand,
     resume::ResumeCommand,
     seek::SeekCommand,
@@ -189,6 +191,7 @@ pub fn map() -> HashMap<String, Arc<Box<dyn Command<'static> + Send + Sync>>> {
         Arc::new(Box::new(QueueCommand)),
         Arc::new(Box::new(RadioCommand)),
         Arc::new(Box::new(RemoveCommand)),
+        Arc::new(Box::new(RepeatCommand)),
         Arc::new(Box::new(RestartCommand)),
         Arc::new(Box::new(ResumeCommand)),
         Arc::new(Box::new(SeekCommand)),
