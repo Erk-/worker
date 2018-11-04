@@ -4,18 +4,18 @@ pub struct RepeatCommand;
 
 impl RepeatCommand {
     async fn _run() -> CommandResult {
-        // TODO(Proximyst): Implement loop command
+        // TODO(Proximyst,zeyla): Implement reorder command
         Response::err("This command has not been implemented yet and is being worked on!")
     }
 }
 
 impl<'a> Command<'a> for RepeatCommand {
     fn names(&self) -> &'static [&'static str] {
-        &["loop", "repeat"]
+        &["reorder"]
     }
 
     fn description(&self) -> &'static str {
-        "Loops a queue or a single song, depending on the setting."
+        "Reorders the position of a song in the queue."
     }
 
     fn run(&self, _: Context) -> RunFuture<'a> {
