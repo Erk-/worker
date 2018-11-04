@@ -73,11 +73,8 @@ impl JoinCommand {
         await!(req.ctx.to_sharder(map))?;
         trace!("Sent SessionDescription payload to sharder");
 
-        await!(req.ctx.state.redis.send(resp_array![
-            "SET",
-            format!("j:{}", guild_id),
-            req.ctx.msg.channel_id.0 as usize
-        ]).compat())?;
+        await!(req.ctx.state.cache.inner.set_join(guild_id,
+                                                  req.ctx.msg.channel_id.0))?;
 
         if !req.pop {
             return Ok(JoinResponse::successful_without_pop(req));
@@ -154,16 +151,7 @@ impl JoinCommand {
         await!(ctx.to_sharder(map))?;
         trace!("Sent SessionDescription payload to sharder");
 
-        await!(
-            ctx.state
-                .redis
-                .send(resp_array![
-                    "SET",
-                    format!("j:{}", guild_id),
-                    ctx.msg.channel_id.0 as usize
-                ])
-                .compat()
-        )?;
+        await!(ctx.state.cache.inner.set_join(guild_id, ctx.msg.channel_id.0))?;
 
         Ok(Join::Successful)
     }

@@ -1,4 +1,4 @@
-use redis_async::client::PairedConnection;
+use crate::cache::Cache;
 use std::sync::Arc;
 use super::{
     choose,
@@ -9,11 +9,11 @@ pub struct CancelCommand;
 
 impl CancelCommand {
     async fn _run(ctx: Context) -> CommandResult {
-        Self::cancel(&ctx.state.redis, ctx.guild_id()?)
+        Self::cancel(Arc::clone(&ctx.state.cache), ctx.guild_id()?)
     }
 
-    pub(super) fn cancel(redis: &Arc<PairedConnection>, guild_id: u64) -> Result<Response> {
-        choose::ChooseCommand::delete_selection(&redis, guild_id);
+    pub(super) fn cancel(redis: Arc<Cache>, guild_id: u64) -> Result<Response> {
+        choose::ChooseCommand::delete_selection(redis, guild_id);
 
         Response::text("Selection cancelled!")
     }
