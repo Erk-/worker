@@ -1,5 +1,7 @@
-use crate::services::lavalink::LavalinkManager;
-use redis_async::client::PairedConnection;
+use crate::{
+    services::lavalink::LavalinkManager,
+    cache::Cache,
+};
 use serenity::constants::VoiceOpCode;
 use std::sync::Arc;
 use super::prelude::*;
@@ -11,7 +13,7 @@ impl LeaveCommand {
         let gid = ctx.guild_id()?;
         let sid = ctx.shard_id;
 
-        match await!(Self::leave(sid, gid, &ctx.state.playback, &ctx.state.redis)) {
+        match await!(Self::leave(sid, gid, &ctx.state.playback, Arc::clone(&ctx.state.cache))) {
             Ok(()) => Response::text("Stopped playing music & left the voice channel."),
             Err(why) => {
                 error!("Error stopping in guild {}: {:?}", gid, why,);
@@ -25,7 +27,7 @@ impl LeaveCommand {
         shard_id: u64,
         guild_id: u64,
         playback: &'a Arc<LavalinkManager>,
-        redis: &'a Arc<PairedConnection>,
+        redis: Arc<Cache>,
     ) -> Result<()> {
         let map = serde_json::to_vec(&json!({
             "op": VoiceOpCode::SessionDescription.num(),
@@ -36,12 +38,10 @@ impl LeaveCommand {
                 "self_mute": false,
             },
         }))?;
-        let key = format!("sharder:to:{}", shard_id);
-        let cmd = resp_array!["RPUSH", key, map];
 
-        redis.send_and_forget(cmd);
-        redis.send_and_forget(resp_array!["DEL", format!("j:{}", guild_id)]);
-        redis.send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
+        redis.inner.sharder_msg(shard_id, map);
+        redis.inner.delete_join(guild_id);
+        redis.inner.delete_choices(guild_id);
 
         await!(playback.stop(guild_id))?;
 

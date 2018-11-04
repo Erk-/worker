@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::{Result, CacheResultExt as _},
     utils,
     worker::WorkerState,
 };
@@ -87,11 +87,8 @@ async fn handle_song(
     track: DecodedTrack,
     state: Arc<WorkerState>,
 ) -> Result<()> {
-    let channel_id: String = await!(state.redis.send(resp_array![
-        "GET",
-        format!("j:{}", played.guild_id)
-    ]).compat())?;
-    let id = channel_id.parse::<u64>()?;
+    let id = await!(state.cache.inner.get_join(played.guild_id)).convert()?
+        .parse::<u64>()?;
 
     let msg = format!(
         "Now playing **{}** by **{}** `[{}]`",

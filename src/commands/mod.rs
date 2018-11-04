@@ -31,7 +31,7 @@ pub mod youtube;
 use crate::{
     services::lavalink::PlayerState,
     worker::WorkerState,
-    Result,
+    error::{Result, CacheResultExt as _},
 };
 use futures::compat::Future01CompatExt;
 use futures::future::FutureObj;
@@ -137,14 +137,7 @@ impl Context {
     }
 
     pub async fn to_sharder(&self, payload: Vec<u8>) -> Result<()> {
-        let key = format!("sharder:to:{}", self.shard_id);
-        let cmd = resp_array!["RPUSH", key, payload];
-
-        debug!("cmd: {:?}", cmd);
-
-        self.state.redis.send_and_forget(cmd);
-
-        Ok(())
+        await!(self.state.cache.inner.sharder_msg(self.shard_id, payload)).convert()
     }
 }
 
