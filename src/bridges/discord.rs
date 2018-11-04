@@ -58,10 +58,10 @@ impl DiscordEventHandler {
         use self::GatewayEvent::Dispatch;
 
         match event {
-            Dispatch(_, Ready(e)) => ready(e),
             Dispatch(_, MessageCreate(e)) => {
                 await!(message_create(e, shard_id, state))?;
             },
+            Dispatch(_, Ready(e)) => ready(e),
             Dispatch(_, VoiceServerUpdate(e)) => {
                 await!(voice_server_update(e, state))?;
             },

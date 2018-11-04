@@ -8,7 +8,7 @@ pub struct RadioCommand;
 impl RadioCommand {
     async fn _run(ctx: Context) -> CommandResult {
         if ctx.args.is_empty() {
-            let prefix = ctx.state.config.bot_prefixes.first()?;
+            let prefix = ctx.prefix()?;
 
             return Response::text(format!(
                 "View the radios here: <https://dabbot.org/radios>
@@ -27,7 +27,7 @@ For example, use `{prefix}radio Radio Here`",
             None => {
                 return Response::text(format!(
                     "Invalid station! For usage & stations, use `{}radio`",
-                    ctx.state.config.bot_prefixes.first()?,
+                    ctx.prefix()?,
                 ));
             },
         };

@@ -105,6 +105,10 @@ impl Context {
         Ok(true)
     }
 
+    pub fn prefix(&self) -> Option<&str> {
+        self.state.config.bot_prefixes.first().map(|x| &**x)
+    }
+
     pub async fn queue(
         &self,
         limit: u32,
@@ -223,25 +227,16 @@ fn no_song() -> Result<Response> {
 
 #[cfg(test)]
 mod tests {
+    use crate::error::Result;
     use super::Response;
 
     #[test]
-    fn test_responses() {
-        assert_eq!(
-            Response::err("foo").unwrap(),
-            Response::Text("⚠ foo".to_owned()),
-        );
-        assert_eq!(
-            Response::err("").unwrap(),
-            Response::Text("⚠ ".to_owned()),
-        );
-        assert_eq!(
-            Response::text("hello").unwrap(),
-            Response::Text("hello".to_owned()),
-        );
-        assert_eq!(
-            Response::text("").unwrap(),
-            Response::Text("".to_owned()),
-        );
+    fn test_responses() -> Result<()> {
+        assert_eq!(Response::err("foo")?, Response::Text("⚠ foo".to_owned()));
+        assert_eq!(Response::err("")?, Response::Text("⚠ ".to_owned()));
+        assert_eq!(Response::text("hello")?,Response::Text("hello".to_owned()));
+        assert_eq!(Response::text("")?,Response::Text("".to_owned()));
+
+        Ok(())
     }
 }

@@ -28,7 +28,7 @@ impl ChooseCommand {
         };
 
         if selection.is_empty() {
-            let prefix = ctx.state.config.bot_prefixes.first()?;
+            let prefix = ctx.prefix()?;
 
             let mut msg = MessageBuilder::new();
             // push_safe is used to filter @everyone and other pings

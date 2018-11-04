@@ -145,7 +145,7 @@ impl PlayCommand {
             msg.0.push('\n');
         }
 
-        let prefix = ctx.state.config.bot_prefixes.first()?;
+        let prefix = ctx.prefix()?;
 
         msg.0.push_str("\n**To choose**, use `");
         msg.push_safe(&prefix);

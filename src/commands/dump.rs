@@ -44,7 +44,7 @@ impl DumpCommand {
 
 Load this playlist with `{prefix}load https://{addr}/{uuid}`",
             addr = ctx.state.config.dump.display_address,
-            prefix = ctx.state.config.bot_prefixes.first()?,
+            prefix = ctx.prefix()?,
             uuid = dump.uuid,
         ))
     }
