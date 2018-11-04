@@ -39,14 +39,16 @@ use futures::{
     stream::StreamExt,
 };
 use hyper::rt::Future as _;
-use std::{
-    env,
-    time::{Duration, Instant},
-};
+use std::env;
 use tokio_signal::unix::{SIGTERM, Signal};
 use tokio::{
     runtime::Runtime,
-    timer::Delay,
+};
+
+#[cfg(unix)]
+use {
+    std::time::{Duration, Instant},
+    tokio::timer::Delay,
 };
 
 const RUST_LOG_DEFAULT: &'static str = "info,hyper=info,tokio_reactor=info,\
@@ -71,10 +73,19 @@ fn main() -> Result<()> {
 }
 
 async fn try_main() -> Result<()> {
-    {
-        let config = Config::new("config.toml")?;
-        let worker = await!(Worker::new(config))?;
+    let config = Config::new("config.toml")?;
+    let worker = await!(Worker::new(config))?;
 
+    await!(run(worker))?;
+
+    info!("Exiting try_main");
+
+    Ok(())
+}
+
+#[cfg(unix)]
+async fn run(worker: Worker) -> Result<()> {
+    {
         let mut signal_future = signal().boxed();
         let mut worker_future = worker.run().boxed();
 
@@ -88,10 +99,17 @@ async fn try_main() -> Result<()> {
         }
     }
 
+    drop(worker);
+
     info!("Sleeping for 15 seconds to wait for futures to finish up...");
     await!(Delay::new(Instant::now() + Duration::from_secs(15)).compat())?;
 
-    info!("Exiting try_main");
+    Ok(())
+}
+
+#[cfg(not(unix))]
+async fn run(worker: Worker) -> Result<()> {
+    await!(worker.run())?;
 
     Ok(())
 }
