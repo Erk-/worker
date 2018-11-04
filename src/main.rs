@@ -33,29 +33,97 @@ use crate::{
     config::Config,
     worker::Worker,
 };
-use futures::future::{FutureExt as _, TryFutureExt as _};
+use futures::{
+    compat::{Future01CompatExt, Stream01CompatExt},
+    future::{FutureExt as _, TryFutureExt as _},
+    stream::StreamExt,
+};
 use hyper::rt::Future as _;
 use std::env;
+use tokio_signal::unix::{SIGTERM, Signal};
+use tokio::{
+    runtime::Runtime,
+};
+
+#[cfg(unix)]
+use {
+    std::time::{Duration, Instant},
+    tokio::timer::Delay,
+};
 
 const RUST_LOG_DEFAULT: &'static str = "info,hyper=info,tokio_reactor=info,\
 lavalink_http_server_requester=info,lavalink_queue_requester=info";
 
-fn main() {
+fn main() -> Result<()> {
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", RUST_LOG_DEFAULT);
     }
 
     env_logger::init();
 
-    tokio::run(try_main().boxed().compat().map_err(|why| {
+    let mut rt = Runtime::new()?;
+
+    rt.block_on(try_main().boxed().compat().map(|what| {
+        warn!("Completed tokio loop: {:?}", what);
+    }).map_err(|why| {
         warn!("Error running tokio loop: {:?}", why);
-    }));
+    })).expect("Err with reactor");
+
+    Ok(())
 }
 
 async fn try_main() -> Result<()> {
-    let config = Config::new("config.toml").expect("Could not load config.toml");
+    let config = Config::new("config.toml")?;
     let worker = await!(Worker::new(config))?;
+
+    await!(run(worker))?;
+
+    info!("Exiting try_main");
+
+    Ok(())
+}
+
+#[cfg(unix)]
+async fn run(worker: Worker) -> Result<()> {
+    {
+        let mut signal_future = signal().boxed();
+        let mut worker_future = worker.run().boxed();
+
+        futures::select! {
+            signal_future => {
+                info!("Got SIGTERM signal; shutting down.");
+            },
+            worker_future => {
+                error!("Worker ended: {:?}", worker_future);
+            },
+        }
+    }
+
+    drop(worker);
+
+    info!("Sleeping for 15 seconds to wait for futures to finish up...");
+    await!(Delay::new(Instant::now() + Duration::from_secs(15)).compat())?;
+
+    Ok(())
+}
+
+#[cfg(not(unix))]
+async fn run(worker: Worker) -> Result<()> {
     await!(worker.run())?;
+
+    Ok(())
+}
+
+async fn signal() -> Result<()> {
+    let mut signal = await!(Signal::new(SIGTERM).compat())?.compat();
+
+    while let Some(Ok(int)) = await!(signal.next()) {
+        if int == SIGTERM {
+            break;
+        } else {
+            warn!("Got signal other than SIGTERM: {}", int);
+        }
+    }
 
     Ok(())
 }

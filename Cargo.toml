@@ -23,6 +23,7 @@ serde_json = "1"
 toml = "0.4"
 tungstenite = "0.6"
 tokio = "0.1"
+tokio-signal = "0.2"
 
 [dependencies.cache]
 git = "https://github.com/dabbotorg/cache"
