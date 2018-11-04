@@ -38,13 +38,13 @@ features = ["compat", "tokio-compat"]
 version = "0.3.0-alpha.9"
 
 [dependencies.lavalink]
-git = "https://github.com/zeyla/lavalink.rs"
+git = "https://github.com/dabbotorg/lavalink.rs"
 
 [dependencies.lavalink-http-server-requester]
-git = "https://github.com/zeyla/lavalink-http-server-requester.rs"
+git = "https://github.com/dabbotorg/lavalink-http-server-requester.rs"
 
 [dependencies.lavalink-queue-requester]
-git = "https://github.com/zeyla/lavalink-queue"
+git = "https://github.com/dabbotorg/lavalink-queue"
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity"
