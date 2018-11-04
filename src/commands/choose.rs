@@ -1,6 +1,10 @@
 use crate::utils;
 use lavalink::decoder;
-use redis_async::client::PairedConnection;
+use crate::cache::Cache;
+use futures::{
+    future,
+    compat::Compat,
+};
 use serenity::utils::MessageBuilder;
 use std::sync::Arc;
 use super::{
@@ -14,13 +18,7 @@ impl ChooseCommand {
     async fn _run(ctx: Context) -> CommandResult {
         let guild_id = ctx.guild_id()?;
 
-        let cmd = resp_array![
-            "LRANGE",
-            format!("c:{}", guild_id),
-            0,
-            5
-        ];
-        let mut selection: Vec<String> = match await!(ctx.state.redis.send(cmd).compat()) {
+        let mut selection: Vec<String> = match await!(ctx.state.cache.inner.get_choices_ranged(guild_id, 0, 5)) {
             Ok(selection) => selection,
             Err(why) => {
                 warn!("Err getting selection: {:?}", why);
@@ -56,15 +54,15 @@ To play a song...
 
             await!(Self::select(&ctx, selection.remove(num)))
         } else {
-            super::cancel::CancelCommand::cancel(&ctx.state.redis, guild_id)
+            super::cancel::CancelCommand::cancel(Arc::clone(&ctx.state.cache), guild_id)
         }
     }
 
-    pub(super) fn delete_selection(redis: &Arc<PairedConnection>, guild_id: u64) {
-        redis.send_and_forget(resp_array![
-            "DEL",
-            format!("c:{}", guild_id)
-        ]);
+    pub(super) fn delete_selection(cache: Arc<Cache>, guild_id: u64) {
+        let _ = tokio::spawn(async move {
+            let _ = await!(cache.inner.delete_choices(guild_id));
+            Ok(())
+        }.boxed().compat()); // Forget it
     }
 
     pub(super) async fn select(ctx: &Context, track: String) -> CommandResult {
@@ -74,7 +72,7 @@ To play a song...
 
         let song = decoder::decode_track_base64(&track)?;
 
-        Self::delete_selection(&ctx.state.redis, guild_id);
+        Self::delete_selection(Arc::clone(&ctx.state.cache), guild_id);
 
         match await!(ctx.state.playback.play(guild_id, track)) {
             Ok(true) => {
