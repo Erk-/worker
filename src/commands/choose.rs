@@ -1,10 +1,6 @@
 use crate::utils;
 use lavalink::decoder;
 use crate::cache::Cache;
-use futures::{
-    future,
-    compat::Compat,
-};
 use serenity::utils::MessageBuilder;
 use std::sync::Arc;
 use super::{

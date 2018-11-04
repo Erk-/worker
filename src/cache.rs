@@ -4,7 +4,7 @@ use cache::{
 };
 use crate::{
     config::Config,
-    error::Result,
+    error::{CacheResultExt as _, Result},
 };
 use redis_async::client::PairedConnection;
 use serenity::model::event::*;
@@ -56,7 +56,7 @@ impl Cache {
         await!(self.inner.get_voice_state(
             guild_id,
             user_id,
-        )).map_err(From::from)
+        )).convert()
     }
 
     pub async fn guild_create<'a>(
@@ -77,7 +77,7 @@ impl Cache {
         let id = e.guild.id.0;
 
         debug!("Deleting voice states for {}", id);
-        await!(self.inner.delete_voice_states(id))?;
+        await!(self.inner.delete_voice_states(id)).convert()?;
         debug!("Deleted voice states for {}", id);
 
         Ok(())
@@ -113,8 +113,6 @@ impl Cache {
             None => return Ok(()),
         };
 
-        await!(self.inner.upsert_voice_state(guild_id, &e.voice_state))?;
-
-        Ok(())
+        await!(self.inner.upsert_voice_state(guild_id, &e.voice_state)).convert()
     }
 }

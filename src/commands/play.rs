@@ -112,7 +112,7 @@ impl PlayCommand {
 
         load.tracks.truncate(5);
 
-        let mut blobs = load
+        let blobs = load
             .tracks
             .iter()
             .map(|t| t.track.clone())
@@ -120,14 +120,10 @@ impl PlayCommand {
             .collect::<Vec<_>>();
 
         debug!("Deleting existing choose for guild {}", guild_id);
-        ctx.state
-            .redis
-            .send_and_forget(resp_array!["DEL", format!("c:{}", guild_id)]);
+        let _ = await!(ctx.state.cache.inner.delete_choices(guild_id));
         debug!("Deleted existing choose for guild {}", guild_id);
         debug!("Setting choose for guild {}", guild_id);
-        ctx.state
-            .redis
-            .send_and_forget(resp_array!["LPUSH", format!("c:{}", guild_id)].append(&mut blobs));
+        let _ = ctx.state.cache.inner.push_choices(guild_id, blobs);
         debug!("Set choose for guild {}", guild_id);
 
         let mut msg = MessageBuilder::new();
