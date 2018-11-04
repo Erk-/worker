@@ -5,6 +5,8 @@ pub struct VolumeCommand;
 impl VolumeCommand {
     #[cfg(not(feature = "patron"))]
     async fn _run(_: Context) -> CommandResult {
+        // TODO(Proximyst): Allow for premium users which have the correct
+        // role(s) in the dabBot support server.
         Response::text(
             r#"**The volume command is dabBot premium only!**
 
