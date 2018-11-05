@@ -32,7 +32,7 @@ pub mod youtube;
 use crate::{
     services::lavalink::PlayerState,
     worker::WorkerState,
-    error::{Result, CacheResultExt as _},
+    error::{CacheResultExt as _, Result},
 };
 use futures::compat::Future01CompatExt;
 use futures::future::FutureObj;
