@@ -1,7 +1,6 @@
 use serenity::constants::VoiceOpCode;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use super::prelude::*;
-use crate::error::CacheResultExt as _;
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Join {
@@ -77,7 +76,7 @@ impl JoinCommand {
         await!(req.ctx.state.cache.inner.set_join(
             guild_id,
             req.ctx.msg.channel_id.0,
-        )).convert()?;
+        ))?;
 
         if !req.pop {
             return Ok(JoinResponse::successful_without_pop(req));
@@ -157,7 +156,7 @@ impl JoinCommand {
         await!(ctx.state.cache.inner.set_join(
             guild_id,
             ctx.msg.channel_id.0
-        )).convert()?;
+        ))?;
 
         Ok(Join::Successful)
     }

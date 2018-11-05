@@ -51,26 +51,6 @@ pub enum Error {
     Tungstenite(TungsteniteError),
 }
 
-pub trait CacheErrorExt {
-    fn convert(self) -> Error;
-}
-
-pub trait CacheResultExt<T> {
-    fn convert(self) -> Result<T>;
-}
-
-impl CacheErrorExt for CacheError {
-    fn convert(self) -> Error {
-        self.into()
-    }
-}
-
-impl<T> CacheResultExt<T> for cache::Result<T> {
-    fn convert(self) -> Result<T> {
-        self.map_err(|e| e.convert())
-    }
-}
-
 impl From<AddrParseError> for Error {
     fn from(e: AddrParseError) -> Self {
         Error::AddrParse(e)

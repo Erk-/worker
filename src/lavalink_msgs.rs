@@ -1,5 +1,5 @@
 use crate::{
-    error::{Result, CacheResultExt as _},
+    error::Result,
     utils,
     worker::WorkerState,
 };
@@ -87,7 +87,7 @@ async fn handle_song(
     track: DecodedTrack,
     state: Arc<WorkerState>,
 ) -> Result<()> {
-    let id = await!(state.cache.inner.get_join(played.guild_id)).convert()?
+    let id = await!(state.cache.inner.get_join(played.guild_id))?
         .parse::<u64>()?;
 
     let msg = format!(

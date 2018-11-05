@@ -1,7 +1,7 @@
 use crate::{
     commands::{Context, Response},
     config::Config,
-    error::{Error, Result, CacheResultExt as _},
+    error::{Error, Result},
     utils,
     worker::WorkerState,
 };
@@ -254,8 +254,8 @@ async fn voice_state_update(
 
             debug!("Checking members in voice channel {}", old_channel_id);
             let list = await!(state.cache.inner.get_channel_voice_states(
-                    old_channel_id,
-            )).convert()?;
+                old_channel_id,
+            ))?;
             debug!("Members in voice channel {}: {:?}", old_channel_id, list);
 
             if list.contains(&bot_id) && list.len() == 1 {
@@ -272,7 +272,7 @@ async fn voice_state_update(
             debug!("Checking members in voice channel {}", channel_id);
             let list = await!(state.cache.inner.get_channel_voice_states(
                 channel_id,
-            )).convert()?;
+            ))?;
             debug!("Members in voice channel {}: {:?}", channel_id, list);
 
             if list.len() == 2 {
