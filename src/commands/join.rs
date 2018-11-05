@@ -75,8 +75,8 @@ impl JoinCommand {
         trace!("Sent SessionDescription payload to sharder");
 
         await!(req.ctx.state.cache.inner.set_join(
-                guild_id,
-                req.ctx.msg.channel_id.0
+            guild_id,
+            req.ctx.msg.channel_id.0,
         )).convert()?;
 
         if !req.pop {
@@ -155,8 +155,8 @@ impl JoinCommand {
         trace!("Sent SessionDescription payload to sharder");
 
         await!(ctx.state.cache.inner.set_join(
-                guild_id,
-                ctx.msg.channel_id.0
+            guild_id,
+            ctx.msg.channel_id.0
         )).convert()?;
 
         Ok(Join::Successful)
