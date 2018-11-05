@@ -39,9 +39,9 @@ impl LeaveCommand {
             },
         }))?;
 
-        redis.inner.sharder_msg(shard_id, map);
-        redis.inner.delete_join(guild_id);
-        redis.inner.delete_choices(guild_id);
+        await!(redis.inner.sharder_msg(shard_id, map))?;
+        await!(redis.inner.delete_join(guild_id))?;
+        await!(redis.inner.delete_choices(guild_id))?;
 
         await!(playback.stop(guild_id))?;
 
