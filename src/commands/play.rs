@@ -120,10 +120,10 @@ impl PlayCommand {
             .collect::<Vec<_>>();
 
         debug!("Deleting existing choose for guild {}", guild_id);
-        let _ = await!(ctx.state.cache.inner.delete_choices(guild_id));
+        await!(ctx.state.cache.inner.delete_choices(guild_id))?;
         debug!("Deleted existing choose for guild {}", guild_id);
         debug!("Setting choose for guild {}", guild_id);
-        let _ = ctx.state.cache.inner.push_choices(guild_id, blobs);
+        await!(ctx.state.cache.inner.push_choices(guild_id, blobs))?;
         debug!("Set choose for guild {}", guild_id);
 
         let mut msg = MessageBuilder::new();
