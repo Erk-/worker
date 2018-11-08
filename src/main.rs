@@ -28,6 +28,7 @@ mod utils;
 mod worker;
 
 pub use crate::error::{Error, Result};
+pub use md5::compute as md5;
 
 use crate::{
     config::Config,

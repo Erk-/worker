@@ -14,6 +14,7 @@ humantime = "1"
 hyper = "0.12"
 hyper-tls = "0.3"
 log = "0.4"
+md5 = "^0.6"
 native-tls = "0.2"
 parking_lot = "0.6"
 redis-async = { git = "https://github.com/dabbotorg/redis-async-rs" }
