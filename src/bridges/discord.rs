@@ -102,7 +102,7 @@ async fn message_create(
         return Ok(());
     }
 
-    let content = msg.content.clone();
+    let content = &msg.content;
 
     let guild_id = msg.guild_id?.0;
 
@@ -121,9 +121,8 @@ async fn message_create(
     };
 
     let content_trimmed: String = content.chars().skip(prefix.len()).collect();
-    let content_iter = content_trimmed.split_whitespace().collect::<Vec<&str>>();
+    let mut content_iter = content_trimmed.split_whitespace();
     trace!("content iter: {:?}", content_iter);
-    let mut content_iter = content_iter.iter();
     trace!("Determining command name");
     let command_name = content_iter.next()?;
 
